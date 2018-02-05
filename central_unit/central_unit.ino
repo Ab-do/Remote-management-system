@@ -1,4 +1,5 @@
-// le 05/02/2019 Agadir
+// le 06/02/2019 Agadir
+// Etape 2  : On ajoute une foncation de commutation pour Organiser le sotackage des données et pour effectuer la fonction appropriée.
 #include <SoftwareSerial.h>
 
 
@@ -14,8 +15,7 @@ void setup() {
 }
 
 void loop() {
-  
-
+  getDataSerial();
 }
 //********* OBTEBNIR LES DONNEES
 // Obtenir des données de Serial
@@ -57,12 +57,52 @@ void strToMatrix(String str){
             j++; 
             i++;
          }
-         //Effuctier une action
-         
+         //Commutation des données.
+         switchData(Matrix);
          memset(Matrix,0,sizeof(Matrix));
       }
       else{
          i++; 
       }     
+  }
+}
+// Analyse, Commutation des données et Effectuation des actions.
+void switchData(byte Matrix[30]){
+  switch(Matrix[0]){
+    case 49: // Byte : int + 48.
+            // Inclure les données de paramétrage.
+            Serial.println("Inclure les données de paramétrage.");
+            break;
+    case 50:
+             // Définir les relations entre les objects + les conditions + les secteurs.
+            Serial.println("Définir les relations entre les objects + les conditions.");
+            break;
+    case 51:
+             // Effectuer une action sur un objet.
+            Serial.println("Effectuer une action sur un objet.");
+            break;
+    case 52:
+             // Fonctions liées à l'horloge.
+            Serial.println("Fonctions liées à l'horloge.");
+            break;
+    case 53:
+             // mettre les données à propos système.
+            Serial.println("mettre les données à propos système.");
+            break;
+    case 54:
+             // Obtenir les données à propos système.
+            Serial.println("mettre les données à propos système.");
+            break;
+    case 55:
+             // les fonctions à propos les paramétres.
+            Serial.println("les fonctions à propos les paramétres.");
+            break;
+    case 57: // 9 
+             //Protocole d'essai.
+            Serial.println("Protocole d'essai .");
+            break;
+
+    default:
+            break;
   }
 }
