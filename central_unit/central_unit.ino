@@ -1,7 +1,7 @@
 // le 06/02/2019 Agadir
-// Etape 2  : On ajoute une foncation de commutation pour Organiser le sotackage des données et pour effectuer la fonction appropriée.
+// Etape 3  : 
 #include <SoftwareSerial.h>
-
+const int MTR=30;  // Nombre de Rangé de la matrice
 
 void setup() {
   // Initialisation les serials ( Moniteur, Gsm , Nextion et HC12)
@@ -46,7 +46,7 @@ void getDataNextion(){
 
 // Convertir de string à matrice
 void strToMatrix(String str){
-  byte Matrix[30];
+  byte Matrix[MTR];
   int i=0;
   while(i<str.length()){
       if(str[i]==60){
@@ -67,15 +67,47 @@ void strToMatrix(String str){
   }
 }
 // Analyse, Commutation des données et Effectuation des actions.
-void switchData(byte Matrix[30]){
+void switchData(byte Matrix[MTR]){
   switch(Matrix[0]){
     case 49: // Byte : int + 48.
             // Inclure les données de paramétrage.
             Serial.println("Inclure les données de paramétrage.");
+            if(Matrix[1]==49){
+              // les fonction de paramétrage.
+              if(Matrix[2]==49){
+                setObj(Matrix);
+              }else if(Matrix[2]==50){
+                setRelation(Matrix);
+              }else if(Matrix[2]==50){
+                setSec(Matrix);
+              }else {
+                // Erreur.
+              Error();
+              }
+            }else if(Matrix[1]==50){
+              // Mettre les informations.
+              if(Matrix[2]==49){
+                setNumPhone(Matrix);
+              }else if(Matrix[2]==50){
+                setPIN(Matrix);
+              }else {
+                Error();
+              }
+            }else {
+              // Erreur.
+              Error();
+            }
             break;
     case 50:
              // Définir les relations entre les objects + les conditions + les secteurs.
             Serial.println("Définir les relations entre les objects + les conditions.");
+            if(Matrix[1]==49){
+              actionObj(Matrix); 
+            }else if(Matrix[1]==50){
+              progObj(Matrix);
+            }else {
+              Error();
+            }
             break;
     case 51:
              // Effectuer une action sur un objet.
@@ -84,6 +116,7 @@ void switchData(byte Matrix[30]){
     case 52:
              // Fonctions liées à l'horloge.
             Serial.println("Fonctions liées à l'horloge.");
+            
             break;
     case 53:
              // mettre les données à propos système.
@@ -105,4 +138,22 @@ void switchData(byte Matrix[30]){
     default:
             break;
   }
+}
+/////// PARTIE 1 : Mettre les données en EEPROM.
+/// CONFIGURATION.
+//Mettre le numbres , numéro et la puissance de chaque objets.
+void setObj(byte Matrix[MTR]){}
+void setRelation(byte Matrix[MTR]){}
+void setSec(byte Matrix[MTR]){}
+//Mettre les données de client
+void setNumPhone(byte Matrix[MTR]){}
+void setPIN(byte Matrix[MTR]){}
+/////// PARTIE 2 : Démarrage , Arrer des objets ou mettre un programme de démarrage.
+/// Démarrage / Arret 
+void actionObj(byte Matrix[MTR]){}
+// Mettre un programme de démarrage.
+void progObj(byte Matrix[MTR]){}
+// PS : à cette fonction Il sera des prototypes pour traiter et afficher les erreurs.
+void Error(){
+  Serial.println("Il y a une Erreur ou ce choix n'existe pas");
 }
