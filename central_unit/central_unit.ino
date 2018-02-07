@@ -1,5 +1,5 @@
 // le 07/02/2019 Agadir
-// Etape 4  : les fonction pricipaux des commutations
+// Etape 5  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 const int MTR=30;  // Nombre de Rangé de la matrice
@@ -200,8 +200,15 @@ void setObj(byte Matrix[MTR]){}
 void setRelation(byte Matrix[MTR]){}
 void setSec(byte Matrix[MTR]){}
 //Mettre les données de client
-void setNumPhone(byte Matrix[MTR]){}
-void setPIN(byte Matrix[MTR]){}
+void setNumPhone(byte Matrix[MTR])
+  {
+    
+  }
+void setPIN(byte Matrix[MTR])
+  {
+    int value = Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6];
+    EEPROM.put(2, value);
+  }
 /////// PARTIE 2 : Démarrage , Arrer des objets ou mettre un programme de démarrage.
 /// Démarrage / Arret 
 void actionObj(byte Matrix[MTR]){}
@@ -238,7 +245,24 @@ void setDelay(byte Matrix[MTR]){}
 void tryProto(byte Matrix[MTR]){}
 void sysLock(byte Matrix[MTR]){}
 ///////////////////////////////
+////////////////// les fonctions EEPROM
+////// Mettre des valeurs 
+void Virginity(int value ){
+  EEPROM[0]=value;
+}
 
+
+
+////////////////// les fonctions du vérification
+///// fonction pour vérifier 
+bool checkVirginity(){
+  int value=EEPROM[0];
+  if(value==1){
+    return true;
+  }else if(value==2){
+    return false;
+  }
+}
 void Error(){
   Serial.println("Il y a une Erreur ou ce choix n'existe pas");
 }
