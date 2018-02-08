@@ -2,27 +2,7 @@
 // Etape 6  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
-// Déclaration des constantes.
-const int MTR=20;  // Nombre de Rangé de la matrice
-const int AD_VIRGINITY=0;
-const int AD_VALIDITY=5;
-const int AD_PIN=18;
-const int AD_PHONE=20;
-const int AD_NUMBER_OBJ=38;
-const int AD_SETTING_SMS=50;
-const int AD_SECTOR=62;
-const int AD_RELATION_OBJ=134; //206
-// Déclaration des variables.
-String Phone="669600729"; // numéro de Tel.
-int sysTime=9999;
-int PINcode=1234;
-// Déclaration des matrices.
-int numberPhone[9]={NULL};        // nombre des objets de systeme
-int numberObj[6]={NULL};        // nombre des objets de systeme
-int settingSMS[6]={NULL};        // nombre des objets de systeme
-int objState[5][15]={NULL};        // les etates des objets
-int sector[6][6]={NULL};        // les secteurs 
-int relationObj[6][6]={NULL}; // les relation entre les pompes de refoulements et les vannes
+const int MTR=30;  // Nombre de Rangé de la matrice
 
 void setup() {
   // Initialisation les serials ( Moniteur, Gsm , Nextion et HC12)
@@ -30,18 +10,9 @@ void setup() {
   Serial1.begin(9600);
   Serial2.begin(9600);
   Serial3.begin(9600);
-  while(!checkValidity()){}
-  while(!checkVirginity()){
-    Serial.println("NO");
-    delay(5000);
-    Virginity(1);
-  }
-  while(!loadingData()){
-    Serial.println("Il y a un problème de téléchargement.");
-    delay(5000);
-  }
-  Serial.println("start-up");
-  showRAM();
+  
+  
+
 }
 
 void loop() {
@@ -96,7 +67,10 @@ void strToMatrix(String str){
             i++;
          }
          //Commutation des données.
-         showMatrix(Matrix,20);
+         for(int j=0;j<MTR;j++){
+         Serial.print(" ");
+         Serial.print(Matrix[j]);
+         }
          switchData(Matrix);
          memset(Matrix,0,sizeof(Matrix));
       }
@@ -200,8 +174,7 @@ void switchData(int Matrix[MTR]){
     case 6:
              // Réinitialisation du système 128
             Serial.println("Réinitialisation du système.");
-            if(Matrix[2]==2 && Matrix[2]==2 && Matrix[2]==2){
-               Serial.println("en cours: ");
+            if(Matrix[1]==1 && Matrix[2]==2 && Matrix[3]==8){
               restSys();
             }
             break;
@@ -212,8 +185,7 @@ void switchData(int Matrix[MTR]){
               if(Matrix[2]==1){
                 setDelay(Matrix);
               }else if(Matrix[2]==2){
-                showMemory();
-                //tryProto(Matrix);
+                tryProto(Matrix);
               }else if(Matrix[2]==3){
                 sysLock(Matrix);
               }else {
@@ -229,58 +201,18 @@ void switchData(int Matrix[MTR]){
 /////// PARTIE 1 : Mettre les données en EEPROM.
 /// CONFIGURATION.
 //Mettre le numbres , numéro et la puissance de chaque objets.
-void setObj(int Matrix[MTR])
-  {
-    Serial.println("Mettre le nombre des objets");
-    showMatrix(Matrix,15);
-    int j=0;
-    for(int i=0;i<6;i++){
-      numberObj[i]=toDec(Matrix[j+3],Matrix[j+4]);
-      j+=2;
-    }
-    EEPROM.put(AD_NUMBER_OBJ,numberObj);
-    showMatrix(numberObj,6);
-  }
-void setRelation(int Matrix[MTR])
-  {
-    Serial.println("Mettre les relations");
-    showMatrix(Matrix,15);
-    int j=0;
-    for(int i=0;i<6;i++){
-      relationObj[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);
-      j+=2;
-    }
-    EEPROM.put(AD_RELATION_OBJ,relationObj);
-    showMatrix(relationObj);
-    }
-void setSec(int Matrix[MTR])
-  {
-    Serial.println("Mettre les secteurs.");
-    showMatrix(Matrix,15);
-    int j=0;
-    for(int i=0;i<6;i++){
-      sector[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);
-      j+=2;
-    }
-    EEPROM.put(AD_SECTOR,sector);
-    showMatrix(sector);
-  }
+void setObj(int Matrix[MTR]){}
+void setRelation(int Matrix[MTR]){}
+void setSec(int Matrix[MTR]){}
 //Mettre les données de client
 void setNumPhone(int Matrix[MTR])
   {
-    Serial.println("Mettre Numéro de Tel.");
-    showMatrix(Matrix,11);
-    for(int i=0;i<9;i++){
-      numberPhone[i]=Matrix[i+3];
-    }
-    Phone=toString(numberPhone);
-    EEPROM.put(AD_PHONE,numberPhone);
-    showMatrix(numberPhone,3);
+    
   }
 void setPIN(int Matrix[MTR])
   {
     int value = Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6];
-    EEPROM.put(AD_PIN, value);
+    EEPROM.put(2, value);
   }
 /////// PARTIE 2 : Démarrage , Arrer des objets ou mettre un programme de démarrage.
 /// Démarrage / Arret 
@@ -312,17 +244,7 @@ void pinSetting(int Matrix[MTR]){}
 //// les paramétre Mode de démarrage
 void modeSys(int Matrix[MTR]){}
 /////// PARTIE 6 : Réinitialisation du système
-void restSys()
-  {
-    for (int i = 0 ; i < EEPROM.length() ; i++) {
-    EEPROM.write(i, 0);
-    if(i%100==0){
-      Serial.print("-");
-    }
-  }
-  Serial.println();
-  Serial.println("le système a été réinitialisé");
-  }
+void restSys(){}
 /////// PARTIE 7 : Protection du système
 void setDelay(int Matrix[MTR]){}
 void tryProto(int Matrix[MTR]){}
@@ -333,24 +255,11 @@ void sysLock(int Matrix[MTR]){}
 void Virginity(int value ){
   EEPROM[0]=value;
 }
-// les données
-bool loadingData(){
-  EEPROM.get(AD_PIN,PINcode);
-  EEPROM.get(AD_PHONE,numberPhone);
-  Phone=toString(numberPhone);
-  EEPROM.get(AD_NUMBER_OBJ,numberObj);
-  EEPROM.get(AD_SETTING_SMS,settingSMS);
-  EEPROM.get(AD_SECTOR,sector);
-  EEPROM.get(AD_RELATION_OBJ,relationObj);
-  Serial.println("le chargement des données a été téléchargé");
-  return true;
-}
 
 
 
 ////////////////// les fonctions du vérification
 ///// fonction pour vérifier 
-  //  Vérification la virginité.
 bool checkVirginity(){
   int value=EEPROM[0];
   if(value==1){
@@ -359,121 +268,17 @@ bool checkVirginity(){
     return false;
   }
 }
-  //  Vérification la validité
-bool checkValidity(){
-  return true;
-}
-
-
-
-//les foncations du plugin
-int toDec(int o,int p){
-  int v = o*10+p;
-  Serial.print("V= ");
-  Serial.println(v);
-  return v;
-}
-String toString(int Matrix[9]){
-  String str="";
-  for(int i=0;i<9;i++)
-    str+=Matrix[i];
-  Serial.println(str);
-  return str; 
-}
 void Error(){
   Serial.println("Il y a une Erreur ou ce choix n'existe pas");
 }
 
 
-
-/////////////// fonction d'essai et d'affichage
-
-
-void showRAM(){
-  Serial.print("Numéro de Tel : ");
-  showMatrix(numberPhone,9);
-  Serial.println(Phone);
-  Serial.print("durée de vie : ");
-  Serial.println(sysTime);
-  Serial.print("PIN : ");
-  Serial.println(PINcode);
-  Serial.println("Nombre des Objects..");
-  showMatrix(numberObj,6);
-  Serial.println("les paramètres SMS..");
-  showMatrix(settingSMS,6);
-  Serial.println("Les secteurs : ");
-  showMatrix(sector);
-  Serial.println("les Relation :");
-  showMatrix(relationObj);
-}
-void showMemory(){
-  Serial.print("EEPROM length: ");
-  Serial.println(EEPROM.length());
-  int Matrix1[6];
-  int Matrix2[6][6];
-  int Matrix3[6][6];
-  String str="";
-  Serial.println("Matrice 1 : les nombres des objets");
-  EEPROM.get(AD_NUMBER_OBJ,Matrix1);
-  showMatrix(Matrix1,6);
-  Serial.println("Matrice 2 : les relatiions ");
-  EEPROM.get(AD_RELATION_OBJ,Matrix2);
-  showMatrix(Matrix2);
-  Serial.println("Matrice 3 : les secteurs");
-  EEPROM.get(AD_SECTOR,Matrix3);
-  showMatrix(Matrix3);
-  Serial.println("Numéro de Tel : ");
-  EEPROM.get(AD_PHONE,str);
-  delay(1000);
-  Serial.println(str);
-  
-}
-
-void showMatrix(int Matrix[20],int a){
-  
-    for(int j=0;j<a;j++){
+void showMatrix(int Matrix[30][30],int a,int b){
+  for(int i=0;i<a;i++){
+    for(int j=0;j<b;j++){
     Serial.print(" ");
-    Serial.print(Matrix[j]);
-     }
-    Serial.println();
-}
-
-void showMatrix(int Matrix[6][6]){
-  for(int i=0;i<6;i++){
-    for(int j=0;j<6;j++){
-    Serial.print("   ");
     Serial.print(Matrix[i][j]);
-     }
-    Serial.println();
   }
-  Serial.println("_______6x6________");
   Serial.println();
-}
-
-void showSize(){
-  int adresse=6;
-  adresse += sizeof(sysTime);
-  Serial.print("PIN ");
-  Serial.println(adresse+10);
-  adresse += sizeof(PINcode);
-  Serial.print("NumbrePhone ");
-  Serial.println(adresse+10);
-  adresse += sizeof(numberPhone);
-  Serial.print("numbreObje ");
-  Serial.println(adresse+10);
-  adresse += sizeof(numberObj);
-  Serial.print("settingSMS ");
-  Serial.println(adresse+10);
-  adresse += sizeof(settingSMS);
-  Serial.print("sector ");
-  Serial.println(adresse+10);
-  adresse += sizeof(sector);
-  Serial.print("relationObj ");
-  Serial.println(adresse+10);
-  adresse += sizeof(relationObj);
-  Serial.print("objState ");
-  Serial.println(adresse+10);
-  adresse += sizeof(objState);
-  Serial.print("Next ");
-  Serial.println(adresse+10);
+  }
 }
