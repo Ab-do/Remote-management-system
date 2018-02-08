@@ -1,8 +1,28 @@
-// le 07/02/2019 Agadir
-// Etape 5  : 
+// le 08/02/2019 Agadir
+// Etape 6  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
-const int MTR=30;  // Nombre de Rangé de la matrice
+// Déclaration des constantes.
+const int MTR=20;  // Nombre de Rangé de la matrice
+const int AD_VIRGINITY=0;
+const int AD_VALIDITY=5;
+const int AD_PIN=18;
+const int AD_PHONE=20;
+const int AD_NUMBER_OBJ=38;
+const int AD_SETTING_SMS=50;
+const int AD_SECTOR=62;
+const int AD_RELATION_OBJ=134; //206
+// Déclaration des variables.
+String Phone="669600729"; // numéro de Tel.
+int sysTime=9999;
+int PINcode=1234;
+// Déclaration des matrices.
+int numberPhone[9]={NULL};        // nombre des objets de systeme
+int numberObj[6]={NULL};        // nombre des objets de systeme
+int settingSMS[6]={NULL};        // nombre des objets de systeme
+int objState[5][15]={NULL};        // les etates des objets
+int sector[6][6]={NULL};        // les secteurs 
+int relationObj[6][6]={NULL}; // les relation entre les pompes de refoulements et les vannes
 
 void setup() {
   // Initialisation les serials ( Moniteur, Gsm , Nextion et HC12)
@@ -10,9 +30,18 @@ void setup() {
   Serial1.begin(9600);
   Serial2.begin(9600);
   Serial3.begin(9600);
-  
-  
-
+  while(!checkValidity()){}
+  while(!checkVirginity()){
+    Serial.println("NO");
+    delay(5000);
+    Virginity(1);
+  }
+  while(!loadingData()){
+    Serial.println("Il y a un problème de téléchargement.");
+    delay(5000);
+  }
+  Serial.println("start-up");
+  showRAM();
 }
 
 void loop() {
@@ -55,18 +84,19 @@ void getDataHc(){
 
 // Convertir de string à matrice
 void strToMatrix(String str){
-  byte Matrix[MTR];
+  int Matrix[MTR]={0};
   int i=0;
   while(i<str.length()){
       if(str[i]==60){
         i++;
         int j=0;
           while(str[i]!=62){
-            Matrix[j]=str[i];
+            Matrix[j]=str[i]-48;
             j++; 
             i++;
          }
          //Commutation des données.
+         showMatrix(Matrix,20);
          switchData(Matrix);
          memset(Matrix,0,sizeof(Matrix));
       }
@@ -76,28 +106,29 @@ void strToMatrix(String str){
   }
 }
 // Analyse, Commutation des données et Effectuation des actions.
-void switchData(byte Matrix[MTR]){
+void switchData(int Matrix[MTR]){
+  Serial.println("SWITCH");
   switch(Matrix[0]){
-    case 49: // Byte : int + 48.
+    case 1: // int : int + 48.
             // Inclure les données de paramétrage.
             Serial.println("Inclure les données de paramétrage.");
-            if(Matrix[1]==49){
+            if(Matrix[1]==1){
               // les fonction de paramétrage.
-              if(Matrix[2]==49){
+              if(Matrix[2]==1){
                 setObj(Matrix);
-              }else if(Matrix[2]==50){
+              }else if(Matrix[2]==2){
                 setRelation(Matrix);
-              }else if(Matrix[2]==50){
+              }else if(Matrix[2]==3){
                 setSec(Matrix);
               }else {
                 // Erreur.
               Error();
               }
-            }else if(Matrix[1]==50){
+            }else if(Matrix[1]==2){
               // Mettre les informations.
-              if(Matrix[2]==49){
+              if(Matrix[2]==1){
                 setNumPhone(Matrix);
-              }else if(Matrix[2]==50){
+              }else if(Matrix[2]==2){
                 setPIN(Matrix);
               }else {
                 Error();
@@ -107,45 +138,45 @@ void switchData(byte Matrix[MTR]){
               Error();
             }
             break;
-    case 50:
+    case 2:
              //  // Effectuer une action sur un objet.
             Serial.println("// Effectuer une action sur un objet.");
-            if(Matrix[1]==49){
+            if(Matrix[1]==1){
               actionObj(Matrix); 
-            }else if(Matrix[1]==50){
+            }else if(Matrix[1]==2){
               progObj(Matrix);
             }else {
               Error();
             }
             break;
-    case 51:
+    case 3:
              // Fonctions liées à l'horloge.
             Serial.println("// Fonctions liées à l'horloge.");
-            if(Matrix[1]==49){ // Réglage la date et l'heure
+            if(Matrix[1]==1){ // Réglage la date et l'heure
               setTime(Matrix);
-            }else if(Matrix[1]==50) { // Demmande la date et l'heure
+            }else if(Matrix[1]==2) { // Demmande la date et l'heure
               getTime();
             }else {
               Error();
             }
             break;
-    case 52:
+    case 4:
              // mettre les données à propos système.
             Serial.println("// mettre les données à propos système.");
             switch(Matrix[1]){
-              case 49:
+              case 1:
                 showHist(Matrix[2]);
               break;
-              case 50:
+              case 2:
                 showState();
               break;
-              case 51:
+              case 3:
                 showProg(Matrix[2]);
               break;
-              case 52:
+              case 4:
                 getState(Matrix);
               break;
-              case 53:
+              case 5:
                 getAccess(Matrix);
               break;
               default:
@@ -153,35 +184,37 @@ void switchData(byte Matrix[MTR]){
               break;
             }
             break;
-    case 53:
+    case 5:
              // Paramétre
             Serial.println("// Paramétre");
-            if (Matrix[1]==49){
+            if (Matrix[1]==1){
               smsSetting(Matrix);
-            }else if (Matrix[1]==50){
+            }else if (Matrix[1]==2){
               pinSetting(Matrix);
-            }else if (Matrix[1]==51){
+            }else if (Matrix[1]==3){
               modeSys(Matrix);
             }else {
               Error();
             }
             break;
-    case 54:
+    case 6:
              // Réinitialisation du système 128
             Serial.println("Réinitialisation du système.");
-            if(Matrix[1]==49 && Matrix[2]==50 && Matrix[3]==56){
+            if(Matrix[2]==2 && Matrix[2]==2 && Matrix[2]==2){
+               Serial.println("en cours: ");
               restSys();
             }
             break;
-    case 55:
+    case 7:
              // Protection du système.
             Serial.println("Protection du système.");
-            if(Matrix[1]==55){
-              if(Matrix[2]==49){
+            if(Matrix[1]==4){
+              if(Matrix[2]==1){
                 setDelay(Matrix);
-              }else if(Matrix[2]==50){
-                tryProto(Matrix);
-              }else if(Matrix[2]==51){
+              }else if(Matrix[2]==2){
+                showMemory();
+                //tryProto(Matrix);
+              }else if(Matrix[2]==3){
                 sysLock(Matrix);
               }else {
                 Error();
@@ -196,65 +229,128 @@ void switchData(byte Matrix[MTR]){
 /////// PARTIE 1 : Mettre les données en EEPROM.
 /// CONFIGURATION.
 //Mettre le numbres , numéro et la puissance de chaque objets.
-void setObj(byte Matrix[MTR]){}
-void setRelation(byte Matrix[MTR]){}
-void setSec(byte Matrix[MTR]){}
-//Mettre les données de client
-void setNumPhone(byte Matrix[MTR])
+void setObj(int Matrix[MTR])
   {
-    
+    Serial.println("Mettre le nombre des objets");
+    showMatrix(Matrix,15);
+    int j=0;
+    for(int i=0;i<6;i++){
+      numberObj[i]=toDec(Matrix[j+3],Matrix[j+4]);
+      j+=2;
+    }
+    EEPROM.put(AD_NUMBER_OBJ,numberObj);
+    showMatrix(numberObj,6);
   }
-void setPIN(byte Matrix[MTR])
+void setRelation(int Matrix[MTR])
+  {
+    Serial.println("Mettre les relations");
+    showMatrix(Matrix,15);
+    int j=0;
+    for(int i=0;i<6;i++){
+      relationObj[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);
+      j+=2;
+    }
+    EEPROM.put(AD_RELATION_OBJ,relationObj);
+    showMatrix(relationObj);
+    }
+void setSec(int Matrix[MTR])
+  {
+    Serial.println("Mettre les secteurs.");
+    showMatrix(Matrix,15);
+    int j=0;
+    for(int i=0;i<6;i++){
+      sector[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);
+      j+=2;
+    }
+    EEPROM.put(AD_SECTOR,sector);
+    showMatrix(sector);
+  }
+//Mettre les données de client
+void setNumPhone(int Matrix[MTR])
+  {
+    Serial.println("Mettre Numéro de Tel.");
+    showMatrix(Matrix,11);
+    for(int i=0;i<9;i++){
+      numberPhone[i]=Matrix[i+3];
+    }
+    Phone=toString(numberPhone);
+    EEPROM.put(AD_PHONE,numberPhone);
+    showMatrix(numberPhone,3);
+  }
+void setPIN(int Matrix[MTR])
   {
     int value = Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6];
-    EEPROM.put(2, value);
+    EEPROM.put(AD_PIN, value);
   }
 /////// PARTIE 2 : Démarrage , Arrer des objets ou mettre un programme de démarrage.
 /// Démarrage / Arret 
-void actionObj(byte Matrix[MTR]){}
+void actionObj(int Matrix[MTR]){}
 // Mettre un programme de démarrage.
-void progObj(byte Matrix[MTR]){}
+void progObj(int Matrix[MTR]){}
 // PS : à cette fonction Il sera des prototypes pour traiter et afficher les erreurs.
 /////// PARTIE 3 : les fonction d'horloge
 /// Réglage la date et l'heure.
-void setTime(byte Matrix[MTR]){}
+void setTime(int Matrix[MTR]){}
 //  Obtenir la date et l'heure
 void getTime(){}
 ////// PARTIE 4 : les données de NEXTION
 //// Historique
-void showHist(byte Page){}
+void showHist(int Page){}
 //// Etats des objets
 void showState(){}
 ///  Programme de démarrage
-void showProg(byte Page){}
+void showProg(int Page){}
 //// Obtenir l'Etat d'un objet
-void getState(byte Matrix[MTR]){}
+void getState(int Matrix[MTR]){}
 //// dommander l'acès de paramétrage
-void getAccess(byte Matrix[MTR]){}
+void getAccess(int Matrix[MTR]){}
 //////// PARTIE 5 : paramétre
 //// les paramétre des SMS
-void smsSetting(byte Matrix[MTR]){}
+void smsSetting(int Matrix[MTR]){}
 //// les paramétre de PIN
-void pinSetting(byte Matrix[MTR]){}
+void pinSetting(int Matrix[MTR]){}
 //// les paramétre Mode de démarrage
-void modeSys(byte Matrix[MTR]){}
+void modeSys(int Matrix[MTR]){}
 /////// PARTIE 6 : Réinitialisation du système
-void restSys(){}
+void restSys()
+  {
+    for (int i = 0 ; i < EEPROM.length() ; i++) {
+    EEPROM.write(i, 0);
+    if(i%100==0){
+      Serial.print("-");
+    }
+  }
+  Serial.println();
+  Serial.println("le système a été réinitialisé");
+  }
 /////// PARTIE 7 : Protection du système
-void setDelay(byte Matrix[MTR]){}
-void tryProto(byte Matrix[MTR]){}
-void sysLock(byte Matrix[MTR]){}
+void setDelay(int Matrix[MTR]){}
+void tryProto(int Matrix[MTR]){}
+void sysLock(int Matrix[MTR]){}
 ///////////////////////////////
 ////////////////// les fonctions EEPROM
 ////// Mettre des valeurs 
 void Virginity(int value ){
   EEPROM[0]=value;
 }
+// les données
+bool loadingData(){
+  EEPROM.get(AD_PIN,PINcode);
+  EEPROM.get(AD_PHONE,numberPhone);
+  Phone=toString(numberPhone);
+  EEPROM.get(AD_NUMBER_OBJ,numberObj);
+  EEPROM.get(AD_SETTING_SMS,settingSMS);
+  EEPROM.get(AD_SECTOR,sector);
+  EEPROM.get(AD_RELATION_OBJ,relationObj);
+  Serial.println("le chargement des données a été téléchargé");
+  return true;
+}
 
 
 
 ////////////////// les fonctions du vérification
 ///// fonction pour vérifier 
+  //  Vérification la virginité.
 bool checkVirginity(){
   int value=EEPROM[0];
   if(value==1){
@@ -263,6 +359,121 @@ bool checkVirginity(){
     return false;
   }
 }
+  //  Vérification la validité
+bool checkValidity(){
+  return true;
+}
+
+
+
+//les foncations du plugin
+int toDec(int o,int p){
+  int v = o*10+p;
+  Serial.print("V= ");
+  Serial.println(v);
+  return v;
+}
+String toString(int Matrix[9]){
+  String str="";
+  for(int i=0;i<9;i++)
+    str+=Matrix[i];
+  Serial.println(str);
+  return str; 
+}
 void Error(){
   Serial.println("Il y a une Erreur ou ce choix n'existe pas");
+}
+
+
+
+/////////////// fonction d'essai et d'affichage
+
+
+void showRAM(){
+  Serial.print("Numéro de Tel : ");
+  showMatrix(numberPhone,9);
+  Serial.println(Phone);
+  Serial.print("durée de vie : ");
+  Serial.println(sysTime);
+  Serial.print("PIN : ");
+  Serial.println(PINcode);
+  Serial.println("Nombre des Objects..");
+  showMatrix(numberObj,6);
+  Serial.println("les paramètres SMS..");
+  showMatrix(settingSMS,6);
+  Serial.println("Les secteurs : ");
+  showMatrix(sector);
+  Serial.println("les Relation :");
+  showMatrix(relationObj);
+}
+void showMemory(){
+  Serial.print("EEPROM length: ");
+  Serial.println(EEPROM.length());
+  int Matrix1[6];
+  int Matrix2[6][6];
+  int Matrix3[6][6];
+  String str="";
+  Serial.println("Matrice 1 : les nombres des objets");
+  EEPROM.get(AD_NUMBER_OBJ,Matrix1);
+  showMatrix(Matrix1,6);
+  Serial.println("Matrice 2 : les relatiions ");
+  EEPROM.get(AD_RELATION_OBJ,Matrix2);
+  showMatrix(Matrix2);
+  Serial.println("Matrice 3 : les secteurs");
+  EEPROM.get(AD_SECTOR,Matrix3);
+  showMatrix(Matrix3);
+  Serial.println("Numéro de Tel : ");
+  EEPROM.get(AD_PHONE,str);
+  delay(1000);
+  Serial.println(str);
+  
+}
+
+void showMatrix(int Matrix[20],int a){
+  
+    for(int j=0;j<a;j++){
+    Serial.print(" ");
+    Serial.print(Matrix[j]);
+     }
+    Serial.println();
+}
+
+void showMatrix(int Matrix[6][6]){
+  for(int i=0;i<6;i++){
+    for(int j=0;j<6;j++){
+    Serial.print("   ");
+    Serial.print(Matrix[i][j]);
+     }
+    Serial.println();
+  }
+  Serial.println("_______6x6________");
+  Serial.println();
+}
+
+void showSize(){
+  int adresse=6;
+  adresse += sizeof(sysTime);
+  Serial.print("PIN ");
+  Serial.println(adresse+10);
+  adresse += sizeof(PINcode);
+  Serial.print("NumbrePhone ");
+  Serial.println(adresse+10);
+  adresse += sizeof(numberPhone);
+  Serial.print("numbreObje ");
+  Serial.println(adresse+10);
+  adresse += sizeof(numberObj);
+  Serial.print("settingSMS ");
+  Serial.println(adresse+10);
+  adresse += sizeof(settingSMS);
+  Serial.print("sector ");
+  Serial.println(adresse+10);
+  adresse += sizeof(sector);
+  Serial.print("relationObj ");
+  Serial.println(adresse+10);
+  adresse += sizeof(relationObj);
+  Serial.print("objState ");
+  Serial.println(adresse+10);
+  adresse += sizeof(objState);
+  Serial.print("Next ");
+  Serial.println(adresse+10);
 }
