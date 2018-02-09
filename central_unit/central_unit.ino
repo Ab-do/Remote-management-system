@@ -1,14 +1,7 @@
 // le 09/02/2019 Agadir
-// Etape 11  : 
+// Etape 9  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
-#include <DS3231.h>
-#include <Wire.h>
-//Définition RTC
-DS3231 Clock;
-bool Century=false;
-bool h12;
-bool PM;
 // Déclaration des constantes.
 const int MTR=20;  // Nombre de Rangé de la matrice
 const int AD_VIRGINITY=0;
@@ -19,20 +12,17 @@ const int AD_NUMBER_OBJ=38;
 const int AD_SETTING_SMS=50;
 const int AD_SECTOR=62;
 const int AD_RELATION_OBJ=134; //206
-const int NUMBER_OBJ=5;
-const int NUMBER_MAX=15;
 // Déclaration des variables.
 String Phone="669600729"; // numéro de Tel.
 int sysTime=9999;
 int PINcode=1234;
-byte Hour,Minute,Second,Date,Month,Year;
 // Déclaration des matrices.
-int numberPhone[9]={0};        // nombre des objets de systeme
-int numberObj[6]={0};        // nombre des objets de systeme
-int settingSMS[6]={0};        // nombre des objets de systeme
-int objState[NUMBER_OBJ][NUMBER_MAX]={0};        // les etates des objets
-int sector[6][6]={0};        // les secteurs 
-int relationObj[6][6]={0}; // les relation entre les pompes de refoulements et les vannes
+int numberPhone[9]={NULL};        // nombre des objets de systeme
+int numberObj[6]={NULL};        // nombre des objets de systeme
+int settingSMS[6]={NULL};        // nombre des objets de systeme
+int objState[5][15]={NULL};        // les etates des objets
+int sector[6][6]={NULL};        // les secteurs 
+int relationObj[6][6]={NULL}; // les relation entre les pompes de refoulements et les vannes
 
 void setup() {
   // Initialisation les serials ( Moniteur, Gsm , Nextion et HC12)
@@ -40,7 +30,6 @@ void setup() {
   Serial1.begin(9600);
   Serial2.begin(9600);
   Serial3.begin(9600);
-  Wire.begin();
   while(!checkValidity()){}
   while(!checkVirginity()){
     Serial.println("NO");
@@ -56,8 +45,7 @@ void setup() {
 }
 
 void loop() {
-  getTime(); // Mettre le temps à jour. 
-  getDataSerial(); // ausculter les données qui obtient de moniteur série.
+  getDataSerial();
 }
 //********* OBTEBNIR LES DONNEES
 // Obtenir des données de Serial
@@ -233,11 +221,7 @@ void switchData(int Matrix[MTR]){
               }
             }
             break;
-     case 8:
-         if(Matrix[1]==1){
-          setState(Matrix);
-         }
-     break;
+
     default:
             break;
   }
@@ -306,17 +290,9 @@ void progObj(int Matrix[MTR]){}
 // PS : à cette fonction Il sera des prototypes pour traiter et afficher les erreurs.
 /////// PARTIE 3 : les fonction d'horloge
 /// Réglage la date et l'heure.
-void setTime(int Matrix[MTR]){
-  //<312205191045>
-    Clock.setDate(toDec(Matrix[2],Matrix[3]));
-    Clock.setMonth(toDec(Matrix[4],Matrix[5]));
-    Clock.setYear(toDec(Matrix[6],Matrix[7]));
-    Clock.setHour(toDec(Matrix[8],Matrix[9]));
-    Clock.setMinute(toDec(Matrix[10],Matrix[11]));
-    Clock.setSecond(0);
-  }
-//  Obtenir la date et l'heure to Nextion
-void showTime(){}
+void setTime(int Matrix[MTR]){}
+//  Obtenir la date et l'heure
+void getTime(){}
 ////// PARTIE 4 : les données de NEXTION
 //// Historique
 void showHist(int Page){}
@@ -342,19 +318,6 @@ void smsSetting(int Matrix[MTR])
     EEPROM.put(AD_SETTING_SMS,settingSMS);
     showMatrix(settingSMS,6);
       }
-/////////// PARTIE 6 les etats
-void setState(int Matrix[MTR]){
-  if(Matrix[1]<=NUMBER_OBJ && toDec(Matrix[2],Matrix[3])<=NUMBER_MAX){
-    Serial.print("L'Etat : ");
-    Serial.print(" L'objet de type :");
-    Serial.print(Matrix[1]);
-    Serial.print(" numéro : ");
-    Serial.print(toDec(Matrix[2],Matrix[3]));
-    Serial.print(" Etat : ");
-    Serial.println(Matrix[1]);
-    objState[Matrix[1]][toDec(Matrix[2],Matrix[3])]=Matrix[5];
-  }
-}
 //// les paramétre de PIN
 void pinSetting(int Matrix[MTR]){}
 //// les paramétre Mode de démarrage
@@ -411,56 +374,14 @@ bool checkVirginity(){
 bool checkValidity(){
   return true;
 }
-/////////////// NEXTION
-// Mettre les données à Nextion 
-void setDataNextion(String string,String val) {
-  delay(10);
-  Serial2.write(0xff);
-  Serial2.write(0xff); 
-  Serial2.write(0xff);
-  string.concat(val);
-  for (int i = 0; i < string.length(); i++)
-  {
-    Serial2.write(string[i]); 
-  }
-  Serial2.write(0xff); 
-  Serial2.write(0xff); 
-  Serial2.write(0xff);
-
-}
-// Affiche les informations et les erreurs.
-void popupMessage(String msg){
-  
-}
-///////////////// GSM 
-///// Envoie des notifications et des informations par SMS.
-void sendSMS(String outMessage,int validity){
-  Serial.print("SMS: ");
-  Serial.println(outMessage);
-  if(validity==1){
-  Serial1.print("AT+CMGF=1\r");
-  delay(500);
-  if(Phone=="+212000000000"){
-    Phone="+212770509044";
-  }
-  Serial1.println("AT + CMGS= \"" + Phone +"\"" );
-  delay(500);
-  Serial1.println(outMessage);
-  delay(500);
-  Serial1.write((char)26); //ctrl+z
-  delay(500);
-  Serial1.println("AT+CLTS=1");
-  Serial1.println("AT+CCLK?");
-  }
-}
 
 
 
-
-///////les foncations du plugin
-///
+//les foncations du plugin
 int toDec(int o,int p){
   int v = o*10+p;
+  Serial.print("V= ");
+  Serial.println(v);
   return v;
 }
 String toString(int Matrix[9]){
@@ -470,18 +391,15 @@ String toString(int Matrix[9]){
   Serial.println(str);
   return str; 
 }
-void getTime(){
-  Year=Clock.getYear();
-  Month=Clock.getMonth(Century);
-  Date=Clock.getDate();
-  Hour = Clock.getHour(h12, PM);
-  Minute= Clock.getMinute();
-  Second= Clock.getSecond();
-}
 void Error(){
   Serial.println("Il y a une Erreur ou ce choix n'existe pas");
 }
+
+
+
 /////////////// fonction d'essai et d'affichage
+
+
 void showRAM(){
   Serial.print("Numéro de Tel : ");
   showMatrix(numberPhone,9);
@@ -498,19 +416,6 @@ void showRAM(){
   showMatrix(sector);
   Serial.println("les Relation :");
   showMatrix(relationObj);
-  delay(1000);
-  getTime();
-  Serial.print(Date);
-  Serial.print("-");
-  Serial.print(Month);
-  Serial.print("-");
-  Serial.print(Year);
-  Serial.print(" ");
-  Serial.print(Hour); //24-hr
-  Serial.print(":");
-  Serial.print(Minute);
-  Serial.print(":");
-  Serial.println(Second);
 }
 void showMemory(){
   Serial.print("EEPROM length: ");
