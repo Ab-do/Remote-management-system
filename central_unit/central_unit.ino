@@ -1,5 +1,5 @@
 // le 09/02/2019 Agadir
-// Etape 9  : 
+// Etape 10  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 // Déclaration des constantes.
@@ -290,7 +290,9 @@ void progObj(int Matrix[MTR]){}
 // PS : à cette fonction Il sera des prototypes pour traiter et afficher les erreurs.
 /////// PARTIE 3 : les fonction d'horloge
 /// Réglage la date et l'heure.
-void setTime(int Matrix[MTR]){}
+void setTime(int Matrix[MTR]){
+  
+  }
 //  Obtenir la date et l'heure
 void getTime(){}
 ////// PARTIE 4 : les données de NEXTION
@@ -374,14 +376,56 @@ bool checkVirginity(){
 bool checkValidity(){
   return true;
 }
+/////////////// NEXTION
+// Mettre les données à Nextion 
+void setDataNextion(String string,String val) {
+  delay(10);
+  Serial2.write(0xff);
+  Serial2.write(0xff); 
+  Serial2.write(0xff);
+  string.concat(val);
+  for (int i = 0; i < string.length(); i++)
+  {
+    Serial2.write(string[i]); 
+  }
+  Serial2.write(0xff); 
+  Serial2.write(0xff); 
+  Serial2.write(0xff);
+
+}
+// Affiche les informations et les erreurs.
+void popupMessage(String msg){
+  
+}
+///////////////// GSM 
+///// Envoie des notifications et des informations par SMS.
+void sendSMS(String outMessage,int validity){
+  Serial.print("SMS: ");
+  Serial.println(outMessage);
+  if(validity==1){
+  Serial1.print("AT+CMGF=1\r");
+  delay(500);
+  if(Phone=="+212000000000"){
+    Phone="+212770509044";
+  }
+  Serial1.println("AT + CMGS= \"" + Phone +"\"" );
+  delay(500);
+  Serial1.println(outMessage);
+  delay(500);
+  Serial1.write((char)26); //ctrl+z
+  delay(500);
+  Serial1.println("AT+CLTS=1");
+  Serial1.println("AT+CCLK?");
+  }
+}
 
 
 
-//les foncations du plugin
+
+///////les foncations du plugin
+///
 int toDec(int o,int p){
   int v = o*10+p;
-  Serial.print("V= ");
-  Serial.println(v);
   return v;
 }
 String toString(int Matrix[9]){
@@ -394,12 +438,7 @@ String toString(int Matrix[9]){
 void Error(){
   Serial.println("Il y a une Erreur ou ce choix n'existe pas");
 }
-
-
-
 /////////////// fonction d'essai et d'affichage
-
-
 void showRAM(){
   Serial.print("Numéro de Tel : ");
   showMatrix(numberPhone,9);
