@@ -397,7 +397,7 @@ bool loadingData(){
   if(Mode==1){
     ModeSys=true;
     EEPROM[AD_MODE_SYS]=1;
-  }else if(Mode==2){
+  } else if(Mode==2){
     ModeSys=false;
     EEPROM[AD_MODE_SYS]=2;
   }
