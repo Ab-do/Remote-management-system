@@ -1,10 +1,18 @@
 // le 09/02/2019 Agadir
-// Etape 10  : 
+// Etape 11  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
+#include <DS3231.h>
+#include <Wire.h>
+//Définition RTC
+DS3231 Clock;
+bool Century=false;
+bool h12;
+bool PM;
 // Déclaration des constantes.
 const int MTR=20;  // Nombre de Rangé de la matrice
 const int AD_VIRGINITY=0;
+const int AD_MODE_SYS=1; // mode de démarrage
 const int AD_VALIDITY=5;
 const int AD_PIN=18;
 const int AD_PHONE=20;
@@ -12,17 +20,21 @@ const int AD_NUMBER_OBJ=38;
 const int AD_SETTING_SMS=50;
 const int AD_SECTOR=62;
 const int AD_RELATION_OBJ=134; //206
+const int NUMBER_OBJ=5;
+const int NUMBER_MAX=15;
 // Déclaration des variables.
 String Phone="669600729"; // numéro de Tel.
 int sysTime=9999;
 int PINcode=1234;
+byte Hour,Minute,Second,Date,Month,Year;
+boolean ModeSys=false;
 // Déclaration des matrices.
-int numberPhone[9]={NULL};        // nombre des objets de systeme
-int numberObj[6]={NULL};        // nombre des objets de systeme
-int settingSMS[6]={NULL};        // nombre des objets de systeme
-int objState[5][15]={NULL};        // les etates des objets
-int sector[6][6]={NULL};        // les secteurs 
-int relationObj[6][6]={NULL}; // les relation entre les pompes de refoulements et les vannes
+int numberPhone[9]={0};        // nombre des objets de systeme
+int numberObj[6]={0};        // nombre des objets de systeme
+int settingSMS[6]={0};        // nombre des objets de systeme
+int objState[NUMBER_OBJ][NUMBER_MAX]={0};        // les etates des objets
+int sector[6][6]={0};        // les secteurs 
+int relationObj[6][6]={0}; // les relation entre les pompes de refoulements et les vannes
 
 void setup() {
   // Initialisation les serials ( Moniteur, Gsm , Nextion et HC12)
@@ -30,6 +42,7 @@ void setup() {
   Serial1.begin(9600);
   Serial2.begin(9600);
   Serial3.begin(9600);
+  Wire.begin();
   while(!checkValidity()){}
   while(!checkVirginity()){
     Serial.println("NO");
@@ -45,7 +58,8 @@ void setup() {
 }
 
 void loop() {
-  getDataSerial();
+  getTime(); // Mettre le temps à jour. 
+  getDataSerial(); // ausculter les données qui obtient de moniteur série.
 }
 //********* OBTEBNIR LES DONNEES
 // Obtenir des données de Serial
@@ -221,7 +235,11 @@ void switchData(int Matrix[MTR]){
               }
             }
             break;
-
+     case 8:
+         if(Matrix[1]==1){
+          setState(Matrix);
+         }
+     break;
     default:
             break;
   }
@@ -291,10 +309,16 @@ void progObj(int Matrix[MTR]){}
 /////// PARTIE 3 : les fonction d'horloge
 /// Réglage la date et l'heure.
 void setTime(int Matrix[MTR]){
-  
+  //<312205191045>
+    Clock.setDate(toDec(Matrix[2],Matrix[3]));
+    Clock.setMonth(toDec(Matrix[4],Matrix[5]));
+    Clock.setYear(toDec(Matrix[6],Matrix[7]));
+    Clock.setHour(toDec(Matrix[8],Matrix[9]));
+    Clock.setMinute(toDec(Matrix[10],Matrix[11]));
+    Clock.setSecond(0);
   }
-//  Obtenir la date et l'heure
-void getTime(){}
+//  Obtenir la date et l'heure to Nextion
+void showTime(){}
 ////// PARTIE 4 : les données de NEXTION
 //// Historique
 void showHist(int Page){}
@@ -320,10 +344,31 @@ void smsSetting(int Matrix[MTR])
     EEPROM.put(AD_SETTING_SMS,settingSMS);
     showMatrix(settingSMS,6);
       }
+/////////// PARTIE 6 les etats
+void setState(int Matrix[MTR]){
+  if(Matrix[1]<=NUMBER_OBJ && toDec(Matrix[2],Matrix[3])<=NUMBER_MAX){
+    Serial.print("L'Etat : ");
+    Serial.print(" L'objet de type :");
+    Serial.print(Matrix[1]);
+    Serial.print(" numéro : ");
+    Serial.print(toDec(Matrix[2],Matrix[3]));
+    Serial.print(" Etat : ");
+    Serial.println(Matrix[1]);
+    objState[Matrix[1]][toDec(Matrix[2],Matrix[3])]=Matrix[5];
+  }
+}
 //// les paramétre de PIN
 void pinSetting(int Matrix[MTR]){}
 //// les paramétre Mode de démarrage
-void modeSys(int Matrix[MTR]){}
+void modeSys(int Matrix[MTR]){
+  if(Matrix[4]==1){
+    ModeSys=true;
+    EEPROM[AD_MODE_SYS]=1;
+  }else if(Matrix[4]==2){
+    ModeSys=false;
+    EEPROM[AD_MODE_SYS]=2;
+  }
+  }
 /////// PARTIE 6 : Réinitialisation du système
 void restSys()
   {
@@ -348,6 +393,14 @@ void Virginity(int value ){
 }
 // les données
 bool loadingData(){
+  byte Mode=EEPROM[AD_MODE_SYS];
+  if(Mode==1){
+    ModeSys=true;
+    EEPROM[AD_MODE_SYS]=1;
+  }else if(Mode==2){
+    ModeSys=false;
+    EEPROM[AD_MODE_SYS]=2;
+  }
   EEPROM.get(AD_PIN,PINcode);
   EEPROM.get(AD_PHONE,numberPhone);
   Phone=toString(numberPhone);
@@ -423,11 +476,11 @@ void sendSMS(String outMessage,int validity){
 
 
 ///////les foncations du plugin
-///
+/// Convertir deux nombres en un nombre décimal
 int toDec(int o,int p){
-  int v = o*10+p;
-  return v;
+  return o*10+p;
 }
+// Convertir une matrice en texte.
 String toString(int Matrix[9]){
   String str="";
   for(int i=0;i<9;i++)
@@ -435,6 +488,40 @@ String toString(int Matrix[9]){
   Serial.println(str);
   return str; 
 }
+//  Obtenir l'heure d'horloge 
+void getTime(){
+  Year=Clock.getYear();
+  Month=Clock.getMonth(Century);
+  Date=Clock.getDate();
+  Hour = Clock.getHour(h12, PM);
+  Minute= Clock.getMinute();
+  Second= Clock.getSecond();
+}
+/// Obtenir le nome de l'obejct et leur numéro.
+String getName(int Obj,int Number){
+  switch(Obj){
+    case 1 : //pim
+    return "POMPE IMMERGEE "+String(Number)+" ";
+    break;
+    case 2 : //pr
+    return "POMPE ROUF "+String(Number)+" ";
+    break;
+    case 3 : //Vn
+    return "VANNE "+String(Number)+" ";
+    break;
+    case 4 : //Vn
+    return "MELANGEUR "+String(Number)+" ";
+    break;
+    case 5 : //Vn
+    return "PMP ENGRIS "+String(Number)+" ";
+    break;
+    case 6 : //Vn
+    return "SECTEUR "+String(Number)+" ";
+    break;
+  }
+}
+
+
 void Error(){
   Serial.println("Il y a une Erreur ou ce choix n'existe pas");
 }
@@ -455,6 +542,19 @@ void showRAM(){
   showMatrix(sector);
   Serial.println("les Relation :");
   showMatrix(relationObj);
+  delay(1000);
+  getTime();
+  Serial.print(Date);
+  Serial.print("-");
+  Serial.print(Month);
+  Serial.print("-");
+  Serial.print(Year);
+  Serial.print(" ");
+  Serial.print(Hour); //24-hr
+  Serial.print(":");
+  Serial.print(Minute);
+  Serial.print(":");
+  Serial.println(Second);
 }
 void showMemory(){
   Serial.print("EEPROM length: ");
