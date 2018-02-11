@@ -10,65 +10,99 @@ Item::Item(int id,int number)
 }
 
 //Function Set Programme *********************************************
-void Item::setProg(int sHr,int sMin,int eHr,int eMin,int Type)
-{
-  int add;
-  int Matrix[5]={sHr,sMin,eHr,eMin,Type};
-  for(int i=0;i<5;i++){
-    Serial.println(Matrix[i]);
-  }
-  Serial.println("------------");
-  //sizeof(mT)
-  int k = this->NumberObj * sizeof(Matrix);
+
+void Item::updateProg(){
+  int k = this->NumberObj * sizeof(MatrixTime);
   Serial.println(k);
-  this->sH=sHr;
-  this->sM=sMin;
-  this->eH=eHr;
-  this->eM=eMin;
   switch((this->IdObj))
   {
        case 1:
               //pompe immerger
-              EEPROM.put(500+k,Matrix);
+              EEPROM.put(AD_PROG_PIM+k,MatrixTime);
               break;
        case 2:
               //pompe refolemnt
-              EEPROM.put(610+k,Matrix);
+              EEPROM.put(AD_PROG_PR+k,MatrixTime);
               break;
        case 3:
               //les vannes 
-              EEPROM.put(790+k,Matrix);
+              EEPROM.put(AD_PROG_VAN+k,MatrixTime);
               break;
        case 4:
               //les pompes angre
-              EEPROM.put(670+k,Matrix);
+              EEPROM.put(AD_PROG_MLG+k,MatrixTime);
               break;
        case 5:
               //Melengeur Angre
-              EEPROM.put(730+k,Matrix);
+              EEPROM.put(AD_PROG_ENG+k,MatrixTime);
               break;
        default:
               break;
   }
 }
-//********************************************
+void Item::setProg(int sHr,int sMin,int eHr,int eMin,int Type)
+{
+  //int Matrix[5]= {sHr,sMin,eHr,eMin,Type};
+ MatrixTime[0] =sHr+1;
+ MatrixTime[1] =sMin+1;
+ MatrixTime[2] =eHr+1;
+ MatrixTime[3] =eMin+1;
+ MatrixTime[4] =Type;
+ showMatrix(MatrixTime,5);
+ this->updateProg();
+  //sizeof(mT)
+  
+}
 
-//function Auto Runobj
+
+void Item::getProg(){
+  int k = this->NumberObj * sizeof(MatrixTime);
+  switch((this->IdObj))
+  {
+       case 1:
+              //pompe immerger
+              EEPROM.get(AD_PROG_PIM+k,MatrixTime);
+              break;
+       case 2:
+              //pompe refolemnt
+              EEPROM.get(AD_PROG_PR+k,MatrixTime);
+              break;
+       case 3:
+              //les vannes 
+              EEPROM.get(AD_PROG_VAN+k,MatrixTime);
+              break;
+       case 4:
+              //les pompes angre
+              EEPROM.get(AD_PROG_MLG+k,MatrixTime);
+              break;
+       case 5:
+              //Melengeur Angre
+              EEPROM.get(AD_PROG_ENG+k,MatrixTime);
+              break;
+       default:
+              break;
+  }
+  showMatrix(MatrixTime,5);
+}
+
 void Item::autoRun()
 {
   
-  if(Hour==this->sH && Minute==sM && Second==0)
+  if(Hour==this->MatrixTime[0]-1 && Minute==MatrixTime[1]-1 && Second==0)
       {
+        if(MatrixTime[5]==3){
+          MatrixTime[5]=4;
+          updateProg();
+        }
          this->runObj(1);
       }
-      else if(Hour==this->eH && Minute==eM && Second==0)
+      else if(Hour==this->MatrixTime[2]-1 && Minute==MatrixTime[3]-1 && Second==0)
       {
          this->runObj(2);
       }
 }
 
 
-//function  Run Objet
 bool Item::runObj(int Action)
 {
   if(Action==1){
@@ -78,11 +112,4 @@ bool Item::runObj(int Action)
     sendCmd(Cmd+Action);
   }
   
-}
-
-void static Item::setTime(int Hr,int Min,int Sec)
-{
-  Hour=Hr;
-  Minute=Min;
-  Second=Sec;
 }

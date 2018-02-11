@@ -1,5 +1,5 @@
-// le 09/02/2019 Agadir
-// Etape 11  : 
+// le 12/02/2019 Agadir
+// Etape 17  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -36,7 +36,15 @@ int settingSMS[6]={0};        // nombre des objets de systeme
 int objState[NUMBER_OBJ][NUMBER_MAX]={0};        // les etates des objets
 int sector[6][6]={0};        // les secteurs 
 int relationObj[6][6]={0}; // les relation entre les pompes de refoulements et les vannes
-
+Item pim[10]={{1,1},{1,2},{1,3},{1,4},{1,5},{1,6},{1,7},{1,8},{1,9},{1,10}};
+Item pr[5]={{2,1},{2,2},{2,3},{2,4},{2,5}};
+Item van[15]={{3,1},{3,2},{3,3},{3,4},{3,5},{3,6},{3,7},{3,8},{3,9},{3,10},{3,11},{3,12},{3,13},{3,14},{3,15}};
+Item mlg[5]={{4,1},{4,2},{4,3},{4,4},{4,5}};
+Item eng[5]={{5,1},{5,2},{5,3},{5,4},{5,5}};
+//Item pim1(1,1),pim2(2,1),pim3(3,1),pim4(4,1),pim5(5,1),pim6(6,1),pim7(7,1),pim8(8,1),pim9(9,1),pim10(10,1);
+//Item pr1(1,2),pr2(2,2),pr3(3,2),pr4(4,2),pr5(5,2),pr6(6,2),pr7(7,2);
+//Item v1(1,3),v2(2,3),v3(3,3),v4(4,3),v5(5,3),v6(6,3),v7(7,3),v8(8,3),v9(9,3),v10(10,3),v11(11,3),v12(12,3),v13(13,3),v14(14,3),v15(15,3),v16(16,3),
+//v17(17,3),v18(18,3),v19(19,3),v20(20,3),v21(21,3),v22(22,3),v23(23,3),v24(24,3),v25(25,3),v26(26,3),v27(27,3),v28(28,3),v29(29,3),v30(30,3);
 void setup() {
   // Initialisation les serials ( Moniteur, Gsm , Nextion et HC12)
   Serial.begin(9600);
@@ -56,6 +64,7 @@ void setup() {
   }
   Serial.println("start-up");
   showRAM();
+  pim[0].runObj(2);
 }
 
 void loop() {
@@ -300,9 +309,53 @@ void setPIN(int Matrix[MTR]){
   }
 /////// PARTIE 2 : Démarrage , Arrer des objets ou mettre un programme de démarrage.
 /// Démarrage / Arret 
-void actionObj(int Matrix[MTR]){}
+void actionObj(int Matrix[MTR]){
+  switch(Matrix[2]){
+    case 1:
+        pim[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    case 2:
+        pr[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    case 3:
+        van[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    case 4:
+        mlg[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    case 5:
+        eng[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    default:
+      Error();
+            break;
+  }
+  }
 // Mettre un programme de démarrage.
-void progObj(int Matrix[MTR]){}
+void progObj(int Matrix[MTR]){
+
+  switch(Matrix[2]){
+    case 1:
+        pim[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 2:
+        pr[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 3:
+        van[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 4:
+        mlg[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 5:
+        eng[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    default:
+      Error();
+            break;
+  }
+  
+  }
 // PS : à cette fonction Il sera des prototypes pour traiter et afficher les erreurs.
 /////// PARTIE 3 : les fonction d'horloge
 /// Réglage la date et l'heure.
@@ -467,7 +520,10 @@ void sendSMS(String outMessage,int validity){
   Serial1.println("AT+CCLK?");
   }
 }
-
+////////////////////////
+void runObj(){
+  
+}
 
 
 
@@ -492,6 +548,9 @@ void getTime(){
   Hour = Clock.getHour(h12, PM);
   Minute= Clock.getMinute();
   Second= Clock.getSecond();
+  Item::Hour=Hour;
+  Item::Minute=Minute;
+  Item::Second=Second;
 }
 /// Obtenir le nome de l'obejct et leur numéro.
 String getName(int Obj,int Number){
