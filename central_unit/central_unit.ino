@@ -4,6 +4,7 @@
 #include <EEPROM.h>
 #include <DS3231.h>
 #include <Wire.h>
+#include "Item.h"
 //Définition RTC
 DS3231 Clock;
 bool Century=false;
@@ -238,6 +239,8 @@ void switchData(int Matrix[MTR]){
      case 8:
          if(Matrix[1]==1){
           setState(Matrix);
+         }else {
+          showRAM();
          }
      break;
     default:
@@ -247,8 +250,7 @@ void switchData(int Matrix[MTR]){
 /////// PARTIE 1 : Mettre les données en EEPROM.
 /// CONFIGURATION.
 //Mettre le numbres , numéro et la puissance de chaque objets.
-void setObj(int Matrix[MTR])
-  {
+void setObj(int Matrix[MTR]){
     Serial.println("Mettre le nombre des objets");
     showMatrix(Matrix,15);
     int j=0;
@@ -259,8 +261,7 @@ void setObj(int Matrix[MTR])
     EEPROM.put(AD_NUMBER_OBJ,numberObj);
     showMatrix(numberObj,6);
   }
-void setRelation(int Matrix[MTR])
-  {
+void setRelation(int Matrix[MTR]){
     Serial.println("Mettre les relations");
     showMatrix(Matrix,15);
     int j=0;
@@ -271,8 +272,7 @@ void setRelation(int Matrix[MTR])
     EEPROM.put(AD_RELATION_OBJ,relationObj);
     showMatrix(relationObj);
     }
-void setSec(int Matrix[MTR])
-  {
+void setSec(int Matrix[MTR]){
     Serial.println("Mettre les secteurs.");
     showMatrix(Matrix,15);
     int j=0;
@@ -284,8 +284,7 @@ void setSec(int Matrix[MTR])
     showMatrix(sector);
   }
 //Mettre les données de client
-void setNumPhone(int Matrix[MTR])
-  {
+void setNumPhone(int Matrix[MTR]){
     Serial.println("Mettre Numéro de Tel.");
     showMatrix(Matrix,11);
     for(int i=0;i<9;i++){
@@ -295,8 +294,7 @@ void setNumPhone(int Matrix[MTR])
     EEPROM.put(AD_PHONE,numberPhone);
     showMatrix(numberPhone,3);
   }
-void setPIN(int Matrix[MTR])
-  {
+void setPIN(int Matrix[MTR]){
     int value = Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6];
     EEPROM.put(AD_PIN, value);
   }
@@ -332,8 +330,7 @@ void getState(int Matrix[MTR]){}
 void getAccess(int Matrix[MTR]){}
 //////// PARTIE 5 : paramétre
 //// les paramétre des SMS
-void smsSetting(int Matrix[MTR])
-    {
+void smsSetting(int Matrix[MTR]){
     Serial.println("Paramètre SMS");
     showMatrix(Matrix,8);
     int j=0;
@@ -353,8 +350,8 @@ void setState(int Matrix[MTR]){
     Serial.print(" numéro : ");
     Serial.print(toDec(Matrix[2],Matrix[3]));
     Serial.print(" Etat : ");
-    Serial.println(Matrix[1]);
-    objState[Matrix[1]][toDec(Matrix[2],Matrix[3])]=Matrix[5];
+    Serial.println(Matrix[4]);
+    objState[Matrix[1]-1][toDec(Matrix[2],Matrix[3])-1]=Matrix[4];
   }
 }
 //// les paramétre de PIN
@@ -370,8 +367,7 @@ void modeSys(int Matrix[MTR]){
   }
   }
 /////// PARTIE 6 : Réinitialisation du système
-void restSys()
-  {
+void restSys(){
     for (int i = 0 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
     if(i%100==0){
@@ -555,6 +551,17 @@ void showRAM(){
   Serial.print(Minute);
   Serial.print(":");
   Serial.println(Second);
+  Serial.println("________________________________________");
+  for(int i=0;i<5;i++){
+    for(int j=0;j<15;j++){
+    Serial.print("   ");
+    Serial.print(objState[i][j]);
+    delay(30);
+     }
+    Serial.println();
+  }
+  Serial.println("_______5x15________");
+  Serial.println();
 }
 void showMemory(){
   Serial.print("EEPROM length: ");
