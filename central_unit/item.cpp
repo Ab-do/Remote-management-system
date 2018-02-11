@@ -6,7 +6,7 @@ Item::Item(int id,int number)
 {
   this->IdObj=id;
   this->NumberObj=number;
-  this->cmd=id*1000+number*10;
+  this->Cmd=id*1000+number*10;
 }
 
 //Function Set Programme *********************************************
@@ -71,9 +71,13 @@ void Item::autoRun()
 //function  Run Objet
 bool Item::runObj(int Action)
 {
+  if(Action==1){
+    sendCmd(Cmd+Action);
+  }
+  if(Action==2){
+    sendCmd(Cmd+Action);
+  }
   
-  Serial.println(cmd+Action);
-  Serial3.write(cmd+Action);
 }
 
 void static Item::setTime(int Hr,int Min,int Sec)

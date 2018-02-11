@@ -517,6 +517,10 @@ String getName(int Obj,int Number){
   }
 }
 
+void sendCmd(int cmd){
+  Serial.println(cmd);
+  Serial3.println(cmd);
+}
 
 void Error(){
   Serial.println("Il y a une Erreur ou ce choix n'existe pas");
