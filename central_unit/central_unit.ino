@@ -1,5 +1,5 @@
-// le 11/02/2019 Agadir
-// Etape 16  : 
+// le 13/02/2019 Agadir
+// Etape 18  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -24,6 +24,7 @@ const int AD_RELATION_OBJ=134; //206
 const int NUMBER_OBJ=5;
 const int NUMBER_MAX=15;
 // Déclaration des variables.
+unsigned long last = millis();
 String Phone="669600729"; // numéro de Tel.
 int sysTime=9999;
 int PINcode=1234;
@@ -36,12 +37,11 @@ int settingSMS[6]={0};        // nombre des objets de systeme
 int objState[NUMBER_OBJ][NUMBER_MAX]={0};        // les etates des objets
 int sector[6][6]={0};        // les secteurs 
 int relationObj[6][6]={0}; // les relation entre les pompes de refoulements et les vannes
-Item Object1[5]={{1,1},{1,2},{1,3},{1,4},{1,5}};
-Item Object2[5]={{1,1},{1,2},{1,3},{1,4},{1,5}};
-Item Object4[5]={{1,1},{1,2},{1,3},{1,4},{1,5}};
-Item Object5[5]={{1,1},{1,2},{1,3},{1,4},{1,5}};
-Item Object6[5]={{1,1},{1,2},{1,3},{1,4},{1,5}};
-Item Object7[5]={{1,1},{1,2},{1,3},{1,4},{1,5}};
+Item pim[10]={{1,1},{1,2},{1,3},{1,4},{1,5},{1,6},{1,7},{1,8},{1,9},{1,10}};
+Item pr[5]={{2,1},{2,2},{2,3},{2,4},{2,5}};
+Item van[15]={{3,1},{3,2},{3,3},{3,4},{3,5},{3,6},{3,7},{3,8},{3,9},{3,10},{3,11},{3,12},{3,13},{3,14},{3,15}};
+Item mlg[5]={{4,1},{4,2},{4,3},{4,4},{4,5}};
+Item eng[5]={{5,1},{5,2},{5,3},{5,4},{5,5}};
 
 void setup() {
   // Initialisation les serials ( Moniteur, Gsm , Nextion et HC12)
@@ -62,11 +62,14 @@ void setup() {
   }
   Serial.println("start-up");
   showRAM();
+  pim[0].runObj(2);
+  
 }
 
 void loop() {
   getTime(); // Mettre le temps à jour. 
   getDataSerial(); // ausculter les données qui obtient de moniteur série.
+  autoRunObj(); 
 }
 //********* OBTEBNIR LES DONNEES
 // Obtenir des données de Serial
@@ -306,9 +309,53 @@ void setPIN(int Matrix[MTR]){
   }
 /////// PARTIE 2 : Démarrage , Arrer des objets ou mettre un programme de démarrage.
 /// Démarrage / Arret 
-void actionObj(int Matrix[MTR]){}
+void actionObj(int Matrix[MTR]){
+  switch(Matrix[2]){
+    case 1:
+        pim[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    case 2:
+        pr[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    case 3:
+        van[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    case 4:
+        mlg[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    case 5:
+        eng[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
+    break;
+    default:
+      Error();
+            break;
+  }
+  }
 // Mettre un programme de démarrage.
-void progObj(int Matrix[MTR]){}
+void progObj(int Matrix[MTR]){
+
+  switch(Matrix[2]){
+    case 1:
+        pim[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 2:
+        pr[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 3:
+        van[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 4:
+        mlg[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 5:
+        eng[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    default:
+      Error();
+            break;
+  }
+  
+  }
 // PS : à cette fonction Il sera des prototypes pour traiter et afficher les erreurs.
 /////// PARTIE 3 : les fonction d'horloge
 /// Réglage la date et l'heure.
@@ -410,9 +457,20 @@ bool loadingData(){
   EEPROM.get(AD_SETTING_SMS,settingSMS);
   EEPROM.get(AD_SECTOR,sector);
   EEPROM.get(AD_RELATION_OBJ,relationObj);
+  for(int i=0;i<10;i++)
+      pim[i].getProg();
+  for(int i=0;i<5;i++)
+      pr[i].getProg();
+  for(int i=0;i<15;i++)
+      van[i].getProg();
+  for(int i=0;i<5;i++)
+      mlg[i].getProg();
+  for(int i=0;i<5;i++)
+      eng[i].getProg();    
   Serial.println("le chargement des données a été téléchargé");
   return true;
 }
+
 
 
 
@@ -473,7 +531,10 @@ void sendSMS(String outMessage,int validity){
   Serial1.println("AT+CCLK?");
   }
 }
-
+////////////////////////
+void runObj(){
+  
+}
 
 
 
@@ -498,6 +559,9 @@ void getTime(){
   Hour = Clock.getHour(h12, PM);
   Minute= Clock.getMinute();
   Second= Clock.getSecond();
+  Item::Hour=Hour;
+  Item::Minute=Minute;
+  Item::Second=Second;
 }
 /// Obtenir le nome de l'obejct et leur numéro.
 String getName(int Obj,int Number){
@@ -522,10 +586,27 @@ String getName(int Obj,int Number){
     break;
   }
 }
+// fonction class
+void autoRunObj(){
+  for(int i=0;i<10;i++)
+      pim[i].autoRun();
+  for(int i=0;i<5;i++)
+      pr[i].autoRun();
+  for(int i=0;i<15;i++)
+      van[i].autoRun();
+  for(int i=0;i<5;i++)
+      mlg[i].autoRun();
+  for(int i=0;i<5;i++)
+      eng[i].autoRun();  
+}
+
 
 void sendCmd(int cmd){
-  Serial.println(cmd);
-  Serial3.println(cmd);
+  if(millis() - last > 250){
+      Serial.println(cmd);
+      Serial3.println(cmd);
+      }
+      last = millis();
 }
 
 void Error(){
