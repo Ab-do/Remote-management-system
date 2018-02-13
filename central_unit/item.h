@@ -5,6 +5,7 @@ extern int settingSMS[6];        // nombre des objets de systeme
 extern int objState[5][15];        // les etates des objets
 extern int sector[6][6];        // les secteurs 
 extern int relationObj[6][6]; // les relation entre les pompes de refoulements et les vannes
+extern int relationEng[2][5];
 extern void sendCmd(int cmd);
 void showMatrix(int Matrix[20],int a);
 int const AD_PROG_PIM=500;
@@ -29,6 +30,11 @@ class Item{
     private :
       int IdObj,NumberObj,Cmd;
       int MatrixTime[5]={99};
-      
+      bool ckeckPmp();
+      bool checkVan();
+      bool ckeckPrVan();
+      bool checkPrPae();
+      bool checkPae();
+      bool ckeckVanPr(int pr);
   };
 #endif

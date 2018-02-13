@@ -37,6 +37,7 @@ int settingSMS[6]={0};        // nombre des objets de systeme
 int objState[NUMBER_OBJ][NUMBER_MAX]={0};        // les etates des objets
 int sector[6][6]={0};        // les secteurs 
 int relationObj[6][6]={0}; // les relation entre les pompes de refoulements et les vannes
+int relationEng[2][5]={0};
 Item pim[10]={{1,1},{1,2},{1,3},{1,4},{1,5},{1,6},{1,7},{1,8},{1,9},{1,10}};
 Item pr[5]={{2,1},{2,2},{2,3},{2,4},{2,5}};
 Item van[15]={{3,1},{3,2},{3,3},{3,4},{3,5},{3,6},{3,7},{3,8},{3,9},{3,10},{3,11},{3,12},{3,13},{3,14},{3,15}};
@@ -396,15 +397,15 @@ void smsSetting(int Matrix[MTR]){
       }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
-  if(Matrix[1]<=NUMBER_OBJ && toDec(Matrix[2],Matrix[3])<=NUMBER_MAX){
+  if(Matrix[2]<=NUMBER_OBJ && toDec(Matrix[3],Matrix[4])<=NUMBER_MAX){
     Serial.print("L'Etat : ");
     Serial.print(" L'objet de type :");
-    Serial.print(Matrix[1]);
+    Serial.print(Matrix[2]);
     Serial.print(" numéro : ");
-    Serial.print(toDec(Matrix[2],Matrix[3]));
+    Serial.print(toDec(Matrix[3],Matrix[4]));
     Serial.print(" Etat : ");
-    Serial.println(Matrix[4]);
-    objState[Matrix[1]-1][toDec(Matrix[2],Matrix[3])-1]=Matrix[4];
+    Serial.println(Matrix[5]);
+    objState[Matrix[2]-1][toDec(Matrix[3],Matrix[4])-1]=Matrix[5];
   }
 }
 //// les paramétre de PIN
@@ -605,9 +606,12 @@ void sendCmd(int cmd){
   if(millis() - last > 250){
       Serial.println(cmd);
       Serial3.println(cmd);
+      RdCmd(cmd);
       }
       last = millis();
 }
+
+
 
 void Error(){
   Serial.println("Il y a une Erreur ou ce choix n'existe pas");
@@ -724,4 +728,21 @@ void showSize(){
   adresse += sizeof(objState);
   Serial.print("Next ");
   Serial.println(adresse+10);
+}
+
+void RdCmd(int Bpin){
+  Serial.println("B PIN");
+  Serial.println(Bpin);
+  int Mpin[4];
+  int i=0;
+  while (Bpin > 0)
+{
+    Mpin[i] = Bpin%10;
+    Bpin /= 10;
+    i++;
+}
+showMatrix(Mpin,4);
+if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
+   objState[Mpin[3]-1][Mpin[1]+(Mpin[2]*10)-1]=Mpin[0];
+}
 }

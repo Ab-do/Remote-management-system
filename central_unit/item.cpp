@@ -99,15 +99,13 @@ void Item::getProg(){
 void Item::autoRun()
 {
   if(this->MatrixTime[5]==3 || 4){
-   if(Hour==this->MatrixTime[0]-1 && Minute==this->MatrixTime[1]-1 && Second==0)
-      {
+   if(Hour==this->MatrixTime[0]-1 && Minute==this->MatrixTime[1]-1 && Second==0) {
         if(MatrixTime[5]==3){
           this->MatrixTime[5]=5;
           this->updateProg();
         }
          this->runObj(1);
-      }
-      else if(Hour==this->MatrixTime[2]-1 && Minute==this->MatrixTime[3]-1 && Second==0)
+      }  else if(Hour==this->MatrixTime[2]-1 && Minute==this->MatrixTime[3]-1 && Second==0)
       {
          this->runObj(2);
       }
@@ -118,11 +116,151 @@ void Item::autoRun()
 
 bool Item::runObj(int Action)
 {
-  if(Action==1){
-    sendCmd(Cmd+Action);
+  switch(this->IdObj)
+  {
+    case 1:
+            if(Action==1 && ckeckPmp()){
+             sendCmd(Cmd+Action);
+             return true;
+            } else if(Action==1){
+             Serial.println("la pompe immérgée: n'a pas démarré");
+             return false;
+            } else if(Action==2){
+             //offObj(1);
+             sendCmd(Cmd+Action);
+             return true;
+            }
+           break;
+    case 2:
+          if(Action==1 && ckeckPmp()){
+             if(checkVan()) {
+                //runS();
+                sendCmd(Cmd+Action);
+                return true;
+              } else {
+                //Erreur(2);
+                Serial.println("la pompe de refoulement : n'a pas démarré a cause de nombre des vannes.");
+                return false;
+              }
+          } else if(Action==1) {
+            //Erreur(1);
+             Serial.println("la pompe de refoulement : n'a pas démarré.");
+             return false;
+          } else if(Action==2 && checkPae()) {
+            //offObj(1);
+             sendCmd(Cmd+Action);
+             return true;
+          } else if(Action==2) {
+            //Erreur(5);//la pompe a angre n'est pas etainde
+            Serial.println("la pompe a angre n'est pas etainde");
+             return false;
+          }
+           break;
+    case 3://****************************************************
+           //Vannes
+          if(Action==1) {
+            //runS();
+             sendCmd(Cmd+Action);
+             return true;
+          } else if(Action==2 && ckeckPrVan()) {
+            //offObj(3);
+             sendCmd(Cmd+Action);
+             return true;
+          } else if(Action==2)  {
+            //Erreur(3);//
+            Serial.println("pompe doit etre etainde");
+             return false;
+          }
+           break;
+    case 4://****************************************************
+          //pompe a angre 
+          if(Action==1 && checkPrPae()) {
+             //runS();
+             sendCmd(Cmd+Action);
+             return true;
+          } else if(Action==1)
+          {
+             //sendCmd(Cmd+Action);
+             return false; 
+          } else if(Action==2)
+          {
+            sendCmd(Cmd+Action);
+            return true;
+          }
+          break;
+     case 5:
+          sendCmd(Cmd+Action);
+          break;
+    default:
+           break;
   }
-  if(Action==2){
-    sendCmd(Cmd+Action);
+}
+
+
+bool Item::ckeckPmp(){
+  int count=0;
+  for(int i=0;i<2;i++)
+  {
+    for(int j=0;j<10;j++)
+    {
+      if(objState[i][j]==1)
+      {
+        count++;
+        if(count>numberObj[6]) return false;
+      }
+    }
   }
-  
+  //if(count<numberObj[6]) 
+  return true;
+}
+
+bool Item::checkVan() {
+  int count=0;
+  for(int i=0;i<5;i++)
+  {
+    if(objState[2][(relationObj[this->NumberObj-1][i])-1]==1)
+    {
+       count++;
+       if(count>=relationObj[this->NumberObj-1][5]) return true;
+    }
+  }
+  //if(count<relationObj[this->numberObj-1][5]) 
+    return false;
+}
+
+
+bool Item::ckeckPrVan()
+{
+  for(int i=0;i<5;i++) {
+    for(int j=0;j<5;j++) {
+     if(relationObj[i][j]==this->NumberObj) 
+        if(objState[1][i]==1 && !ckeckVanPr(i)) return false;
+    }
+  }
+  return true;
+}
+
+
+bool Item::checkPrPae()
+{
+  if(objState[1][relationEng[this->NumberObj-1][1]-1]==1) return true;
+  return false;
+}
+//**************************condition 5***************************
+bool Item::checkPae()
+{
+  if(objState[3][relationEng[this->NumberObj-1][1]]==1) return false;
+  return true;
+}
+
+bool Item::ckeckVanPr(int pr) 
+{
+  int count=0;
+  for(int i=0;i<5;i++){
+    if(objState[2][(relationObj[pr][i])-1]==1){
+      count++;
+      if(count>relationObj[pr][5]) return true;
+    }
+  }
+  return false;
 }
