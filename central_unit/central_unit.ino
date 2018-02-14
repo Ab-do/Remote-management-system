@@ -20,7 +20,8 @@ const int AD_PHONE=20;
 const int AD_NUMBER_OBJ=38;
 const int AD_SETTING_SMS=50;
 const int AD_SECTOR=62;
-const int AD_RELATION_OBJ=134; //206
+const int AD_RELATION_OBJ=134; 
+const int AD_RELATION_PAE=210; //280
 const int NUMBER_OBJ=5;
 const int NUMBER_MAX=15;
 // Déclaration des variables.
@@ -37,7 +38,7 @@ int settingSMS[6]={0};        // nombre des objets de systeme
 int objState[NUMBER_OBJ][NUMBER_MAX]={0};        // les etates des objets
 int sector[6][6]={0};        // les secteurs 
 int relationObj[6][6]={0}; // les relation entre les pompes de refoulements et les vannes
-int relationEng[2][5]={0};
+int relationPae[5][2]={0};
 Item pim[10]={{1,1},{1,2},{1,3},{1,4},{1,5},{1,6},{1,7},{1,8},{1,9},{1,10}};
 Item pr[5]={{2,1},{2,2},{2,3},{2,4},{2,5}};
 Item van[15]={{3,1},{3,2},{3,3},{3,4},{3,5},{3,6},{3,7},{3,8},{3,9},{3,10},{3,11},{3,12},{3,13},{3,14},{3,15}};
@@ -63,8 +64,6 @@ void setup() {
   }
   Serial.println("start-up");
   showRAM();
-  pim[0].runObj(2);
-  
 }
 
 void loop() {
@@ -145,7 +144,10 @@ void switchData(int Matrix[MTR]){
                 setRelation(Matrix);
               }else if(Matrix[2]==3){
                 setSec(Matrix);
+              }else if(Matrix[2]==4){
+                setRelationPae(Matrix);
               }else {
+              
                 // Erreur.
               Error();
               }
@@ -287,12 +289,21 @@ void setSec(int Matrix[MTR]){
     showMatrix(Matrix,15);
     int j=0;
     for(int i=0;i<6;i++){
-      sector[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);
+      sector[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);  // peut etre y'a un problème pour les vannes qu'elle a un numéro plus que 10.
       j+=2;
     }
     EEPROM.put(AD_SECTOR,sector);
     showMatrix(sector);
   }
+ // Mettre la relation entre les pompes de refoulement et les pompes à engrais.
+void setRelationPae(int Matrix[MTR]){
+    Serial.println("Mettre la relation entre les pompes de refoulement et les pompes à engaris.");
+    showMatrix(Matrix,15);
+    relationPae[Matrix[3]-1][0]=toDec(Matrix[4],Matrix[5]);
+    relationPae[Matrix[3]-1][1]=toDec(Matrix[6],Matrix[7]);
+    EEPROM.put(AD_RELATION_PAE,relationPae);
+    //showMatrix(relationPae);
+}
 //Mettre les données de client
 void setNumPhone(int Matrix[MTR]){
     Serial.println("Mettre Numéro de Tel.");

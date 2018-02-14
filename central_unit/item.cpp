@@ -243,13 +243,13 @@ bool Item::ckeckPrVan()
 
 bool Item::checkPrPae()
 {
-  if(objState[1][relationEng[this->NumberObj-1][1]-1]==1) return true;
+  if(objState[1][relationPae[this->NumberObj-1][1]-1]==1) return true;
   return false;
 }
 //**************************condition 5***************************
 bool Item::checkPae()
 {
-  if(objState[3][relationEng[this->NumberObj-1][1]]==1) return false;
+  if(objState[3][relationPae[this->NumberObj-1][1]]==1) return false;
   return true;
 }
 
