@@ -692,8 +692,7 @@ void showMemory(){
   
 }
 
-void showMatrix(int Matrix[20],int a){
-  
+void showMatrix(int Matrix[20],int a) {
     for(int j=0;j<a;j++){
     Serial.print(" ");
     Serial.print(Matrix[j]);
