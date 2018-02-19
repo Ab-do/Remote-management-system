@@ -152,7 +152,7 @@ bool Item::runObj(int Action)
              return true;
           } else if(Action==2) {
             //Erreur(5);//la pompe a angre n'est pas etainde
-            Serial.println("la pompe a angre n'est pas etainde");
+            Serial.println("Vous pouvez pas Arreter la pompe de refoulement N : "+String(this->NumberObj));
              return false;
           }
            break;
@@ -168,19 +168,19 @@ bool Item::runObj(int Action)
              return true;
           } else if(Action==2)  {
             //Erreur(3);//
-            Serial.println("pompe doit etre etainde");
+            Serial.println("Vous pouvez pas Arreter la vanne N : "+String(this->NumberObj));
              return false;
           }
            break;
     case 4://****************************************************
           //pompe a angre 
           if(Action==1 && checkPrPae()) {
-             //runS();
              sendCmd(Cmd+Action);
              return true;
           } else if(Action==1)
           {
              //sendCmd(Cmd+Action);
+             Serial.println("Vous pouvez pas démarrer la pompe à engrais N : "+String(this->NumberObj));
              return false; 
           } else if(Action==2)
           {
@@ -243,13 +243,15 @@ bool Item::ckeckPrVan()
 
 bool Item::checkPrPae()
 {
-  if(objState[1][relationPae[this->NumberObj-1][1]-1]==1) return true;
+  for(int i=0;i<5;i++){
+    if(objState[1][relationPae[i][0]-1]==1){ return true; }
+  }
   return false;
 }
 //**************************condition 5***************************
 bool Item::checkPae()
 {
-  if(objState[3][relationPae[this->NumberObj-1][1]]==1) return false;
+  if(objState[3][relationPae[(this->NumberObj)-1][0]]==1){ return false; }
   return true;
 }
 

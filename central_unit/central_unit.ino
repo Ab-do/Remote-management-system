@@ -1,5 +1,5 @@
-// le 13/02/2019 Agadir
-// Etape 18  : 
+// le 19/02/2019 Agadir
+// Etape 22  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -69,6 +69,7 @@ void setup() {
 void loop() {
   getTime(); // Mettre le temps à jour. 
   getDataSerial(); // ausculter les données qui obtient de moniteur série.
+  getDataHc();
   autoRunObj(); 
 }
 //********* OBTEBNIR LES DONNEES
@@ -469,6 +470,7 @@ bool loadingData(){
   EEPROM.get(AD_SETTING_SMS,settingSMS);
   EEPROM.get(AD_SECTOR,sector);
   EEPROM.get(AD_RELATION_OBJ,relationObj);
+  EEPROM.get(AD_RELATION_PAE,relationPae);
   for(int i=0;i<10;i++)
       pim[i].getProg();
   for(int i=0;i<5;i++)
@@ -644,6 +646,8 @@ void showRAM(){
   showMatrix(sector);
   Serial.println("les Relation :");
   showMatrix(relationObj);
+  Serial.println("Relation PAE");
+  //showMatrix(relationPae);
   delay(1000);
   getTime();
   Serial.print(Date);
