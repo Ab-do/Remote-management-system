@@ -1,5 +1,5 @@
 // WC : wirless controller.
-// le 20/02/2018 Agadir.
+// le 20/02/2019 Agadir.
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
 const int AD_PHONE=10;
@@ -19,7 +19,7 @@ void loop() {
   getDataHc();
 }
 
-//  obtenir les donnée
+//  obtenir les donnée 
 void getDataSerial(){
   if(Serial.available()>0){
     String data=Serial.readString();
@@ -33,7 +33,7 @@ void getDataGsm(){
     Serial.println(data); // afficher str
     Filtrage(data);
   }
-
+    
 }
 
 void getDataHc(){
@@ -60,7 +60,7 @@ void getDataHc(){
       Serial.println("autre choix...");
     }
   }
-
+  
 }
 
 void Filtrage(String str){
@@ -72,7 +72,7 @@ void Filtrage(String str){
         int j=0;
           while(str[i]!=62){
             dataSend +=str[i];
-            j++;
+            j++; 
             i++;
          }
          //Commutation des données.
@@ -83,8 +83,8 @@ void Filtrage(String str){
          //memset(Matrix,0,sizeof(Matrix));
       }
       else{
-         i++;
-      }
+         i++; 
+      }     
   }
 }
 
@@ -139,5 +139,5 @@ String toString(int Matrix[9]){
   for(int i=0;i<9;i++)
     str+=Matrix[i];
   Serial.println(str);
-  return str;
+  return str; 
 }
