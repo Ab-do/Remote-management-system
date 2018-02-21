@@ -1,5 +1,5 @@
-// le 19/02/2019 Agadir
-// Etape 22  : 
+// le 21/02/2019 Agadir
+// Etape 24  : 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -28,7 +28,7 @@ const int NUMBER_MAX=15;
 unsigned long last = millis();
 String Phone="669600729"; // numéro de Tel.
 int sysTime=9999;
-int PINcode=1234;
+int PINcode=11234;
 byte Hour,Minute,Second,Date,Month,Year;
 boolean ModeSys=false;
 // Déclaration des matrices.
@@ -205,7 +205,7 @@ void switchData(int Matrix[MTR]){
                 getState(Matrix);
               break;
               case 5:
-                getAccess(Matrix);
+                getAccess();
               break;
               default:
                 Error();
@@ -317,8 +317,8 @@ void setNumPhone(int Matrix[MTR]){
     showMatrix(numberPhone,3);
   }
 void setPIN(int Matrix[MTR]){
-    int value = Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6];
-    EEPROM.put(AD_PIN, value);
+    PINcode= 10000+Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6]; 
+    EEPROM.put(AD_PIN,PINcode);
   }
 /////// PARTIE 2 : Démarrage , Arrer des objets ou mettre un programme de démarrage.
 /// Démarrage / Arret 
@@ -387,13 +387,124 @@ void showTime(){}
 //// Historique
 void showHist(int Page){}
 //// Etats des objets
-void showState(){}
+void showState(){ 
+     int S;
+  for(int i=0;i<numberObj[0];i++){
+     int k=i+0;
+    S=objState[0][i];
+    if(S==1){
+    setDataNextion("b"+String(k)+".picc=","20");
+    }else if(S==3) {
+    setDataNextion("b"+String(k)+".picc=","19");
+    }else {
+    setDataNextion("b"+String(k)+".picc=","15");
+    }
+  }
+  for(int i=0;i<numberObj[1];i++){
+    int k=i+10;
+    S=objState[1][i];
+     if(S==1){
+    setDataNextion("b"+String(k)+".picc=","20");
+    }else if(S==3) {
+    setDataNextion("b"+String(k)+".picc=","19");
+    }else {
+    setDataNextion("b"+String(k)+".picc=","15");
+    }
+  }
+  for(int i=0;i<numberObj[2];i++){
+     int k=i+15;
+    S=objState[2][i];
+     if(S==1){
+    setDataNextion("b"+String(k)+".picc=","20");
+    }else if(S==3) {
+    setDataNextion("b"+String(k)+".picc=","19");
+    }else {
+    setDataNextion("b"+String(k)+".picc=","15");
+    }
+  }
+  for(int i=0;i<numberObj[3];i++){
+     int k=i+45;
+    S=objState[3][i];
+     if(S==1){
+    setDataNextion("b"+String(k)+".picc=","20");
+    }else if(S==3) {
+    setDataNextion("b"+String(k)+".picc=","19");
+    }else {
+    setDataNextion("b"+String(k)+".picc=","15");
+    }
+  }
+    for(int i=0;i<numberObj[4];i++){
+     int k=i+47;
+    S=objState[4][i];
+     if(S==1){
+    setDataNextion("b"+String(k)+".picc=","20");
+    }else if(S==3) {
+    setDataNextion("b"+String(k)+".picc=","19");
+    }else {
+    setDataNextion("b"+String(k)+".picc=","15");
+    }
+  }
+  }
 ///  Programme de démarrage
 void showProg(int Page){}
 //// Obtenir l'Etat d'un objet
-void getState(int Matrix[MTR]){}
+void getState(int Matrix[MTR]){
+   int St =objState[Matrix[3]-1][toDec(Matrix[4],Matrix[5])-1];  
+   switch(Matrix[3]){
+      case 1:
+          if(St==1){
+          setDataNextion("p0.pic=","50");
+          }else if (St==3){
+          setDataNextion("p0.pic=","43");
+          }else {
+          setDataNextion("p0.pic=","52");
+          }
+      break;
+      case 2:
+          if(St==1){
+          setDataNextion("p0.pic=","51");
+          }else if (St==3){
+          setDataNextion("p0.pic=","53");
+          }else {
+          setDataNextion("p0.pic=","49");
+          }
+      break;
+      case 3:
+          if(St==1){
+          setDataNextion("p0.pic=","54");
+          }else if (St==3){
+          setDataNextion("p0.pic=","42");
+          }else {
+          setDataNextion("p0.pic=","48");
+          }
+      break;
+      case 4:
+          if(St==1){
+          setDataNextion("p0.pic=","44");
+          }else if (St==3){
+          setDataNextion("p0.pic=","40");
+          }else {
+          setDataNextion("p0.pic=","55");
+          }
+      break;
+      case 5:
+          if(St==1){
+          setDataNextion("p0.pic=","46");
+          }else if (St==3){
+          setDataNextion("p0.pic=","45");
+          }else {
+          setDataNextion("p0.pic=","47");
+          }
+      break;
+      default:
+          Error();
+      break;
+   }
+  }
 //// dommander l'acès de paramétrage
-void getAccess(int Matrix[MTR]){}
+void getAccess(){
+    setDataNextion("PINcode.val=",String(PINcode));  
+  }
 //////// PARTIE 5 : paramétre
 //// les paramétre des SMS
 void smsSetting(int Matrix[MTR]){
@@ -406,7 +517,7 @@ void smsSetting(int Matrix[MTR]){
     }
     EEPROM.put(AD_SETTING_SMS,settingSMS);
     showMatrix(settingSMS,6);
-      }
+  }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
   if(Matrix[2]<=NUMBER_OBJ && toDec(Matrix[3],Matrix[4])<=NUMBER_MAX){
@@ -760,3 +871,10 @@ if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
    objState[Mpin[3]-1][Mpin[1]+(Mpin[2]*10)-1]=Mpin[0];
 }
 }
+
+void statPage(){
+  
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
