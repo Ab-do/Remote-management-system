@@ -1,5 +1,5 @@
-// le 23/02/2019 Agadir
-// Etape 26  :  Historique 
+// le 22/02/2019 Agadir
+// Etape 25  :  Historique 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
