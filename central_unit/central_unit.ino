@@ -1,12 +1,18 @@
-// le 21/02/2019 Agadir
-// Etape 24  : 
+// le 23/02/2019 Agadir
+// Etape 26  :  Historique 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
 #include <Wire.h>
 #include "Item.h"
+#include <SdFat.h>
+#include <CSVFile.h>
+#define PIN_SD_CS 53
+#define SD_CARD_SPEED SPI_FULL_SPEED 
 //Définition RTC
 DS3231 Clock;
+SdFat sd;
+CSVFile csv;
 bool Century=false;
 bool h12;
 bool PM;
@@ -29,7 +35,7 @@ unsigned long last = millis();
 String Phone="669600729"; // numéro de Tel.
 int sysTime=9999;
 int PINcode=11234;
-byte Hour,Minute,Second,Date,Month,Year;
+int Hour,Minute,Second,Date,Month,Year;
 boolean ModeSys=false;
 // Déclaration des matrices.
 int numberPhone[9]={0};        // nombre des objets de systeme
@@ -62,8 +68,16 @@ void setup() {
     Serial.println("Il y a un problème de téléchargement.");
     delay(5000);
   }
+  if (!sd.begin(PIN_SD_CS, SD_CARD_SPEED))
+  {
+  Serial.println("SD card begin error");
+  return;
+  }else {
+   Serial.println("SD....... OK ! ");
+  }
   Serial.println("start-up");
   showRAM();
+  setDataNextion("page 1");
 }
 
 void loop() {
@@ -191,15 +205,15 @@ void switchData(int Matrix[MTR]){
     case 4:
              // mettre les données à propos système.
             Serial.println("// mettre les données à propos système.");
-            switch(Matrix[1]){
+            switch(Matrix[2]){
               case 1:
-                showHist(Matrix[2]);
+                showHist(Matrix);
               break;
               case 2:
                 showState();
               break;
               case 3:
-                showProg(Matrix[2]);
+                showProg(Matrix[3]);
               break;
               case 4:
                 getState(Matrix);
@@ -257,6 +271,7 @@ void switchData(int Matrix[MTR]){
          }
      break;
     default:
+       Error();
             break;
   }
 }
@@ -385,7 +400,41 @@ void setTime(int Matrix[MTR]){
 void showTime(){}
 ////// PARTIE 4 : les données de NEXTION
 //// Historique
-void showHist(int Page){}
+void showHist(int Matrix[MTR]){
+  String HistFile;
+  Matrix[3]==9? HistFile = "Hist_"+String(Date)+String(Month)+String(Year)+".csv"         
+  :   HistFile = "Hist_"+String(toDec(Matrix[3],Matrix[4]))+"_"+String(toDec(Matrix[5],Matrix[6]))+"_"+String(toDec(Matrix[7],Matrix[8]))+".csv";
+  Serial.println("Name de fichier : "+HistFile);
+  if(sd.exists(HistFile.c_str())){
+      csv.open(HistFile.c_str(), O_RDWR); 
+    } else {
+      Serial.println("File not existe");  
+      return 0; 
+      }
+  csv.gotoBeginOfFile();
+  while(!csv.isEndOfLine()) csv.nextLine();
+  int countLine=csv.getNumberOfLine()-1,i=5,Line=0;
+  csv.gotoBeginOfFile();
+  Line=(countLine-(5*Matrix[2]))+5;
+  csv.gotoLine(Line);
+  int j=1;
+  while(i!=0)
+  {
+    char buffer[30];
+    csv.readField(buffer,30);
+    setDataNextion("O"+String(j)+".txt=\""+String(buffer)+"\"");
+    csv.nextField(); 
+    memset(buffer,0,30);
+    csv.readField(buffer,7);
+    setDataNextion("M"+String(j)+".txt=\""+String(buffer)+"\"");
+    csv.nextField(); memset(buffer,0,30);
+    csv.readField(buffer,5);
+    setDataNextion("S"+String(j)+".txt=\""+String(buffer)+"\"");
+    j++;   i--;  Line--; memset(buffer,0,30);
+    csv.gotoLine(Line);
+  }
+    csv.close();
+}
 //// Etats des objets
 void showState(){ 
      int S;
@@ -393,55 +442,55 @@ void showState(){
      int k=i+0;
     S=objState[0][i];
     if(S==1){
-    setDataNextion("b"+String(k)+".picc=","20");
+    setDataNextion("b"+String(k)+".picc=20");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=","19");
+    setDataNextion("b"+String(k)+".picc=19");
     }else {
-    setDataNextion("b"+String(k)+".picc=","15");
+    setDataNextion("b"+String(k)+".picc=15");
     }
   }
   for(int i=0;i<numberObj[1];i++){
     int k=i+10;
     S=objState[1][i];
      if(S==1){
-    setDataNextion("b"+String(k)+".picc=","20");
+    setDataNextion("b"+String(k)+".picc=20");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=","19");
+    setDataNextion("b"+String(k)+".picc=19");
     }else {
-    setDataNextion("b"+String(k)+".picc=","15");
+    setDataNextion("b"+String(k)+".picc=15");
     }
   }
   for(int i=0;i<numberObj[2];i++){
      int k=i+15;
     S=objState[2][i];
      if(S==1){
-    setDataNextion("b"+String(k)+".picc=","20");
+    setDataNextion("b"+String(k)+".picc=20");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=","19");
+    setDataNextion("b"+String(k)+".picc=19");
     }else {
-    setDataNextion("b"+String(k)+".picc=","15");
+    setDataNextion("b"+String(k)+".picc=15");
     }
   }
   for(int i=0;i<numberObj[3];i++){
      int k=i+45;
     S=objState[3][i];
      if(S==1){
-    setDataNextion("b"+String(k)+".picc=","20");
+    setDataNextion("b"+String(k)+".picc=20");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=","19");
+    setDataNextion("b"+String(k)+".picc=19");
     }else {
-    setDataNextion("b"+String(k)+".picc=","15");
+    setDataNextion("b"+String(k)+".picc=15");
     }
   }
     for(int i=0;i<numberObj[4];i++){
      int k=i+47;
     S=objState[4][i];
      if(S==1){
-    setDataNextion("b"+String(k)+".picc=","20");
+    setDataNextion("b"+String(k)+".picc=20");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=","19");
+    setDataNextion("b"+String(k)+".picc=19");
     }else {
-    setDataNextion("b"+String(k)+".picc=","15");
+    setDataNextion("b"+String(k)+".picc=15");
     }
   }
   }
@@ -453,47 +502,47 @@ void getState(int Matrix[MTR]){
    switch(Matrix[3]){
       case 1:
           if(St==1){
-          setDataNextion("p0.pic=","50");
+          setDataNextion("p0.pic=50");
           }else if (St==3){
-          setDataNextion("p0.pic=","43");
+          setDataNextion("p0.pic=43");
           }else {
-          setDataNextion("p0.pic=","52");
+          setDataNextion("p0.pic=52");
           }
       break;
       case 2:
           if(St==1){
-          setDataNextion("p0.pic=","51");
+          setDataNextion("p0.pic=51");
           }else if (St==3){
-          setDataNextion("p0.pic=","53");
+          setDataNextion("p0.pic=53");
           }else {
-          setDataNextion("p0.pic=","49");
+          setDataNextion("p0.pic=49");
           }
       break;
       case 3:
           if(St==1){
-          setDataNextion("p0.pic=","54");
+          setDataNextion("p0.pic=54");
           }else if (St==3){
-          setDataNextion("p0.pic=","42");
+          setDataNextion("p0.pic=42");
           }else {
-          setDataNextion("p0.pic=","48");
+          setDataNextion("p0.pic=48");
           }
       break;
       case 4:
           if(St==1){
-          setDataNextion("p0.pic=","44");
+          setDataNextion("p0.pic=44");
           }else if (St==3){
-          setDataNextion("p0.pic=","40");
+          setDataNextion("p0.pic=40");
           }else {
-          setDataNextion("p0.pic=","55");
+          setDataNextion("p0.pic=55");
           }
       break;
       case 5:
           if(St==1){
-          setDataNextion("p0.pic=","46");
+          setDataNextion("p0.pic=46");
           }else if (St==3){
-          setDataNextion("p0.pic=","45");
+          setDataNextion("p0.pic=45");
           }else {
-          setDataNextion("p0.pic=","47");
+          setDataNextion("p0.pic=47");
           }
       break;
       default:
@@ -503,7 +552,7 @@ void getState(int Matrix[MTR]){
   }
 //// dommander l'acès de paramétrage
 void getAccess(){
-    setDataNextion("PINcode.val=",String(PINcode));  
+    setDataNextion("PINcode.val="+String(PINcode));  
   }
 //////// PARTIE 5 : paramétre
 //// les paramétre des SMS
@@ -616,16 +665,12 @@ bool checkValidity(){
 }
 /////////////// NEXTION
 // Mettre les données à Nextion 
-void setDataNextion(String string,String val) {
-  delay(10);
+void setDataNextion(String data) {
+  Serial2.print(data);
+  Serial.print(data);
   Serial2.write(0xff);
-  Serial2.write(0xff); 
   Serial2.write(0xff);
-  string.concat(val);
-  for (int i = 0; i < string.length(); i++)
-  {
-    Serial2.write(string[i]); 
-  }
+  Serial2.write(0xff);
   Serial2.write(0xff); 
   Serial2.write(0xff); 
   Serial2.write(0xff);
@@ -633,7 +678,8 @@ void setDataNextion(String string,String val) {
 }
 // Affiche les informations et les erreurs.
 void popupMessage(String msg){
-  
+   setDataNextion("page erreur");
+   setDataNextion("msg.txt=\""+msg+"\"");
 }
 ///////////////// GSM 
 ///// Envoie des notifications et des informations par SMS.
@@ -734,8 +780,43 @@ void sendCmd(int cmd){
       }
       last = millis();
 }
-
-
+// fonction pour ajouter l'historique.
+void addHist(String hist)
+{
+  String Time,Day;
+  if(Hour<10)   { Time  ="0"+String(Hour); }     else { Time=String(Hour); }
+  if(Minute<10) { Time+=" : 0"+String(Minute); }  else { Time+=" : "+String(Minute); }
+  if(Date<10)   { Day   ="0"+String(Date); }    else { Day=String(Date); }
+  if(Month<10)  { Day+="/0"+String(Month); }   else { Day+="/"+String(Month); }
+  if(!sdInit()){
+    Serial.println("Erreur de creation de fichier");
+    return 0;
+  }
+  Serial.println("HISTORIQUE : "+hist+" "+Time+" "+Day);
+  csv.addField(hist.c_str());
+  csv.addField(Time.c_str());
+  csv.addField(Day.c_str());
+  csv.addLine();
+  csv.close();
+}
+////// Initialization de la module carte SD !! 
+bool sdInit(){
+  String HistFile="Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv";
+  //Si le fichier existe,Il s'ouvre.
+  if(!sd.exists(HistFile.c_str())){
+      csv.open(HistFile.c_str(), O_RDWR | O_CREAT);
+      csv.gotoBeginOfFile();
+      while(!csv.isEndOfLine()) csv.nextLine();
+      return true;
+  }else if(sd.exists(HistFile.c_str())){
+      csv.open(HistFile.c_str(), O_RDWR);
+      csv.gotoBeginOfFile();
+      while(!csv.isEndOfLine()) csv.nextLine();
+      return true;
+  }else{
+    return false;
+  }
+}
 
 void Error(){
   Serial.println("Il y a une Erreur ou ce choix n'existe pas");
