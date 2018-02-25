@@ -1,5 +1,5 @@
-// le 22/02/2019 Agadir
-// Etape 25  :  Historique 
+// le 25/02/2019 Agadir
+// Etape 27  :  Historique 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -58,32 +58,40 @@ void setup() {
   Serial2.begin(9600);
   Serial3.begin(9600);
   Wire.begin();
+  setDataNextion("page 0");
   while(!checkValidity()){}
+  delay(200);setDataNextion("j0.val=10");
   while(!checkVirginity()){
     Serial.println("NO");
     delay(5000);
     Virginity(1);
   }
+  delay(200);setDataNextion("j0.val=20");
   while(!loadingData()){
-    Serial.println("Il y a un problème de téléchargement.");
+    popupMessage("Il y a un problème de téléchargement.");
     delay(5000);
   }
+  setDataNextion("j0.val=100");
   if (!sd.begin(PIN_SD_CS, SD_CARD_SPEED))
   {
-  Serial.println("SD card begin error");
+  popupMessage("SD card begin error");
   return;
   }else {
    Serial.println("SD....... OK ! ");
   }
   Serial.println("start-up");
-  showRAM();
+  
+  //showRAM();
+  getTime();
   setDataNextion("page 1");
+  addHist("start-up");
 }
 
 void loop() {
   getTime(); // Mettre le temps à jour. 
   getDataSerial(); // ausculter les données qui obtient de moniteur série.
   getDataHc();
+  getDataNextion();
   autoRunObj(); 
 }
 //********* OBTEBNIR LES DONNEES
@@ -286,7 +294,9 @@ void setObj(int Matrix[MTR]){
       numberObj[i]=toDec(Matrix[j+3],Matrix[j+4]);
       j+=2;
     }
-    EEPROM.put(AD_NUMBER_OBJ,numberObj);
+    if(EEPROM.put(AD_NUMBER_OBJ,numberObj)){
+      successMessage();
+    }
     showMatrix(numberObj,6);
   }
 void setRelation(int Matrix[MTR]){
@@ -297,7 +307,9 @@ void setRelation(int Matrix[MTR]){
       relationObj[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);
       j+=2;
     }
-    EEPROM.put(AD_RELATION_OBJ,relationObj);
+    if(EEPROM.put(AD_RELATION_OBJ,relationObj)){
+      successMessage();
+    }
     showMatrix(relationObj);
     }
 void setSec(int Matrix[MTR]){
@@ -308,7 +320,9 @@ void setSec(int Matrix[MTR]){
       sector[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);  // peut etre y'a un problème pour les vannes qu'elle a un numéro plus que 10.
       j+=2;
     }
-    EEPROM.put(AD_SECTOR,sector);
+    if(EEPROM.put(AD_SECTOR,sector)){
+      successMessage();
+    }
     showMatrix(sector);
   }
  // Mettre la relation entre les pompes de refoulement et les pompes à engrais.
@@ -317,7 +331,9 @@ void setRelationPae(int Matrix[MTR]){
     showMatrix(Matrix,15);
     relationPae[Matrix[3]-1][0]=toDec(Matrix[4],Matrix[5]);
     relationPae[Matrix[3]-1][1]=toDec(Matrix[6],Matrix[7]);
-    EEPROM.put(AD_RELATION_PAE,relationPae);
+    if(EEPROM.put(AD_RELATION_PAE,relationPae)){
+      successMessage();
+    }
     //showMatrix(relationPae);
 }
 //Mettre les données de client
@@ -328,12 +344,16 @@ void setNumPhone(int Matrix[MTR]){
       numberPhone[i]=Matrix[i+3];
     }
     Phone=toString(numberPhone);
-    EEPROM.put(AD_PHONE,numberPhone);
+    if(EEPROM.put(AD_PHONE,numberPhone)){
+      successMessage();
+    }
     showMatrix(numberPhone,3);
   }
 void setPIN(int Matrix[MTR]){
     PINcode= 10000+Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6]; 
-    EEPROM.put(AD_PIN,PINcode);
+    if(EEPROM.put(AD_PIN,PINcode)){
+      successMessage();
+    }
   }
 /////// PARTIE 2 : Démarrage , Arrer des objets ou mettre un programme de démarrage.
 /// Démarrage / Arret 
@@ -402,7 +422,7 @@ void showTime(){}
 //// Historique
 void showHist(int Matrix[MTR]){
   String HistFile;
-  Matrix[3]==9? HistFile = "Hist_"+String(Date)+String(Month)+String(Year)+".csv"         
+  Matrix[3]==9? HistFile = "Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv"         
   :   HistFile = "Hist_"+String(toDec(Matrix[3],Matrix[4]))+"_"+String(toDec(Matrix[5],Matrix[6]))+"_"+String(toDec(Matrix[7],Matrix[8]))+".csv";
   Serial.println("Name de fichier : "+HistFile);
   if(sd.exists(HistFile.c_str())){
@@ -415,7 +435,7 @@ void showHist(int Matrix[MTR]){
   while(!csv.isEndOfLine()) csv.nextLine();
   int countLine=csv.getNumberOfLine()-1,i=5,Line=0;
   csv.gotoBeginOfFile();
-  Line=(countLine-(5*Matrix[2]))+5;
+  Line=(countLine-(5*Matrix[1]))+5;
   csv.gotoLine(Line);
   int j=1;
   while(i!=0)
@@ -552,7 +572,7 @@ void getState(int Matrix[MTR]){
   }
 //// dommander l'acès de paramétrage
 void getAccess(){
-    setDataNextion("PINcode.val="+String(PINcode));  
+    setDataNextion("Pw.txt=\""+String(PINcode-10000)+"\"");
   }
 //////// PARTIE 5 : paramétre
 //// les paramétre des SMS
@@ -564,7 +584,9 @@ void smsSetting(int Matrix[MTR]){
       settingSMS[i]=toDec(Matrix[j+2],Matrix[j+3]);
       j+=2;
     }
-    EEPROM.put(AD_SETTING_SMS,settingSMS);
+    if(EEPROM.put(AD_SETTING_SMS,settingSMS)){
+      successMessage();
+    }
     showMatrix(settingSMS,6);
   }
 /////////// PARTIE 6 les etats
@@ -586,10 +608,14 @@ void pinSetting(int Matrix[MTR]){}
 void modeSys(int Matrix[MTR]){
   if(Matrix[4]==1){
     ModeSys=true;
-    EEPROM[AD_MODE_SYS]=1;
+    if(EEPROM[AD_MODE_SYS]=1){
+      successMessage();
+    }
   }else if(Matrix[4]==2){
     ModeSys=false;
-    EEPROM[AD_MODE_SYS]=2;
+    if(EEPROM[AD_MODE_SYS]=2){
+      successMessage();
+    }
   }
   }
 /////// PARTIE 6 : Réinitialisation du système
@@ -615,6 +641,7 @@ void Virginity(int value ){
 }
 // les données
 bool loadingData(){
+  delay(200);setDataNextion("j0.val=30");
   byte Mode=EEPROM[AD_MODE_SYS];
   if(Mode==1){
     ModeSys=true;
@@ -624,23 +651,38 @@ bool loadingData(){
     EEPROM[AD_MODE_SYS]=2;
   }
   EEPROM.get(AD_PIN,PINcode);
+  delay(200);setDataNextion("j0.val=40");
   EEPROM.get(AD_PHONE,numberPhone);
+  delay(200);setDataNextion("j0.val=45");
   Phone=toString(numberPhone);
+  delay(200);setDataNextion("j0.val=50");
   EEPROM.get(AD_NUMBER_OBJ,numberObj);
+  delay(200);setDataNextion("j0.val=55");
   EEPROM.get(AD_SETTING_SMS,settingSMS);
+  delay(200);setDataNextion("j0.val=60");
   EEPROM.get(AD_SECTOR,sector);
+  delay(200);setDataNextion("j0.val=65");
   EEPROM.get(AD_RELATION_OBJ,relationObj);
+  delay(200);setDataNextion("j0.val=70");
   EEPROM.get(AD_RELATION_PAE,relationPae);
   for(int i=0;i<10;i++)
       pim[i].getProg();
+  delay(200);setDataNextion("j0.val=75");
   for(int i=0;i<5;i++)
       pr[i].getProg();
+  delay(200);setDataNextion("j0.val=80");
   for(int i=0;i<15;i++)
       van[i].getProg();
+  
+  delay(200); setDataNextion("j0.val=85");
   for(int i=0;i<5;i++)
       mlg[i].getProg();
+  delay(200);
+  setDataNextion("j0.val=90");
   for(int i=0;i<5;i++)
       eng[i].getProg();    
+  delay(200);
+  setDataNextion("j0.val=95");
   Serial.println("le chargement des données a été téléchargé");
   return true;
 }
@@ -680,6 +722,11 @@ void setDataNextion(String data) {
 void popupMessage(String msg){
    setDataNextion("page erreur");
    setDataNextion("msg.txt=\""+msg+"\"");
+   addHist(msg);
+}
+// Affiche les informations 
+void successMessage(){
+   setDataNextion("page succes");
 }
 ///////////////// GSM 
 ///// Envoie des notifications et des informations par SMS.
@@ -776,7 +823,8 @@ void sendCmd(int cmd){
   if(millis() - last > 250){
       Serial.println(cmd);
       Serial3.println(cmd);
-      RdCmd(cmd);
+      RdCmd(cmd);  // tm
+      
       }
       last = millis();
 }
@@ -802,6 +850,7 @@ void addHist(String hist)
 ////// Initialization de la module carte SD !! 
 bool sdInit(){
   String HistFile="Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv";
+  Serial.println(HistFile);
   //Si le fichier existe,Il s'ouvre.
   if(!sd.exists(HistFile.c_str())){
       csv.open(HistFile.c_str(), O_RDWR | O_CREAT);
@@ -941,16 +990,22 @@ void RdCmd(int Bpin){
   Serial.println(Bpin);
   int Mpin[4];
   int i=0;
+  String Histo="";
   while (Bpin > 0)
 {
     Mpin[i] = Bpin%10;
     Bpin /= 10;
     i++;
 }
-showMatrix(Mpin,4);
+//showMatrix(Mpin,4);
 if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
    objState[Mpin[3]-1][Mpin[1]+(Mpin[2]*10)-1]=Mpin[0];
 }
+ if(Mpin[0]==1)
+    Histo=getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"ON";
+ else
+    Histo=getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"OFF";
+ addHist(Histo);
 }
 
 void statPage(){
