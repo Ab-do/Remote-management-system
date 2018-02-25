@@ -77,13 +77,13 @@ void setup() {
   popupMessage("SD card begin error");
   return;
   }else {
-   Serial.println("SD....... OK ! ");
+   //Serial.println("SD....... OK ! ");
   }
   Serial.println("start-up");
   
   //showRAM();
   getTime();
-  setDataNextion("page 1");
+  //setDataNextion("page 1");
   addHist("start-up");
 }
 
@@ -99,7 +99,7 @@ void loop() {
 void getDataSerial(){
   if(Serial.available()>0){
     String str=Serial.readString();
-    Serial.println(str); // afficher str
+    //Serial.println(str); // afficher str
     strToMatrix(str);
   }
 }
@@ -107,7 +107,7 @@ void getDataSerial(){
 void getDataGsm(){
   if(Serial1.available()>0){
     String str=Serial1.readString();
-    Serial.println(str); // afficher str
+    //Serial.println(str); // afficher str
     strToMatrix(str);
   }
 }
@@ -115,7 +115,7 @@ void getDataGsm(){
 void getDataNextion(){
   if(Serial2.available()>0){
     String str=Serial2.readString();
-    Serial.println(str); // afficher str
+    //Serial.println(str); // afficher str
     strToMatrix(str);
   }
 }
@@ -123,7 +123,7 @@ void getDataNextion(){
 void getDataHc(){
   if(Serial3.available()>0){
     String str=Serial3.readString();
-    Serial.println(str); // afficher str
+    //Serial.println(str); // afficher str
     strToMatrix(str);
   }
 }
@@ -143,7 +143,7 @@ void strToMatrix(String str){
             i++;
          }
          //Commutation des données.
-         showMatrix(Matrix,20);
+         //showMatrix(Matrix,20);
          switchData(Matrix);
          memset(Matrix,0,sizeof(Matrix));
       }
@@ -154,11 +154,11 @@ void strToMatrix(String str){
 }
 // Analyse, Commutation des données et Effectuation des actions.
 void switchData(int Matrix[MTR]){
-  Serial.println("SWITCH");
+  //Serial.println("SWITCH");
   switch(Matrix[0]){
     case 1: // int : int + 48.
             // Inclure les données de paramétrage.
-            Serial.println("Inclure les données de paramétrage.");
+            //Serial.println("Inclure les données de paramétrage.");
             if(Matrix[1]==1){
               // les fonction de paramétrage.
               if(Matrix[2]==1){
@@ -190,7 +190,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 2:
              //  // Effectuer une action sur un objet.
-            Serial.println("// Effectuer une action sur un objet.");
+            //Serial.println("// Effectuer une action sur un objet.");
             if(Matrix[1]==1){
               actionObj(Matrix); 
             }else if(Matrix[1]==2){
@@ -201,7 +201,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 3:
              // Fonctions liées à l'horloge.
-            Serial.println("// Fonctions liées à l'horloge.");
+            //Serial.println("// Fonctions liées à l'horloge.");
             if(Matrix[1]==1){ // Réglage la date et l'heure
               setTime(Matrix);
             }else if(Matrix[1]==2) { // Demmande la date et l'heure
@@ -212,7 +212,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 4:
              // mettre les données à propos système.
-            Serial.println("// mettre les données à propos système.");
+            //Serial.println("// mettre les données à propos système.");
             switch(Matrix[2]){
               case 1:
                 showHist(Matrix);
@@ -236,7 +236,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 5:
              // Paramétre
-            Serial.println("// Paramétre");
+            //Serial.println("// Paramétre");
             if (Matrix[1]==1){
               smsSetting(Matrix);
             }else if (Matrix[1]==2){
@@ -249,7 +249,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 6:
              // Réinitialisation du système 128
-            Serial.println("Réinitialisation du système.");
+            //Serial.println("Réinitialisation du système.");
             if(Matrix[2]==2 && Matrix[2]==2 && Matrix[2]==2){
                Serial.println("en cours: ");
               restSys();
@@ -257,7 +257,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 7:
              // Protection du système.
-            Serial.println("Protection du système.");
+            //Serial.println("Protection du système.");
             if(Matrix[1]==4){
               if(Matrix[2]==1){
                 setDelay(Matrix);
@@ -287,8 +287,8 @@ void switchData(int Matrix[MTR]){
 /// CONFIGURATION.
 //Mettre le numbres , numéro et la puissance de chaque objets.
 void setObj(int Matrix[MTR]){
-    Serial.println("Mettre le nombre des objets");
-    showMatrix(Matrix,15);
+    //Serial.println("Mettre le nombre des objets");
+    //showMatrix(Matrix,15);
     int j=0;
     for(int i=0;i<6;i++){
       numberObj[i]=toDec(Matrix[j+3],Matrix[j+4]);
@@ -297,11 +297,11 @@ void setObj(int Matrix[MTR]){
     if(EEPROM.put(AD_NUMBER_OBJ,numberObj)){
       successMessage();
     }
-    showMatrix(numberObj,6);
+    //showMatrix(numberObj,6);
   }
 void setRelation(int Matrix[MTR]){
-    Serial.println("Mettre les relations");
-    showMatrix(Matrix,15);
+    //Serial.println("Mettre les relations");
+    ////showMatrix(Matrix,15);
     int j=0;
     for(int i=0;i<6;i++){
       relationObj[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);
@@ -310,11 +310,11 @@ void setRelation(int Matrix[MTR]){
     if(EEPROM.put(AD_RELATION_OBJ,relationObj)){
       successMessage();
     }
-    showMatrix(relationObj);
+    //showMatrix(relationObj);
     }
 void setSec(int Matrix[MTR]){
-    Serial.println("Mettre les secteurs.");
-    showMatrix(Matrix,15);
+    //Serial.println("Mettre les secteurs.");
+    //showMatrix(Matrix,15);
     int j=0;
     for(int i=0;i<6;i++){
       sector[Matrix[3]-1][i]=toDec(Matrix[j+4],Matrix[j+5]);  // peut etre y'a un problème pour les vannes qu'elle a un numéro plus que 10.
@@ -323,23 +323,23 @@ void setSec(int Matrix[MTR]){
     if(EEPROM.put(AD_SECTOR,sector)){
       successMessage();
     }
-    showMatrix(sector);
+    //showMatrix(sector);
   }
  // Mettre la relation entre les pompes de refoulement et les pompes à engrais.
 void setRelationPae(int Matrix[MTR]){
-    Serial.println("Mettre la relation entre les pompes de refoulement et les pompes à engaris.");
-    showMatrix(Matrix,15);
+    //Serial.println("Mettre la relation entre les pompes de refoulement et les pompes à engaris.");
+    //showMatrix(Matrix,15);
     relationPae[Matrix[3]-1][0]=toDec(Matrix[4],Matrix[5]);
     relationPae[Matrix[3]-1][1]=toDec(Matrix[6],Matrix[7]);
     if(EEPROM.put(AD_RELATION_PAE,relationPae)){
       successMessage();
     }
-    //showMatrix(relationPae);
+    ////showMatrix(relationPae);
 }
 //Mettre les données de client
 void setNumPhone(int Matrix[MTR]){
-    Serial.println("Mettre Numéro de Tel.");
-    showMatrix(Matrix,11);
+    //Serial.println("Mettre Numéro de Tel.");
+    //showMatrix(Matrix,11);
     for(int i=0;i<9;i++){
       numberPhone[i]=Matrix[i+3];
     }
@@ -347,7 +347,7 @@ void setNumPhone(int Matrix[MTR]){
     if(EEPROM.put(AD_PHONE,numberPhone)){
       successMessage();
     }
-    showMatrix(numberPhone,3);
+    //showMatrix(numberPhone,3);
   }
 void setPIN(int Matrix[MTR]){
     PINcode= 10000+Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6]; 
@@ -424,11 +424,11 @@ void showHist(int Matrix[MTR]){
   String HistFile;
   Matrix[3]==9? HistFile = "Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv"         
   :   HistFile = "Hist_"+String(toDec(Matrix[3],Matrix[4]))+"_"+String(toDec(Matrix[5],Matrix[6]))+"_"+String(toDec(Matrix[7],Matrix[8]))+".csv";
-  Serial.println("Name de fichier : "+HistFile);
+  //Serial.println("Name de fichier : "+HistFile);
   if(sd.exists(HistFile.c_str())){
       csv.open(HistFile.c_str(), O_RDWR); 
     } else {
-      Serial.println("File not existe");  
+      popupMessage("File not existe");  
       return 0; 
       }
   csv.gotoBeginOfFile();
@@ -577,8 +577,8 @@ void getAccess(){
 //////// PARTIE 5 : paramétre
 //// les paramétre des SMS
 void smsSetting(int Matrix[MTR]){
-    Serial.println("Paramètre SMS");
-    showMatrix(Matrix,8);
+    //Serial.println("Paramètre SMS");
+    //showMatrix(Matrix,8);
     int j=0;
     for(int i=0;i<6;i++){
       settingSMS[i]=toDec(Matrix[j+2],Matrix[j+3]);
@@ -587,18 +587,18 @@ void smsSetting(int Matrix[MTR]){
     if(EEPROM.put(AD_SETTING_SMS,settingSMS)){
       successMessage();
     }
-    showMatrix(settingSMS,6);
+    //showMatrix(settingSMS,6);
   }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
   if(Matrix[2]<=NUMBER_OBJ && toDec(Matrix[3],Matrix[4])<=NUMBER_MAX){
-    Serial.print("L'Etat : ");
-    Serial.print(" L'objet de type :");
-    Serial.print(Matrix[2]);
-    Serial.print(" numéro : ");
-    Serial.print(toDec(Matrix[3],Matrix[4]));
-    Serial.print(" Etat : ");
-    Serial.println(Matrix[5]);
+//    Serial.print("L'Etat : ");
+//    Serial.print(" L'objet de type :");
+//    Serial.print(Matrix[2]);
+//    Serial.print(" numéro : ");
+//    Serial.print(toDec(Matrix[3],Matrix[4]));
+//    Serial.print(" Etat : ");
+//    Serial.println(Matrix[5]);
     objState[Matrix[2]-1][toDec(Matrix[3],Matrix[4])-1]=Matrix[5];
   }
 }
@@ -681,13 +681,20 @@ bool loadingData(){
   setDataNextion("j0.val=90");
   for(int i=0;i<5;i++)
       eng[i].getProg();    
+  putDataNextion();
   delay(200);
   setDataNextion("j0.val=95");
-  Serial.println("le chargement des données a été téléchargé");
+  //Serial.println("le chargement des données a été téléchargé");
   return true;
 }
 
-
+void putDataNextion(){
+   setDataNextion("pim.val="+String(numberObj[0]));
+   setDataNextion("pr.val="+String(numberObj[1]));
+   setDataNextion("van.val="+String(numberObj[2]));
+   setDataNextion("mlg.val="+String(numberObj[3]));
+   setDataNextion("ang.val="+String(numberObj[4]));
+}
 
 
 ////////////////// les fonctions du vérification
@@ -709,7 +716,7 @@ bool checkValidity(){
 // Mettre les données à Nextion 
 void setDataNextion(String data) {
   Serial2.print(data);
-  Serial.print(data);
+  Serial.println(data);
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.write(0xff);
@@ -766,7 +773,7 @@ String toString(int Matrix[9]){
   String str="";
   for(int i=0;i<9;i++)
     str+=Matrix[i];
-  Serial.println(str);
+  //Serial.println(str);
   return str; 
 }
 //  Obtenir l'heure d'horloge 
@@ -821,7 +828,7 @@ void autoRunObj(){
 
 void sendCmd(int cmd){
   if(millis() - last > 250){
-      Serial.println(cmd);
+      //Serial.println(cmd);
       Serial3.println(cmd);
       RdCmd(cmd);  // tm
       
@@ -837,10 +844,10 @@ void addHist(String hist)
   if(Date<10)   { Day   ="0"+String(Date); }    else { Day=String(Date); }
   if(Month<10)  { Day+="/0"+String(Month); }   else { Day+="/"+String(Month); }
   if(!sdInit()){
-    Serial.println("Erreur de creation de fichier");
+    popupMessage("Erreur de creation de fichier");
     return 0;
   }
-  Serial.println("HISTORIQUE : "+hist+" "+Time+" "+Day);
+  //Serial.println("HISTORIQUE : "+hist+" "+Time+" "+Day);
   csv.addField(hist.c_str());
   csv.addField(Time.c_str());
   csv.addField(Day.c_str());
@@ -850,7 +857,7 @@ void addHist(String hist)
 ////// Initialization de la module carte SD !! 
 bool sdInit(){
   String HistFile="Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv";
-  Serial.println(HistFile);
+  //Serial.println(HistFile);
   //Si le fichier existe,Il s'ouvre.
   if(!sd.exists(HistFile.c_str())){
       csv.open(HistFile.c_str(), O_RDWR | O_CREAT);
@@ -873,22 +880,22 @@ void Error(){
 /////////////// fonction d'essai et d'affichage
 void showRAM(){
   Serial.print("Numéro de Tel : ");
-  showMatrix(numberPhone,9);
+  //showMatrix(numberPhone,9);
   Serial.println(Phone);
   Serial.print("durée de vie : ");
   Serial.println(sysTime);
   Serial.print("PIN : ");
   Serial.println(PINcode);
   Serial.println("Nombre des Objects..");
-  showMatrix(numberObj,6);
+  //showMatrix(numberObj,6);
   Serial.println("les paramètres SMS..");
-  showMatrix(settingSMS,6);
+  //showMatrix(settingSMS,6);
   Serial.println("Les secteurs : ");
-  showMatrix(sector);
+  //showMatrix(sector);
   Serial.println("les Relation :");
-  showMatrix(relationObj);
+  //showMatrix(relationObj);
   Serial.println("Relation PAE");
-  //showMatrix(relationPae);
+  ////showMatrix(relationPae);
   delay(1000);
   getTime();
   Serial.print(Date);
@@ -923,13 +930,13 @@ void showMemory(){
   String str="";
   Serial.println("Matrice 1 : les nombres des objets");
   EEPROM.get(AD_NUMBER_OBJ,Matrix1);
-  showMatrix(Matrix1,6);
+  //showMatrix(Matrix1,6);
   Serial.println("Matrice 2 : les relatiions ");
   EEPROM.get(AD_RELATION_OBJ,Matrix2);
-  showMatrix(Matrix2);
+  //showMatrix(Matrix2);
   Serial.println("Matrice 3 : les secteurs");
   EEPROM.get(AD_SECTOR,Matrix3);
-  showMatrix(Matrix3);
+  //showMatrix(Matrix3);
   Serial.println("Numéro de Tel : ");
   EEPROM.get(AD_PHONE,str);
   delay(1000);
