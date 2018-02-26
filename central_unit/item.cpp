@@ -19,33 +19,23 @@ void Item::updateProg(){
   {
        case 1:
               //pompe immerger
-              if(EEPROM.put(AD_PROG_PIM+k,MatrixTime)){
-                successMessage();
-              }
+              EEPROM.put(AD_PROG_PIM+k,MatrixTime);
               break;
        case 2:
               //pompe refolemnt
-              if(EEPROM.put(AD_PROG_PR+k,MatrixTime)){
-                successMessage();
-              }
+              EEPROM.put(AD_PROG_PR+k,MatrixTime);
               break;
        case 3:
               //les vannes 
-              if(EEPROM.put(AD_PROG_VAN+k,MatrixTime)){
-                successMessage();
-              }
+              EEPROM.put(AD_PROG_VAN+k,MatrixTime);
               break;
        case 4:
               //les pompes angre
-              if(EEPROM.put(AD_PROG_MLG+k,MatrixTime)){
-                successMessage();
-              }
+              EEPROM.put(AD_PROG_MLG+k,MatrixTime);
               break;
        case 5:
               //Melengeur Angre
-              if(EEPROM.put(AD_PROG_PIM+k,MatrixTime)){
-                successMessage();
-              }
+              EEPROM.put(AD_PROG_ENG+k,MatrixTime);
               break;
        default:
               break;
@@ -97,6 +87,13 @@ void Item::getProg(){
        default:
               break;
   }
+  Serial.print("Objet : ");
+  Serial.print(IdObj);
+  Serial.print("   Numéro : ");
+  Serial.print(NumberObj);
+  Serial.print("   Adresse ");
+  Serial.println(AD);
+  showMatrix(MatrixTime,5);
 }
 
 void Item::autoRun()
@@ -126,7 +123,7 @@ bool Item::runObj(int Action)
              sendCmd(Cmd+Action);
              return true;
             } else if(Action==1){
-             popupMessage("la pompe immérgée: n'a pas démarré");
+             Serial.println("la pompe immérgée: n'a pas démarré");
              return false;
             } else if(Action==2){
              //offObj(1);
@@ -142,12 +139,12 @@ bool Item::runObj(int Action)
                 return true;
               } else {
                 //Erreur(2);
-                popupMessage("la pompe de refoulement : n'a pas démarré a cause de nombre des vannes.");
+                Serial.println("la pompe de refoulement : n'a pas démarré a cause de nombre des vannes.");
                 return false;
               }
           } else if(Action==1) {
             //Erreur(1);
-             popupMessage("la pompe de refoulement : n'a pas démarré.");
+             Serial.println("la pompe de refoulement : n'a pas démarré.");
              return false;
           } else if(Action==2 && checkPae()) {
             //offObj(1);
@@ -155,7 +152,7 @@ bool Item::runObj(int Action)
              return true;
           } else if(Action==2) {
             //Erreur(5);//la pompe a angre n'est pas etainde
-             popupMessage("Vous pouvez pas Arreter la pompe de refoulement N : "+String(this->NumberObj));
+            Serial.println("Vous pouvez pas Arreter la pompe de refoulement N : "+String(this->NumberObj));
              return false;
           }
            break;
@@ -171,7 +168,7 @@ bool Item::runObj(int Action)
              return true;
           } else if(Action==2)  {
             //Erreur(3);//
-            popupMessage("Vous pouvez pas Arreter la vanne N : "+String(this->NumberObj));
+            Serial.println("Vous pouvez pas Arreter la vanne N : "+String(this->NumberObj));
              return false;
           }
            break;
@@ -183,7 +180,7 @@ bool Item::runObj(int Action)
           } else if(Action==1)
           {
              //sendCmd(Cmd+Action);
-             popupMessage("Vous pouvez pas démarrer la pompe à engrais N : "+String(this->NumberObj));
+             Serial.println("Vous pouvez pas démarrer la pompe à engrais N : "+String(this->NumberObj));
              return false; 
           } else if(Action==2)
           {
