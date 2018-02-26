@@ -1,5 +1,5 @@
 // le 25/02/2019 Agadir
-// Etape 27  :  Historique 
+// Etape 29  :  Historique 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -993,8 +993,8 @@ void showSize(){
 }
 
 void RdCmd(int Bpin){
-  Serial.println("B PIN");
-  Serial.println(Bpin);
+  //Serial.println("B PIN");
+  //Serial.println(Bpin);
   int Mpin[4];
   int i=0;
   String Histo="";
