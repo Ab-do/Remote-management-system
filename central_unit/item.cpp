@@ -97,13 +97,6 @@ void Item::getProg(){
        default:
               break;
   }
-  Serial.print("Objet : ");
-  Serial.print(IdObj);
-  Serial.print("   Numéro : ");
-  Serial.print(NumberObj);
-  Serial.print("   Adresse ");
-  Serial.println(AD);
-  showMatrix(MatrixTime,5);
 }
 
 void Item::autoRun()
