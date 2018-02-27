@@ -7,6 +7,9 @@ extern int sector[6][6];        // les secteurs
 extern int relationObj[6][6]; // les relation entre les pompes de refoulements et les vannes
 extern int relationPae[5][2];
 extern void sendCmd(int cmd);
+extern void popupMessage(String msg);
+extern void addHist(String hist);
+extern void successMessage();
 void showMatrix(int Matrix[20],int a);
 int const AD_PROG_PIM=500;
 int const AD_PROG_PR=610;
@@ -26,10 +29,11 @@ class Item{
       void setProg(int sHr,int sMin,int eHr,int eMin,int Type);
       void getProg();
       void updateProg();
+      int MatrixTime[5]={99};
       //void static setTime(int Hr,int Min,int Sec);
     private :
       int IdObj,NumberObj,Cmd;
-      int MatrixTime[5]={99};
+      
       bool ckeckPmp();
       bool checkVan();
       bool ckeckPrVan();
