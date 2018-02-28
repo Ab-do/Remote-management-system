@@ -1,5 +1,5 @@
-// le 26/02/2019 Agadir
-// Etape 29  :  Historique 
+// le 28/02/2019 Agadir
+// Etape 32  :  
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -16,6 +16,7 @@ CSVFile csv;
 bool Century=false;
 bool h12;
 bool PM;
+bool Config=false;
 // Déclaration des constantes.
 const int MTR=20;  // Nombre de Rangé de la matrice
 const int AD_VIRGINITY=0;
@@ -58,13 +59,24 @@ void setup() {
   Serial2.begin(9600);
   Serial3.begin(9600);
   Wire.begin();
-  setDataNextion("page 0");
-  while(!checkValidity()){}
-  delay(200);setDataNextion("j0.val=10");
-  while(!checkVirginity()){
-    Serial.println("NO");
-    delay(5000);
-    Virginity(1);
+  while(!checkValidity()){
+    setDataNextion("page Info");
+    setDataNextion("t0.txt=\"Certificat de securite non valide.\"");
+    while(1);
+    }
+   setDataNextion("page 0");
+   delay(200);setDataNextion("j0.val=10");
+   while(!checkVirginity()){
+    if(Config==false){
+      Serial.println("NO");
+      setDataNextion("page Welcome");
+      Config=true;
+    }else {
+       //getDataNextion();
+       //getDataSerial();
+       loop();
+      //Virginity(1);
+    }
   }
   delay(200);setDataNextion("j0.val=20");
   while(!loadingData()){
@@ -83,7 +95,7 @@ void setup() {
   
   //showRAM();
   getTime();
-  setDataNextion("page 1");
+  //setDataNextion("page 1");
   addHist("start-up");
 }
 
@@ -232,6 +244,12 @@ void switchData(int Matrix[MTR]){
               case 6:
                 getProg(Matrix);
               break;
+              case 7:
+                getSettingSMS();
+              break;
+              case 8:
+                sendPinSMS();
+              break;
               default:
                 Error();
               break;
@@ -253,9 +271,10 @@ void switchData(int Matrix[MTR]){
     case 6:
              // Réinitialisation du système 128
             //Serial.println("Réinitialisation du système.");
-            if(Matrix[2]==2 && Matrix[2]==2 && Matrix[2]==2){
-               Serial.println("en cours: ");
+            if(Matrix[3]==1){
               restSys();
+            }else if(Matrix[3]==2){
+              Virginity(1);
             }
             break;
     case 7:
@@ -592,37 +611,64 @@ void getAccess(){
 void getProg(int Matrix[MTR]){
    switch(Matrix[3]){
       case 1: 
-            Serial.println(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[4]);
-          //if(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[4]==3){
-            setDataNextion("t0.txt=\""+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[0])+"\"");
-            setDataNextion("t1.txt=\""+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[1])+"\"");
-            setDataNextion("t2.txt=\""+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[2])+"\"");
-            setDataNextion("t3.txt=\""+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[3])+"\"");
+//            Serial.println(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[4]);
+//          if(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[4]==3){
+            setDataNextion("va0.val="+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
 //          } else {
 //            Serial.println(" ......  "); 
 //          }
       break;
       case 2:
+            setDataNextion("va0.val="+String(pr[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(pr[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(pr[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(pr[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
       break;
       case 3:
+            setDataNextion("va0.val="+String(van[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(van[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(van[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(van[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
       break;
       case 4:
+            setDataNextion("va0.val="+String(mlg[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(mlg[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(mlg[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(mlg[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
       break;
       case 5:
+            setDataNextion("va0.val="+String(eng[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(eng[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(eng[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(eng[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
       break;
       default:
+           Error();
       break;
    }
+}
+
+void getSettingSMS(){
+  for(int i=0;i<6;i++){
+    if(settingSMS[i]==1){
+      setDataNextion("bt"+String(i+1)+".val=1");
+    }
+  }
+}
+// envoyer le pin par sms.
+void sendPinSMS(){
+  
 }
 //////// PARTIE 5 : paramétre
 //// les paramétre des SMS
 void smsSetting(int Matrix[MTR]){
     //Serial.println("Paramètre SMS");
     //showMatrix(Matrix,8);
-    int j=0;
     for(int i=0;i<6;i++){
-      settingSMS[i]=toDec(Matrix[j+2],Matrix[j+3]);
-      j+=2;
+      settingSMS[i]=Matrix[i+2];
     }
     if(EEPROM.put(AD_SETTING_SMS,settingSMS)){
       successMessage();
@@ -660,10 +706,14 @@ void modeSys(int Matrix[MTR]){
   }
 /////// PARTIE 6 : Réinitialisation du système
 void restSys(){
+    int j=0;
+    setDataNextion("page 0");
     for (int i = 0 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
-    if(i%100==0){
-      Serial.print("-");
+    if(i%400==0){
+      Serial.print(j+=10);
+      Serial.print(" ");
+      setDataNextion("j0.val="+String(j+10));
     }
   }
   Serial.println();
@@ -818,11 +868,11 @@ String toString(int Matrix[9]){
 }
 //  Obtenir l'heure d'horloge 
 void getTimeNextion(){
-  setDataNextion("t0.txt=\""+String(Hour)+"\"");
-  setDataNextion("t1.txt=\""+String(Minute)+"\"");
-  setDataNextion("t2.txt=\""+String(Date)+"\"");
-  setDataNextion("t3.txt=\""+String(Month)+"\"");
-  setDataNextion("t4.txt=\""+String(Year)+"\"");
+  setDataNextion("n0.val="+String(Hour));
+  setDataNextion("n1.val="+String(Minute));
+  setDataNextion("n2.val="+String(Date));
+  setDataNextion("n3.val="+String(Month));
+  setDataNextion("n4.val="+String(Year));
 }
 
 void getTime(){
