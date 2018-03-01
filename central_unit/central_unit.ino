@@ -1,4 +1,4 @@
-// le 28/02/2019 Agadir
+// le 01/03/2019 Agadir
 // Etape 32  :  
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
@@ -19,9 +19,9 @@ bool PM;
 bool Config=false;
 // Déclaration des constantes.
 const int MTR=20;  // Nombre de Rangé de la matrice
-const int AD_VIRGINITY=0;
-const int AD_MODE_SYS=1; // mode de démarrage
-const int AD_VALIDITY=5;
+const int AD_VIRGINITY=1;
+const int AD_MODE_SYS=2; // mode de démarrage
+const int AD_VALIDITY=0;
 const int AD_PIN=18;
 const int AD_PHONE=20;
 const int AD_NUMBER_OBJ=38;
@@ -60,7 +60,7 @@ void setup() {
   Serial2.begin(SPEED_SERIAL);
   Serial3.begin(SPEED_SERIAL);
   Wire.begin();
-  while(!checkValidity()){
+  while(checkValidity()){
     setDataNextion("page Info");
     setDataNextion("t0.txt=\"Certificat de securite non valide.\"");
     while(1);
@@ -724,9 +724,9 @@ void modeSys(int Matrix[MTR]){
   }
 /////// PARTIE 6 : Réinitialisation du système
 void restSys(){
-    int j=0;
-    setDataNextion("page 0");
-    for (int i = 0 ; i < EEPROM.length() ; i++) {
+    int j=-10;
+    setDataNextion("page Reset");
+    for (int i = 1 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
     if(i%400==0){
       Serial.print(j+=10);
@@ -734,8 +734,8 @@ void restSys(){
       setDataNextion("j0.val="+String(j+10));
     }
   }
-  Serial.println();
-  Serial.println("le système a été réinitialisé");
+  //Serial.println("le système a été réinitialisé");
+  setup();
   }
 
 void getValueRelation(){
@@ -752,15 +752,15 @@ void setDelay(int Matrix[MTR]){}
 void tryProto(int Matrix[MTR]){}
 void sysLock(int Matrix[MTR]){
     EEPROM[AD_VALIDITY]=3;
-    setDataNextion("page Info");
-    setDataNextion("Système a ete blocker...!");
-    
+    setDataNextion("page Info"); //t0.txt=\"Certificat de securite non valide.\"
+    setDataNextion("t0.txt=\"Système a ete blocker...!\"");
   }
 ///////////////////////////////
 ////////////////// les fonctions EEPROM
 ////// Mettre des valeurs 
 void Virginity(int value ){
-  EEPROM[0]=value;
+  EEPROM[AD_VIRGINITY]=value;
+  setup();
 }
 // les données
 bool loadingData(){
@@ -824,7 +824,7 @@ void putDataNextion(){
 ///// fonction pour vérifier 
   //  Vérification la virginité.
 bool checkVirginity(){
-  int value=EEPROM[0];
+  int value=EEPROM[AD_VIRGINITY];
   if(value==1){
     return true;
   }else if(value==2){
