@@ -31,6 +31,7 @@ const int AD_RELATION_OBJ=134;
 const int AD_RELATION_PAE=210; //280
 const int NUMBER_OBJ=5;
 const int NUMBER_MAX=15;
+const double SPEED_SERIAL = 9600;
 // Déclaration des variables.
 unsigned long last = millis();
 String Phone="669600729"; // numéro de Tel.
@@ -54,10 +55,10 @@ Item eng[5]={{5,1},{5,2},{5,3},{5,4},{5,5}};
 
 void setup() {
   // Initialisation les serials ( Moniteur, Gsm , Nextion et HC12)
-  Serial.begin(9600);
-  Serial1.begin(9600);
-  Serial2.begin(9600);
-  Serial3.begin(9600);
+  Serial.begin(SPEED_SERIAL);
+  Serial1.begin(SPEED_SERIAL);
+  Serial2.begin(SPEED_SERIAL);
+  Serial3.begin(SPEED_SERIAL);
   Wire.begin();
   while(!checkValidity()){
     setDataNextion("page Info");
@@ -104,7 +105,9 @@ void loop() {
   getDataSerial(); // ausculter les données qui obtient de moniteur série.
   getDataHc();
   getDataNextion();
-  autoRunObj(); 
+  if(ModeSys==true){
+    autoRunObj(); 
+  }
 }
 //********* OBTEBNIR LES DONNEES
 // Obtenir des données de Serial
@@ -271,12 +274,27 @@ void switchData(int Matrix[MTR]){
     case 6:
              // Réinitialisation du système 128
             //Serial.println("Réinitialisation du système.");
-            if(Matrix[3]==1){
-              restSys();
-            }else if(Matrix[3]==2){
-              Virginity(1);
-            }
-            break;
+            switch(Matrix[3]){
+              case 1:
+                restSys();
+              break;
+              case 2:
+                //Virginity(1);
+              break;
+              case 3:
+                getValueRelation();
+              break;
+              case 4:
+                getValuePae();
+              break;
+              case 5:
+                Virginity(1);
+              break;
+              default:
+                Error();
+              break;
+            };
+          break;
     case 7:
              // Protection du système.
             //Serial.println("Protection du système.");
@@ -719,10 +737,25 @@ void restSys(){
   Serial.println();
   Serial.println("le système a été réinitialisé");
   }
+
+void getValueRelation(){
+    setDataNextion("prMax.val="+String(numberObj[1]));
+    setDataNextion("vanMax.val="+String(numberObj[2]));
+}
+void getValuePae(){
+    setDataNextion("prMax.val="+String(numberObj[1]));
+    setDataNextion("mlgMax.val="+String(numberObj[3]));
+    setDataNextion("engMax.val="+String(numberObj[3]));
+}
 /////// PARTIE 7 : Protection du système
 void setDelay(int Matrix[MTR]){}
 void tryProto(int Matrix[MTR]){}
-void sysLock(int Matrix[MTR]){}
+void sysLock(int Matrix[MTR]){
+    EEPROM[AD_VALIDITY]=3;
+    setDataNextion("page Info");
+    setDataNextion("Système a ete blocker...!");
+    
+  }
 ///////////////////////////////
 ////////////////// les fonctions EEPROM
 ////// Mettre des valeurs 
@@ -800,7 +833,9 @@ bool checkVirginity(){
 }
   //  Vérification la validité
 bool checkValidity(){
-  return true;
+  bool k;
+  EEPROM[AD_VALIDITY]==3? k=false : k=true;
+  return k;
 }
 /////////////// NEXTION
 // Mettre les données à Nextion 
