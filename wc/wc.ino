@@ -1,10 +1,11 @@
 // WC : wirless controller.
-// le 20/02/2019 Agadir.
+// le 28/02/2019 Agadir.
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
 const int AD_PHONE=10;
 String Phone="";
 int numberPhone[9]={0};        // nombre des objets de systeme
+int settingSMS[6]={0};
 const int MTR=15;
 void setup() {
   Serial.begin(9600);  // Moniteur série
@@ -12,11 +13,13 @@ void setup() {
   Serial2.begin(9600); // Module radio HC12
   Serial.println("Start-up");
   Serial2.println("Start-up");
+  loadingData();
 }
 
 void loop() {
-  //getDataGsm();
+  getDataGsm();
   getDataHc();
+  getDataSerial();
 }
 
 //  obtenir les donnée 
@@ -53,7 +56,7 @@ void getDataHc(){
     }else if(data[0]==52){
       data.remove(0,1);
       setNumPhone(data);
-    }if(data[0]==53){
+    }else if(data[0]==53){
       loadingData();
       }
     else {
@@ -140,4 +143,50 @@ String toString(int Matrix[9]){
     str+=Matrix[i];
   Serial.println(str);
   return str; 
+}
+
+void smsExmple(int Matrix[]){
+    String msg="";
+    switch(Matrix[2]){
+      case 1:
+             msg=getName(Matrix[1],toDec(Matrix[2],Matrix[3]));
+         if(Matrix[4]==3){
+            msg+=" ON";
+         }else if(Matrix[5]==4) {
+            msg+=" OFF";
+         }else if(Matrix[4]==5) {
+            msg+=" Erreur!";
+         }
+      break;
+    }
+    sendSMS(msg,settingSMS[0]);
+}
+
+/// Obtenir le nome de l'obejct et leur numéro.
+String getName(int Obj,int Number){
+  switch(Obj){
+    case 1 : //pim
+    return "POMPE IMMERGEE "+String(Number)+" ";
+    break;
+    case 2 : //pr
+    return "POMPE ROUF "+String(Number)+" ";
+    break;
+    case 3 : //Vn
+    return "VANNE "+String(Number)+" ";
+    break;
+    case 4 : //Vn
+    return "MELANGEUR "+String(Number)+" ";
+    break;
+    case 5 : //Vn
+    return "PMP ENGRIS "+String(Number)+" ";
+    break;
+    case 6 : //Vn
+    return "SECTEUR "+String(Number)+" ";
+    break;
+  }
+}
+
+/// Convertir deux nombres en un nombre décimal
+int toDec(int o,int p){
+  return o*10+p;
 }
