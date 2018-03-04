@@ -390,6 +390,7 @@ void setNumPhone(int Matrix[MTR]){
     if(EEPROM.put(AD_PHONE,numberPhone)){
       successMessage();
     }
+    Serial2.println("4"+Phone);
     //showMatrix(numberPhone,3);
   }
 void setPIN(int Matrix[MTR]){
@@ -417,9 +418,16 @@ void actionObj(int Matrix[MTR]){
     case 5:
         eng[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
     break;
+    case 6:
+        for(int i=0;i<6;i++){
+           if(sector[Matrix[3]-1][i]>0){
+              van[sector[Matrix[3]-1][i]].runObj(Matrix[4]);
+           }
+        }  
+    break;
     default:
       Error();
-            break;
+    break;
   }
   }
 // Mettre un programme de démarrage.
@@ -440,6 +448,11 @@ void progObj(int Matrix[MTR]){
     break;
     case 5:
         eng[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 6:
+        for(int i=0;i>6;i++){
+          van[sector[Matrix[3]-1][i]].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+         }
     break;
     default:
       Error();
@@ -1159,6 +1172,6 @@ if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
 void statPage(){
   
 }
-
+// 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
