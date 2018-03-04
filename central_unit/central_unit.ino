@@ -1,5 +1,5 @@
-// le 01/03/2019 Agadir
-// Etape 32  :  
+// le 04/03/2019 Agadir
+// Etape 36  :  
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -70,7 +70,7 @@ void setup() {
    while(!checkVirginity()){
     if(Config==false){
       Serial.println("NO");
-      setDataNextion("page Welcome");
+      setDataNextion("page Configuration");
       Config=true;
     }else {
        //getDataNextion();
@@ -318,6 +318,9 @@ void switchData(int Matrix[MTR]){
           showRAM();
          }
      break;
+     case 9:
+        checkState(Matrix);
+     break;
     default:
        Error();
             break;
@@ -387,6 +390,7 @@ void setNumPhone(int Matrix[MTR]){
     if(EEPROM.put(AD_PHONE,numberPhone)){
       successMessage();
     }
+    Serial2.println("4"+Phone);
     //showMatrix(numberPhone,3);
   }
 void setPIN(int Matrix[MTR]){
@@ -414,9 +418,16 @@ void actionObj(int Matrix[MTR]){
     case 5:
         eng[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
     break;
+    case 6:
+        for(int i=0;i<6;i++){
+           if(sector[Matrix[3]-1][i]>0){
+              van[sector[Matrix[3]-1][i]].runObj(Matrix[4]);
+           }
+        }  
+    break;
     default:
       Error();
-            break;
+    break;
   }
   }
 // Mettre un programme de démarrage.
@@ -437,6 +448,11 @@ void progObj(int Matrix[MTR]){
     break;
     case 5:
         eng[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+    break;
+    case 6:
+        for(int i=0;i>6;i++){
+          van[sector[Matrix[3]-1][i]].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+         }
     break;
     default:
       Error();
@@ -755,7 +771,13 @@ void sysLock(int Matrix[MTR]){
     setDataNextion("page Info"); //t0.txt=\"Certificat de securite non valide.\"
     setDataNextion("t0.txt=\"Système a ete blocker...!\"");
   }
+  
 ///////////////////////////////
+void checkState(int Matrix[]){
+    if(Matrix[2]<=5 && toDec(Matrix[3],Matrix[4])<=numberObj[2] &&  toDec(Matrix[3],Matrix[4])>0 && (Matrix[5]==3 || Matrix[5]==4 || Matrix[5]==5 || Matrix[5]==6)){
+         objState[Matrix[2]-1][toDec(Matrix[3],Matrix[4])-1]=Matrix[5]-2;
+    }
+}
 ////////////////// les fonctions EEPROM
 ////// Mettre des valeurs 
 void Virginity(int value ){
@@ -852,7 +874,7 @@ void setDataNextion(String data) {
 }
 // Affiche les informations et les erreurs.
 void popupMessage(String msg){
-   setDataNextion("page erreur");
+   setDataNextion("page errors");
    setDataNextion("msg.txt=\""+msg+"\"");
    addHist(msg);
 }
@@ -962,9 +984,8 @@ void autoRunObj(){
 void sendCmd(int cmd){
   if(millis() - last > 250){
       //Serial.println(cmd);
-      Serial3.println(cmd);
+      Serial3.println(cmd+80000);
       RdCmd(cmd);  // tm
-      
       }
       last = millis();
 }
@@ -1145,12 +1166,12 @@ if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
     Histo=getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"ON";
  else
     Histo=getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"OFF";
- addHist(Histo);
+    addHist(Histo);
 }
 
 void statPage(){
   
 }
-
+// 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
