@@ -1,8 +1,9 @@
-// WC : wirless controller.
-// le 28/02/2019 Agadir.
+// WC 4 : wirless controller.
+// le 2/03/2019 Agadir.
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
 const int AD_PHONE=10;
+const int AD_SETTING_SMS=30;
 String Phone="";
 int numberPhone[9]={0};        // nombre des objets de systeme
 int settingSMS[6]={0};
@@ -34,7 +35,7 @@ void getDataGsm(){
   if(Serial1.available()>0){
     String data=Serial1.readString();
     Serial.println(data); // afficher str
-    Filtrage(data);
+    filtering(data);
   }
     
 }
@@ -47,26 +48,25 @@ void getDataHc(){
     Serial.println(data.length());
     Serial.println(data.charAt(1));
     if(data[0]==49){
-      Serial2.println(data);
-    }else if( data[0]==50){
       data.remove(0,1);
+      Serial2.println(data);
+    }else if( data[0]==57){
       Serial2.println("<"+data+">");
+      switchSMS("1"+data);
     }else if (data[0]==51){
-      sendSMS(data);
+      Serial.println("switch SMS");
+      switchSMS(data);
     }else if(data[0]==52){
       data.remove(0,1);
       setNumPhone(data);
-    }else if(data[0]==53){
-      loadingData();
-      }
-    else {
+    } else {
       Serial.println("autre choix...");
     }
   }
   
 }
 
-void Filtrage(String str){
+void filtering(String str){
   String dataSend="";
   int i=0;
   while(i<str.length()){
@@ -91,9 +91,36 @@ void Filtrage(String str){
   }
 }
 
-void sendSMS(String str){
+void switchSMS(String str){
   Serial.print("les données qui la fonction va analyser et l'envoyer par SMS au client.");
   Serial.println(str);
+  String msg;
+  switch(str[1]-48){
+    case 9:
+         msg=getName(str[2]-48,toDec(str[3]-48,str[4]-48));
+         if(str[5]-48==3){
+            msg+=" ON";
+         }else if(str[5]-48==4) {
+            msg+=" OFF";
+         }else if(str[5]-48==5) {
+            msg+=" Erreur!";
+         }
+         sendSMS(msg,settingSMS[0]);
+    break;
+    case 2:
+       msg="démmarage de systeme..";
+       sendSMS(msg,1);
+    break;
+    case 3:
+       msg="votre PIN code : ";
+       msg+=str.substring(2);
+       sendSMS(msg,1);
+    break;
+    case 4:
+      
+    break;
+  };
+  
 }
 
 
@@ -112,7 +139,10 @@ void setNumPhone(String str){
 void loadingData(){
   EEPROM.get(AD_PHONE,numberPhone);
   Phone=toString(numberPhone);
-  Serial.print(Phone);
+  EEPROM.get(AD_SETTING_SMS,settingSMS);
+  Serial.println(Phone);
+  for(int i=0;i<6;i++) Serial.print(settingSMS[i]);
+  Serial.println();
 }
 
 ///// Envoie des notifications et des informations par SMS.
@@ -141,7 +171,6 @@ String toString(int Matrix[9]){
   String str="";
   for(int i=0;i<9;i++)
     str+=Matrix[i];
-  Serial.println(str);
   return str; 
 }
 
@@ -186,6 +215,12 @@ String getName(int Obj,int Number){
   }
 }
 
+void setSettingSMS(String str){
+   for(int i=0;i<6;i++){
+     settingSMS[i]=str[i+2]-48;
+   }
+   EEPROM.put(AD_SETTING_SMS,settingSMS);
+}
 /// Convertir deux nombres en un nombre décimal
 int toDec(int o,int p){
   return o*10+p;
