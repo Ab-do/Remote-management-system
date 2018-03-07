@@ -1,5 +1,5 @@
 // le 04/03/2019 Agadir
-// Etape 36  :  
+// Etape 38  :  
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -70,7 +70,7 @@ void setup() {
    while(!checkVirginity()){
     if(Config==false){
       Serial.println("NO");
-      setDataNextion("page Welcome");
+      setDataNextion("page Configuration");
       Config=true;
     }else {
        //getDataNextion();
@@ -518,55 +518,55 @@ void showState(){
      int k=i+0;
     S=objState[0][i];
     if(S==1){
-    setDataNextion("b"+String(k)+".picc=20");
+    setDataNextion("b"+String(k)+".picc=30");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=19");
+    setDataNextion("b"+String(k)+".picc=31");
     }else {
-    setDataNextion("b"+String(k)+".picc=15");
+    setDataNextion("b"+String(k)+".picc=32");
     }
   }
   for(int i=0;i<numberObj[1];i++){
     int k=i+10;
     S=objState[1][i];
      if(S==1){
-    setDataNextion("b"+String(k)+".picc=20");
+    setDataNextion("b"+String(k)+".picc=30");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=19");
+    setDataNextion("b"+String(k)+".picc=31");
     }else {
-    setDataNextion("b"+String(k)+".picc=15");
+    setDataNextion("b"+String(k)+".picc=32");
     }
   }
   for(int i=0;i<numberObj[2];i++){
      int k=i+15;
     S=objState[2][i];
      if(S==1){
-    setDataNextion("b"+String(k)+".picc=20");
+    setDataNextion("b"+String(k)+".picc=30");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=19");
+    setDataNextion("b"+String(k)+".picc=31");
     }else {
-    setDataNextion("b"+String(k)+".picc=15");
+    setDataNextion("b"+String(k)+".picc=32");
     }
   }
   for(int i=0;i<numberObj[3];i++){
      int k=i+45;
     S=objState[3][i];
      if(S==1){
-    setDataNextion("b"+String(k)+".picc=20");
+    setDataNextion("b"+String(k)+".picc=30");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=19");
+    setDataNextion("b"+String(k)+".picc=31");
     }else {
-    setDataNextion("b"+String(k)+".picc=15");
+    setDataNextion("b"+String(k)+".picc=32");
     }
   }
     for(int i=0;i<numberObj[4];i++){
      int k=i+47;
     S=objState[4][i];
      if(S==1){
-    setDataNextion("b"+String(k)+".picc=20");
+    setDataNextion("b"+String(k)+".picc=30");
     }else if(S==3) {
-    setDataNextion("b"+String(k)+".picc=19");
+    setDataNextion("b"+String(k)+".picc=31");
     }else {
-    setDataNextion("b"+String(k)+".picc=15");
+    setDataNextion("b"+String(k)+".picc=32");
     }
   }
   }
@@ -589,47 +589,47 @@ void getState(int Matrix[MTR]){
    switch(Matrix[3]){
       case 1:
           if(St==1){
-          setDataNextion("p0.pic=50");
-          }else if (St==3){
-          setDataNextion("p0.pic=43");
-          }else {
           setDataNextion("p0.pic=52");
-          }
-      break;
-      case 2:
-          if(St==1){
-          setDataNextion("p0.pic=51");
           }else if (St==3){
-          setDataNextion("p0.pic=53");
+          setDataNextion("p0.pic=57");
           }else {
           setDataNextion("p0.pic=49");
           }
       break;
+      case 2:
+          if(St==1){
+          setDataNextion("p0.pic=50");
+          }else if (St==3){
+          setDataNextion("p0.pic=54");
+          }else {
+          setDataNextion("p0.pic=51");
+          }
+      break;
       case 3:
           if(St==1){
-          setDataNextion("p0.pic=54");
+          setDataNextion("p0.pic=43");
           }else if (St==3){
-          setDataNextion("p0.pic=42");
+          setDataNextion("p0.pic=56");
           }else {
-          setDataNextion("p0.pic=48");
+          setDataNextion("p0.pic=53");
           }
       break;
       case 4:
           if(St==1){
           setDataNextion("p0.pic=44");
           }else if (St==3){
-          setDataNextion("p0.pic=40");
+          setDataNextion("p0.pic=46");
           }else {
-          setDataNextion("p0.pic=55");
+          setDataNextion("p0.pic=45");
           }
       break;
       case 5:
           if(St==1){
-          setDataNextion("p0.pic=46");
+          setDataNextion("p0.pic=55");
           }else if (St==3){
-          setDataNextion("p0.pic=45");
-          }else {
           setDataNextion("p0.pic=47");
+          }else {
+          setDataNextion("p0.pic=48");
           }
       break;
       default:
@@ -874,7 +874,7 @@ void setDataNextion(String data) {
 }
 // Affiche les informations et les erreurs.
 void popupMessage(String msg){
-   setDataNextion("page erreur");
+   setDataNextion("page errors");
    setDataNextion("msg.txt=\""+msg+"\"");
    addHist(msg);
 }
