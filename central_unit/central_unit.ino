@@ -261,12 +261,42 @@ void switchData(int Matrix[MTR]){
     case 5:
              // Paramétre
             //Serial.println("// Paramétre");
+            
             if (Matrix[1]==1){
               smsSetting(Matrix);
             }else if (Matrix[1]==2){
               pinSetting(Matrix);
             }else if (Matrix[1]==3){
               modeSys(Matrix);
+            }else if(Matrix[1]==4){
+              Serial.println("switch");
+              Serial.println(Matrix[2]);
+                 switch(Matrix[2]){
+                    case 1:
+                      getNumObj();
+                    break;
+                    case 2:
+                      getNumPae();
+                    break;
+                    case 3:
+                      getNumPae();
+                    break;
+                    case 4:
+                      getNumSector();
+                    break;
+                    case 5:
+                      getSector(Matrix[3]);
+                    break;
+                    case 6:
+                      getNumRelation();
+                    break;
+                    case 7:
+                      getRelation(Matrix[3]);
+                    break;
+                    default:
+                    break;
+             
+                  }
             }else {
               Error();
             }
@@ -709,6 +739,54 @@ void smsSetting(int Matrix[MTR]){
     }
     //showMatrix(settingSMS,6);
   }
+
+void getNumObj(){
+  for(int i=0;i<6;i++){
+      setDataNextion("n"+String(i)+".val="+String(numberObj[i]));
+    }
+  }
+void getNumPae(){
+  int count=0;
+  for(int i=0;i<6;i++){
+    if(relationPae[i][0]>0 && sector[i][0]<6){
+      setDataNextion("vis b"+String(i+2)+",1");
+      count++;
+    }
+  }
+  setDataNextion("NbSec.val="+String(count));
+  
+  }
+void getNumSector(){
+  int count=0;
+  for(int i=0;i<6;i++){
+    if(sector[i][0]>0 && sector[i][0]<6){
+      setDataNextion("vis b"+String(i+2)+",1");
+      count++;
+    }
+  }
+  setDataNextion("NbSec.val="+String(count));
+  }
+void getSector(int sec){
+    for(int i=0;i<6;i++){
+      setDataNextion("n"+String(i)+".val="+String(sector[sec-1][i]));
+    }
+  }
+void getNumRelation(){
+  int count=0;
+  for(int i=0;i<6;i++){
+    if(relationObj[i][0]>0 && sector[i][0]<6){
+      setDataNextion("vis b"+String(i+2)+",1");
+      count++;
+    }
+  }
+  setDataNextion("NbSec.val="+String(count));
+}
+
+void getRelation(int pr){
+    for(int i=0;i<6;i++){
+      setDataNextion("n"+String(i)+".val="+String(relationObj[pr-1][i]));
+    }
+  }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
   if(Matrix[2]<=NUMBER_OBJ && toDec(Matrix[3],Matrix[4])<=NUMBER_MAX){
@@ -983,7 +1061,7 @@ void autoRunObj(){
 
 void sendCmd(int cmd){
   if(millis() - last > 250){
-      //Serial.println(cmd);
+      Serial.println(cmd);
       Serial3.println(cmd+80000);
       RdCmd(cmd);  // tm
       }
@@ -1034,22 +1112,22 @@ void Error(){
 /////////////// fonction d'essai et d'affichage
 void showRAM(){
   Serial.print("Numéro de Tel : ");
-  //showMatrix(numberPhone,9);
+  showMatrix(numberPhone,9);
   Serial.println(Phone);
   Serial.print("durée de vie : ");
   Serial.println(sysTime);
   Serial.print("PIN : ");
   Serial.println(PINcode);
   Serial.println("Nombre des Objects..");
-  //showMatrix(numberObj,6);
+  showMatrix(numberObj,6);
   Serial.println("les paramètres SMS..");
-  //showMatrix(settingSMS,6);
+  showMatrix(settingSMS,6);
   Serial.println("Les secteurs : ");
-  //showMatrix(sector);
+  showMatrix(sector);
   Serial.println("les Relation :");
-  //showMatrix(relationObj);
+  showMatrix(relationObj);
   Serial.println("Relation PAE");
-  ////showMatrix(relationPae);
+  //showMatrix(relationPae);
   delay(1000);
   getTime();
   Serial.print(Date);
@@ -1084,18 +1162,18 @@ void showMemory(){
   String str="";
   Serial.println("Matrice 1 : les nombres des objets");
   EEPROM.get(AD_NUMBER_OBJ,Matrix1);
-  //showMatrix(Matrix1,6);
+  showMatrix(Matrix1,6);
   Serial.println("Matrice 2 : les relatiions ");
   EEPROM.get(AD_RELATION_OBJ,Matrix2);
-  //showMatrix(Matrix2);
+  showMatrix(Matrix2);
   Serial.println("Matrice 3 : les secteurs");
   EEPROM.get(AD_SECTOR,Matrix3);
-  //showMatrix(Matrix3);
+  showMatrix(Matrix3);
   Serial.println("Numéro de Tel : ");
   EEPROM.get(AD_PHONE,str);
   delay(1000);
   Serial.println(str);
-  
+  showRAM();
 }
 
 void showMatrix(int Matrix[20],int a) {
@@ -1147,8 +1225,8 @@ void showSize(){
 }
 
 void RdCmd(int Bpin){
-  //Serial.println("B PIN");
-  //Serial.println(Bpin);
+  Serial.println("B PIN");
+  Serial.println(Bpin);
   int Mpin[4];
   int i=0;
   String Histo="";
