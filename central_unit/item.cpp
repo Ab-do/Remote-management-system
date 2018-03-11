@@ -12,6 +12,9 @@ Item::Item(int id,int number)
 //Function Set Programme *********************************************
 
 void Item::updateProg(){
+  
+  Serial.println("updateProg");
+  Serial.println("IdObj : "+ String(this->IdObj));
   showMatrix(MatrixTime,5);
   int k = this->NumberObj * sizeof(MatrixTime);
   Serial.println(k);
@@ -32,7 +35,7 @@ void Item::updateProg(){
        case 3:
               //les vannes 
               if(EEPROM.put(AD_PROG_VAN+k,MatrixTime)){
-                successMessage();
+                //successMessage();
               }
               break;
        case 4:
@@ -60,6 +63,7 @@ void Item::setProg(int sHr,int sMin,int eHr,int eMin,int Type)
  MatrixTime[2] =eHr+1;
  MatrixTime[3] =eMin+1;
  MatrixTime[4] =Type;
+ showMatrix(MatrixTime,5);
  this->updateProg();  
 }
 
@@ -97,13 +101,13 @@ void Item::getProg(){
        default:
               break;
   }
-  Serial.print("Objet : ");
-  Serial.print(IdObj);
-  Serial.print("   Numéro : ");
-  Serial.print(NumberObj);
-  Serial.print("   Adresse ");
-  Serial.println(AD);
-  showMatrix(MatrixTime,5);
+//  Serial.print("Objet : ");
+//  Serial.print(IdObj);
+//  Serial.print("   Numéro : ");
+//  Serial.print(NumberObj);
+//  Serial.print("   Adresse ");
+//  Serial.println(AD);
+    showMatrix(MatrixTime,5);
 }
 
 void Item::autoRun()

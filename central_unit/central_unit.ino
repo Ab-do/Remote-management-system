@@ -1,5 +1,5 @@
 // le 04/03/2019 Agadir
-// Etape 38  :  
+// Etape 40  :  
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -38,7 +38,7 @@ String Phone="669600729"; // numéro de Tel.
 int sysTime=9999;
 int PINcode=11234;
 int Hour,Minute,Second,Date,Month,Year;
-boolean ModeSys=false;
+//boolean ModeSys=false;
 // Déclaration des matrices.
 int numberPhone[9]={0};        // nombre des objets de systeme
 int numberObj[6]={0};        // nombre des objets de systeme
@@ -47,6 +47,7 @@ int objState[NUMBER_OBJ][NUMBER_MAX]={0};        // les etates des objets
 int sector[6][6]={0};        // les secteurs 
 int relationObj[6][6]={0}; // les relation entre les pompes de refoulements et les vannes
 int relationPae[5][2]={0};
+int ModeSys[3]={0};
 Item pim[10]={{1,1},{1,2},{1,3},{1,4},{1,5},{1,6},{1,7},{1,8},{1,9},{1,10}};
 Item pr[5]={{2,1},{2,2},{2,3},{2,4},{2,5}};
 Item van[15]={{3,1},{3,2},{3,3},{3,4},{3,5},{3,6},{3,7},{3,8},{3,9},{3,10},{3,11},{3,12},{3,13},{3,14},{3,15}};
@@ -105,7 +106,7 @@ void loop() {
   getDataSerial(); // ausculter les données qui obtient de moniteur série.
   getDataHc();
   getDataNextion();
-  if(ModeSys==true){
+  if(ModeSys[2]==1){
     autoRunObj(); 
   }
 }
@@ -156,6 +157,7 @@ void strToMatrix(String str){
             Matrix[j]=str[i]-48;
             j++; 
             i++;
+            if(i>str.length()) return 0;
          }
          //Commutation des données.
          //showMatrix(Matrix,20);
@@ -207,7 +209,11 @@ void switchData(int Matrix[MTR]){
              //  // Effectuer une action sur un objet.
             //Serial.println("// Effectuer une action sur un objet.");
             if(Matrix[1]==1){
-              actionObj(Matrix); 
+              if(ModeSys[0]==1){
+                actionObj(Matrix); 
+              }else {
+                Error();
+              }
             }else if(Matrix[1]==2){
               progObj(Matrix);
             }else {
@@ -253,6 +259,9 @@ void switchData(int Matrix[MTR]){
               case 8:
                 sendPinSMS();
               break;
+              case 9:
+                getModeSys();
+              break;
               default:
                 Error();
               break;
@@ -279,7 +288,7 @@ void switchData(int Matrix[MTR]){
                       getNumPae();
                     break;
                     case 3:
-                      getNumPae();
+                      getPae(Matrix[3]);
                     break;
                     case 4:
                       getNumSector();
@@ -450,8 +459,11 @@ void actionObj(int Matrix[MTR]){
     break;
     case 6:
         for(int i=0;i<6;i++){
-           if(sector[Matrix[3]-1][i]>0){
-              van[sector[Matrix[3]-1][i]].runObj(Matrix[4]);
+          Serial.println("sec "+ String(Matrix[4])+ " van "+String(sector[Matrix[4]-1][i]));
+           if(sector[Matrix[4]-1][i]>0){
+              Serial.println("---------->sec "+ String(Matrix[4])+ " van "+String(sector[Matrix[4]-1][i])+" Action "+String(Matrix[5]));
+              van[sector[Matrix[4]-1][i]].runObj(Matrix[5]);
+              delay(1000);
            }
         }  
     break;
@@ -480,9 +492,15 @@ void progObj(int Matrix[MTR]){
         eng[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
     break;
     case 6:
-        for(int i=0;i>6;i++){
-          van[sector[Matrix[3]-1][i]].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+        for(int i=0;i<6;i++){
+         if(sector[Matrix[4]-1][i]>0){  
+          int N= sector[Matrix[4]-1][i];
+          Serial.println("sec "+ String(Matrix[4])+ " van "+String(N));
+           van[N-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+           //van[N-1].setProg(12,13,14,15,4);
          }
+         }
+         //van[1].setProg(12,13,14,15,4);
     break;
     default:
       Error();
@@ -589,7 +607,7 @@ void showState(){
     }
   }
     for(int i=0;i<numberObj[4];i++){
-     int k=i+47;
+     int k=i+50;
     S=objState[4][i];
      if(S==1){
     setDataNextion("b"+String(k)+".picc=30");
@@ -675,39 +693,45 @@ void getAccess(){
 void getProg(int Matrix[MTR]){
    switch(Matrix[3]){
       case 1: 
-//            Serial.println(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[4]);
+            Serial.println(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]);
+            //showMatrix(pim[1MatrixTime,5);
 //          if(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[4]==3){
-            setDataNextion("va0.val="+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(pim[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
+            setDataNextion("va0.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
+            setDataNextion("St.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
 //          } else {
 //            Serial.println(" ......  "); 
 //          }
       break;
       case 2:
-            setDataNextion("va0.val="+String(pr[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(pr[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(pr[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(pr[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
+            setDataNextion("va0.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
+            setDataNextion("St.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
       break;
       case 3:
-            setDataNextion("va0.val="+String(van[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(van[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(van[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(van[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
+            setDataNextion("va0.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
+            setDataNextion("St.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
       break;
       case 4:
-            setDataNextion("va0.val="+String(mlg[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(mlg[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(mlg[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(mlg[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
+            setDataNextion("va0.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
+            setDataNextion("St.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
       break;
       case 5:
-            setDataNextion("va0.val="+String(eng[toDec(Matrix[4],Matrix[5])].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(eng[toDec(Matrix[4],Matrix[5])].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(eng[toDec(Matrix[4],Matrix[5])].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(eng[toDec(Matrix[4],Matrix[5])].MatrixTime[3]-1));
+            setDataNextion("va0.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
+            setDataNextion("va1.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
+            setDataNextion("va2.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
+            setDataNextion("va3.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
+            setDataNextion("St.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
       break;
       default:
            Error();
@@ -746,20 +770,25 @@ void getNumObj(){
     }
   }
 void getNumPae(){
-  int count=0;
-  for(int i=0;i<6;i++){
-    if(relationPae[i][0]>0 && sector[i][0]<6){
-      setDataNextion("vis b"+String(i+2)+",1");
-      count++;
+  for(int i=0;i<numberObj[1];i++){
+    
+    if(relationPae[i][0]>0 && relationPae[i][0]<6){
+      setDataNextion("b"+String(i+2)+".picc=62");
+    }else {
+      setDataNextion("b"+String(i+2)+".picc=63");
     }
+    setDataNextion("vis b"+String(i+2)+",1");
   }
-  setDataNextion("NbSec.val="+String(count));
-  
   }
+void getPae(int pr){
+    for(int i=0;i<2;i++){
+      setDataNextion("va"+String(i+1)+".val="+String(relationPae[pr-1][i]));
+    }
+  } 
 void getNumSector(){
   int count=0;
   for(int i=0;i<6;i++){
-    if(sector[i][0]>0 && sector[i][0]<6){
+    if(sector[i][0]>0 && sector[i][0]<numberObj[2]){
       setDataNextion("vis b"+String(i+2)+",1");
       count++;
     }
@@ -768,25 +797,38 @@ void getNumSector(){
   }
 void getSector(int sec){
     for(int i=0;i<6;i++){
-      setDataNextion("n"+String(i)+".val="+String(sector[sec-1][i]));
+      setDataNextion("n"+String(i+1)+".val="+String(sector[sec-1][i]));
     }
+    setDataNextion("vanMax.val="+String(numberObj[2]));
   }
 void getNumRelation(){
   int count=0;
-  for(int i=0;i<6;i++){
-    if(relationObj[i][0]>0 && sector[i][0]<6){
-      setDataNextion("vis b"+String(i+2)+",1");
+  for(int i=0;i<numberObj[1];i++){
+    if(relationObj[i][0]>0 && relationObj[i][0]<numberObj[2]){
+      setDataNextion("b"+String(i+2)+".picc=61");
       count++;
+    }else {
+      setDataNextion("b"+String(i+2)+".picc=60");
     }
+    setDataNextion("vis b"+String(i+2)+",1");
   }
-  setDataNextion("NbSec.val="+String(count));
 }
 
 void getRelation(int pr){
+     setDataNextion("n0.val="+String(pr));
     for(int i=0;i<6;i++){
-      setDataNextion("n"+String(i)+".val="+String(relationObj[pr-1][i]));
+      setDataNextion("n"+String(i+1)+".val="+String(relationObj[pr-1][i]));
+    }
+    
+  }
+
+void getModeSys(){
+   for(int i=0;i<3;i++){
+    if(ModeSys[i]==1){
+      setDataNextion("bt"+String(i)+".val=1");
     }
   }
+}
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
   if(Matrix[2]<=NUMBER_OBJ && toDec(Matrix[3],Matrix[4])<=NUMBER_MAX){
@@ -804,17 +846,24 @@ void setState(int Matrix[MTR]){
 void pinSetting(int Matrix[MTR]){}
 //// les paramétre Mode de démarrage
 void modeSys(int Matrix[MTR]){
-  if(Matrix[4]==1){
-    ModeSys=true;
-    if(EEPROM[AD_MODE_SYS]=1){
+    for(int i=0;i<3;i++){
+      ModeSys[i]=Matrix[i+2];
+    }
+    if(EEPROM.put(AD_MODE_SYS,ModeSys)){
       successMessage();
     }
-  }else if(Matrix[4]==2){
-    ModeSys=false;
-    if(EEPROM[AD_MODE_SYS]=2){
-      successMessage();
-    }
-  }
+  
+//  if(Matrix[4]==1){
+//    ModeSys=true;
+//    if(EEPROM[AD_MODE_SYS]=1){
+//      successMessage();
+//    }
+//  }else if(Matrix[4]==2){
+//    ModeSys=false;
+//    if(EEPROM[AD_MODE_SYS]=2){
+//      successMessage();
+//    }
+//  }
   }
 /////// PARTIE 6 : Réinitialisation du système
 void restSys(){
@@ -837,7 +886,7 @@ void getValueRelation(){
     setDataNextion("vanMax.val="+String(numberObj[2]));
 }
 void getValuePae(){
-    setDataNextion("prMax.val="+String(numberObj[1]));
+    //setDataNextion("prMax.val="+String(numberObj[1]));
     setDataNextion("mlgMax.val="+String(numberObj[3]));
     setDataNextion("engMax.val="+String(numberObj[3]));
 }
@@ -865,14 +914,15 @@ void Virginity(int value ){
 // les données
 bool loadingData(){
   delay(200);setDataNextion("j0.val=30");
-  byte Mode=EEPROM[AD_MODE_SYS];
-  if(Mode==1){
-    ModeSys=true;
-    EEPROM[AD_MODE_SYS]=1;
-  } else if(Mode==2){
-    ModeSys=false;
-    EEPROM[AD_MODE_SYS]=2;
-  }
+//  byte Mode=EEPROM[AD_MODE_SYS];
+//  if(Mode==1){
+//    ModeSys=true;
+//    EEPROM[AD_MODE_SYS]=1;
+//  } else if(Mode==2){
+//    ModeSys=false;
+//    EEPROM[AD_MODE_SYS]=2;
+//  }
+  EEPROM.get(AD_MODE_SYS,ModeSys);
   EEPROM.get(AD_PIN,PINcode);
   delay(200);setDataNextion("j0.val=40");
   EEPROM.get(AD_PHONE,numberPhone);
@@ -1003,11 +1053,11 @@ String toString(int Matrix[9]){
 }
 //  Obtenir l'heure d'horloge 
 void getTimeNextion(){
-  setDataNextion("n0.val="+String(Hour));
-  setDataNextion("n1.val="+String(Minute));
-  setDataNextion("n2.val="+String(Date));
-  setDataNextion("n3.val="+String(Month));
-  setDataNextion("n4.val="+String(Year));
+  setDataNextion("va0.val="+String(Hour));
+  setDataNextion("va1.val="+String(Minute));
+  setDataNextion("va2.val="+String(Date));
+  setDataNextion("va3.val="+String(Month));
+  setDataNextion("va4.val="+String(Year));
 }
 
 void getTime(){
