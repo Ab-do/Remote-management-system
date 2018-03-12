@@ -174,11 +174,13 @@ bool Item::runObj(int Action)
            //Vannes
           if(Action==1) {
             //runS();
-             sendCmd(Cmd+Action);
+             //sendCmd(Cmd+Action);
+             funValve(this->NumberObj,Action);
              return true;
           } else if(Action==2 && ckeckPrVan()) {
             //offObj(3);
-             sendCmd(Cmd+Action);
+             //sendCmd(Cmd+Action);
+             funValve(this->NumberObj,Action);
              return true;
           } else if(Action==2)  {
             //Erreur(3);//

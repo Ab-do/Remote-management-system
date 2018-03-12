@@ -10,6 +10,7 @@ extern void sendCmd(int cmd);
 extern void popupMessage(String msg);
 extern void addHist(String hist);
 extern void successMessage();
+extern void funValve(int van,int action);
 void showMatrix(int Matrix[20],int a);
 int const AD_PROG_PIM=500;
 int const AD_PROG_PR=610;

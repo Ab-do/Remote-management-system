@@ -1,5 +1,5 @@
 // le 04/03/2019 Agadir
-// Etape 40  :  
+// Etape 40  :  Integration les vannes en u.c.
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -32,6 +32,10 @@ const int AD_RELATION_PAE=210; //280
 const int NUMBER_OBJ=5;
 const int NUMBER_MAX=15;
 const double SPEED_SERIAL = 9600;
+// Declaration les pins des LED
+const int LED_START=2;
+const int LED_WIRLESS_COM=3;
+const int LED_MODUL_CHECK=4;
 // Déclaration des variables.
 unsigned long last = millis();
 String Phone="669600729"; // numéro de Tel.
@@ -93,6 +97,7 @@ void setup() {
   }else {
    //Serial.println("SD....... OK ! ");
   }
+  intValve();
   Serial.println("start-up");
   
   //showRAM();
@@ -352,6 +357,7 @@ void switchData(int Matrix[MTR]){
             break;
      case 8:
          if(Matrix[1]==1){
+          Serial.println("81");
           setState(Matrix);
          }else {
           showRAM();
@@ -429,7 +435,7 @@ void setNumPhone(int Matrix[MTR]){
     if(EEPROM.put(AD_PHONE,numberPhone)){
       successMessage();
     }
-    Serial2.println("4"+Phone);
+    Serial3.println("4"+Phone);
     //showMatrix(numberPhone,3);
   }
 void setPIN(int Matrix[MTR]){
@@ -755,12 +761,15 @@ void sendPinSMS(){
 void smsSetting(int Matrix[MTR]){
     //Serial.println("Paramètre SMS");
     //showMatrix(Matrix,8);
-    for(int i=0;i<6;i++){
+    String str="";
+    for(int i=0;i<4;i++){
       settingSMS[i]=Matrix[i+2];
+      str+=Matrix[i+2];
     }
     if(EEPROM.put(AD_SETTING_SMS,settingSMS)){
       successMessage();
     }
+    Serial3.println("5"+str);
     //showMatrix(settingSMS,6);
   }
 
@@ -831,15 +840,16 @@ void getModeSys(){
 }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
-  if(Matrix[2]<=NUMBER_OBJ && toDec(Matrix[3],Matrix[4])<=NUMBER_MAX){
-//    Serial.print("L'Etat : ");
-//    Serial.print(" L'objet de type :");
-//    Serial.print(Matrix[2]);
-//    Serial.print(" numéro : ");
-//    Serial.print(toDec(Matrix[3],Matrix[4]));
-//    Serial.print(" Etat : ");
-//    Serial.println(Matrix[5]);
-    objState[Matrix[2]-1][toDec(Matrix[3],Matrix[4])-1]=Matrix[5];
+  if(Matrix[3]<=NUMBER_OBJ && toDec(Matrix[4],Matrix[5])<=NUMBER_MAX){
+    Serial.print("L'Etat : ");
+    Serial.print(" L'objet de type :");
+    Serial.print(Matrix[3]);
+    Serial.print(" numéro : ");
+    Serial.print(toDec(Matrix[4],Matrix[5]));
+    Serial.print(" Etat : ");
+    Serial.println(Matrix[6]);
+    getState(Matrix);
+    objState[Matrix[3]-1][toDec(Matrix[4],Matrix[5])-1]=Matrix[6];
   }
 }
 //// les paramétre de PIN
@@ -1113,7 +1123,7 @@ void sendCmd(int cmd){
   if(millis() - last > 250){
       Serial.println(cmd);
       Serial3.println(cmd+80000);
-      RdCmd(cmd);  // tm
+      //RdCmd(cmd);  // tm
       }
       last = millis();
 }
@@ -1296,7 +1306,35 @@ if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
     Histo=getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"OFF";
     addHist(Histo);
 }
-
+// Initialisation  les pins des vannes 
+void intValve(){
+  for(int i=5;i+5<=numberObj[2];i++){
+    pinMode(i,OUTPUT);
+    digitalWrite(i,HIGH);
+  }
+}
+// 
+void funValve(int van,int action){
+    if(action==1){
+      digitalWrite(van+4,LOW);
+      RdCmd(3001+van*10);
+      Serial.println("la vanne N : "+String(van)+" - ON PIN :"+String(van+3));
+    }else if(action==2){
+      digitalWrite(van+4,HIGH);
+      Serial.println("la vanne N : "+String(van)+" - OFF PIN :"+String(van+3));
+      RdCmd(3002+van*10);
+    }
+}
+void intLed(){
+  pinMode(2,OUTPUT);
+  pinMode(3,OUTPUT);
+  pinMode(4,OUTPUT);
+}
+void checkWirless(){
+   digitalWrite(LED_WIRLESS_COM,HIGH);
+   delay(1000);
+   digitalWrite(LED_WIRLESS_COM,LOW);
+}
 void statPage(){
   
 }
