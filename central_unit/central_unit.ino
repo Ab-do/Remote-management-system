@@ -98,6 +98,8 @@ void setup() {
    //Serial.println("SD....... OK ! ");
   }
   intValve();
+  intLed();
+  ckeckWirless();
   Serial.println("start-up");
   
   //showRAM();
@@ -359,6 +361,8 @@ void switchData(int Matrix[MTR]){
          if(Matrix[1]==1){
           Serial.println("81");
           setState(Matrix);
+         }else if (Matrix[1]==2 && Matrix[2]==3){
+          ckeckWirlessState();
          }else {
           showRAM();
          }
@@ -435,7 +439,7 @@ void setNumPhone(int Matrix[MTR]){
     if(EEPROM.put(AD_PHONE,numberPhone)){
       successMessage();
     }
-    Serial3.println("4"+Phone);
+    Serial3.println("N"+Phone);
     //showMatrix(numberPhone,3);
   }
 void setPIN(int Matrix[MTR]){
@@ -769,7 +773,7 @@ void smsSetting(int Matrix[MTR]){
     if(EEPROM.put(AD_SETTING_SMS,settingSMS)){
       successMessage();
     }
-    Serial3.println("5"+str);
+    Serial3.println("S"+str);
     //showMatrix(settingSMS,6);
   }
 
@@ -840,6 +844,7 @@ void getModeSys(){
 }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
+  showMatrix(Matrix,MTR);
   if(Matrix[3]<=NUMBER_OBJ && toDec(Matrix[4],Matrix[5])<=NUMBER_MAX){
     Serial.print("L'Etat : ");
     Serial.print(" L'objet de type :");
@@ -847,9 +852,9 @@ void setState(int Matrix[MTR]){
     Serial.print(" numéro : ");
     Serial.print(toDec(Matrix[4],Matrix[5]));
     Serial.print(" Etat : ");
-    Serial.println(Matrix[6]);
-    getState(Matrix);
-    objState[Matrix[3]-1][toDec(Matrix[4],Matrix[5])-1]=Matrix[6];
+    Serial.println(Matrix[6]-2);
+    objState[Matrix[3]-1][toDec(Matrix[4],Matrix[5])-1]=Matrix[6]-2;
+    getState(Matrix);  //4  1 4 101 < 8 1 0 102 2
   }
 }
 //// les paramétre de PIN
@@ -879,6 +884,7 @@ void modeSys(int Matrix[MTR]){
 void restSys(){
     int j=-10;
     setDataNextion("page Reset");
+    Serial3.println("T475");
     for (int i = 1 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
     if(i%400==0){
@@ -1041,13 +1047,6 @@ void sendSMS(String outMessage,int validity){
   Serial1.println("AT+CCLK?");
   }
 }
-////////////////////////
-void runObj(){
-  
-}
-
-
-
 ///////les foncations du plugin
 /// Convertir deux nombres en un nombre décimal
 int toDec(int o,int p){
@@ -1122,7 +1121,7 @@ void autoRunObj(){
 void sendCmd(int cmd){
   if(millis() - last > 250){
       Serial.println(cmd);
-      Serial3.println(cmd+80000);
+      Serial3.println("R"+String(cmd));
       //RdCmd(cmd);  // tm
       }
       last = millis();
@@ -1308,8 +1307,8 @@ if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
 }
 // Initialisation  les pins des vannes 
 void intValve(){
-  for(int i=5;i+5<=numberObj[2];i++){
-    pinMode(i,OUTPUT);
+  for(int i=0;i<=numberObj[2];i++){
+    pinMode(i+5,OUTPUT);
     digitalWrite(i,HIGH);
   }
 }
@@ -1326,14 +1325,25 @@ void funValve(int van,int action){
     }
 }
 void intLed(){
-  pinMode(2,OUTPUT);
-  pinMode(3,OUTPUT);
-  pinMode(4,OUTPUT);
+  pinMode(LED_START,OUTPUT);
+  pinMode(LED_WIRLESS_COM,OUTPUT);
+  pinMode(LED_MODUL_CHECK,OUTPUT);
+  digitalWrite(LED_START,LOW);
+  digitalWrite(LED_WIRLESS_COM,LOW);
+  digitalWrite(LED_MODUL_CHECK,LOW);
 }
-void checkWirless(){
+void ckeckWirless(){
+   Serial3.println("Wc1");
+}
+void ckeckWirlessState(){
+   for(int i=0;i<6;i++){
+     digitalWrite(LED_WIRLESS_COM,HIGH);
+     delay(100);
+     digitalWrite(LED_WIRLESS_COM,LOW);
+     delay(100);
+   }
    digitalWrite(LED_WIRLESS_COM,HIGH);
-   delay(1000);
-   digitalWrite(LED_WIRLESS_COM,LOW);
+   Serial.println("Communication entre U.C et W.C ... OK");
 }
 void statPage(){
   
