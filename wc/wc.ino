@@ -1,7 +1,8 @@
-// WC 4 : wirless controller.
-// le 2/03/2019 Agadir.
+// WC 5 : wirless controller.
+// le 04/03/2019 Agadir.
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
+const int LED=13;
 const int AD_PHONE=10;
 const int AD_SETTING_SMS=30;
 String Phone="";
@@ -13,8 +14,9 @@ void setup() {
   Serial1.begin(9600); // Module GSM  SIM800L
   Serial2.begin(9600); // Module radio HC12
   Serial.println("Start-up");
-  Serial2.println("Start-up");
   loadingData();
+  pinMode(LED,INPUT);
+  checkWirless();
 }
 
 void loop() {
@@ -44,26 +46,44 @@ void getDataHc(){
   if(Serial2.available()>0){
     String data=Serial2.readString();
     data.trim();
-    Serial.println(data);
+    Serial.print(data+" nChar : ");
     Serial.println(data.length());
-    Serial.println(data.charAt(1));
-    if(data[0]==49){
-      data.remove(0,1);
-      Serial2.println(data);
-    }else if( data[0]==57){
-      Serial2.println("<"+data+">");
-      switchSMS("1"+data);
-    }else if (data[0]==51){
-      Serial.println("switch SMS");
-      switchSMS(data);
-    }else if(data[0]==52){
-      data.remove(0,1);
-      setNumPhone(data);
-    } else {
-      Serial.println("autre choix...");
+    switch(data[0]){
+      case 'W':
+         if(data[1]=='c'){
+          checkWirless();
+          
+         }
+      break;
+      case 'N':
+        data.remove(0,1);
+        setNumPhone(data);
+      break;
+      case 'S':
+        data.remove(0,1);
+        Serial.println(data);
+        setSettingSMS(data);
+      break;
+      case '8':
+          data.remove(0,1);
+          Serial.println(data);
+          Serial2.println("<810"+data+">");
+          //switchSMS("1"+data);
+      break;
+      case 'R':
+        data.remove(0,1);
+        Serial2.println(data);
+        delay(500);
+        //Serial2.println("<810"+data+">");
+        //Serial.println("<810"+data+">");
+      break;
+      default:
+        if(data=="T475"){
+          restSys();
+        }
+      break;
     }
   }
-  
 }
 
 void filtering(String str){
@@ -77,6 +97,7 @@ void filtering(String str){
             dataSend +=str[i];
             j++; 
             i++;
+            if(i>str.length()) return 0;
          }
          //Commutation des données.
          //showMatrix(Matrix,20);
@@ -141,7 +162,10 @@ void loadingData(){
   Phone=toString(numberPhone);
   EEPROM.get(AD_SETTING_SMS,settingSMS);
   Serial.println(Phone);
-  for(int i=0;i<6;i++) Serial.print(settingSMS[i]);
+  for(int i=0;i<4;i++) {
+    Serial.print(settingSMS[i]);
+    Serial.print("-");
+  }
   Serial.println();
 }
 
@@ -155,7 +179,7 @@ void sendSMS(String outMessage,int validity){
   if(Phone=="+212000000000"){
     Phone="+212770509044";
   }
-  Serial1.println("AT + CMGS= \"" + Phone +"\"" );
+  Serial1.println("AT + CMGS= \"+212" + Phone +"\"" );
   delay(500);
   Serial1.println(outMessage);
   delay(500);
@@ -216,12 +240,29 @@ String getName(int Obj,int Number){
 }
 
 void setSettingSMS(String str){
-   for(int i=0;i<6;i++){
-     settingSMS[i]=str[i+2]-48;
+   for(int i=0;i<4;i++){
+     settingSMS[i]=str[i]-48;
    }
+   Serial.println(str);
    EEPROM.put(AD_SETTING_SMS,settingSMS);
 }
 /// Convertir deux nombres en un nombre décimal
 int toDec(int o,int p){
   return o*10+p;
 }
+
+void checkWirless(){
+    digitalWrite(LED,HIGH);
+    delay(1000);
+    digitalWrite(LED,LOW);
+    delay(1000);
+    digitalWrite(LED,HIGH);
+    Serial2.println("<8233>");
+}
+
+void restSys(){
+    for (int i = 1 ; i < EEPROM.length() ; i++) {
+    EEPROM.write(i, 0);
+  }
+  setup();
+  }
