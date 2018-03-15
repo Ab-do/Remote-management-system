@@ -101,7 +101,6 @@ void setup() {
   intLed();
   ckeckWirless();
   Serial.println("start-up");
-  
   //showRAM();
   getTime();
   //setDataNextion("page 1");
@@ -469,11 +468,10 @@ void actionObj(int Matrix[MTR]){
     break;
     case 6:
         for(int i=0;i<6;i++){
-          Serial.println("sec "+ String(Matrix[4])+ " van "+String(sector[Matrix[4]-1][i]));
            if(sector[Matrix[4]-1][i]>0){
               Serial.println("---------->sec "+ String(Matrix[4])+ " van "+String(sector[Matrix[4]-1][i])+" Action "+String(Matrix[5]));
-              van[sector[Matrix[4]-1][i]].runObj(Matrix[5]);
-              delay(1000);
+              van[sector[Matrix[4]-1][i]-1].runObj(Matrix[5]);
+              delay(500);
            }
         }  
     break;
@@ -844,16 +842,16 @@ void getModeSys(){
 }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
-  showMatrix(Matrix,MTR);
+  
   if(Matrix[3]<=NUMBER_OBJ && toDec(Matrix[4],Matrix[5])<=NUMBER_MAX){
-    Serial.print("L'Etat : ");
-    Serial.print(" L'objet de type :");
-    Serial.print(Matrix[3]);
-    Serial.print(" numéro : ");
-    Serial.print(toDec(Matrix[4],Matrix[5]));
-    Serial.print(" Etat : ");
-    Serial.println(Matrix[6]-2);
     objState[Matrix[3]-1][toDec(Matrix[4],Matrix[5])-1]=Matrix[6]-2;
+    if(Matrix[6]==3){
+      addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"ON");
+    }else if(Matrix[6]==4){
+      addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"OFF");
+    }else if(Matrix[6]==5){
+      addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"ERR");
+    }
     getState(Matrix);  //4  1 4 101 < 8 1 0 102 2
   }
 }
@@ -940,38 +938,38 @@ bool loadingData(){
 //  }
   EEPROM.get(AD_MODE_SYS,ModeSys);
   EEPROM.get(AD_PIN,PINcode);
-  delay(200);setDataNextion("j0.val=40");
+  delay(100);setDataNextion("j0.val=40");
   EEPROM.get(AD_PHONE,numberPhone);
-  delay(200);setDataNextion("j0.val=45");
+  delay(100);setDataNextion("j0.val=45");
   Phone=toString(numberPhone);
-  delay(200);setDataNextion("j0.val=50");
+  delay(100);setDataNextion("j0.val=50");
   EEPROM.get(AD_NUMBER_OBJ,numberObj);
-  delay(200);setDataNextion("j0.val=55");
+  delay(100);setDataNextion("j0.val=55");
   EEPROM.get(AD_SETTING_SMS,settingSMS);
-  delay(200);setDataNextion("j0.val=60");
+  delay(100);setDataNextion("j0.val=60");
   EEPROM.get(AD_SECTOR,sector);
-  delay(200);setDataNextion("j0.val=65");
+  delay(100);setDataNextion("j0.val=65");
   EEPROM.get(AD_RELATION_OBJ,relationObj);
-  delay(200);setDataNextion("j0.val=70");
+  delay(100);setDataNextion("j0.val=70");
   EEPROM.get(AD_RELATION_PAE,relationPae);
   for(int i=0;i<10;i++)
       pim[i].getProg();
-  delay(200);setDataNextion("j0.val=75");
+  delay(100);setDataNextion("j0.val=75");
   for(int i=0;i<5;i++)
       pr[i].getProg();
-  delay(200);setDataNextion("j0.val=80");
+  delay(100);setDataNextion("j0.val=80");
   for(int i=0;i<15;i++)
       van[i].getProg();
   
-  delay(200); setDataNextion("j0.val=85");
+  delay(100); setDataNextion("j0.val=85");
   for(int i=0;i<5;i++)
       mlg[i].getProg();
-  delay(200);
+  delay(100);
   setDataNextion("j0.val=90");
   for(int i=0;i<5;i++)
       eng[i].getProg();    
   putDataNextion();
-  delay(200);
+  delay(100);
   setDataNextion("j0.val=95");
   //Serial.println("le chargement des données a été téléchargé");
   return true;
@@ -1007,7 +1005,7 @@ bool checkValidity(){
 // Mettre les données à Nextion 
 void setDataNextion(String data) {
   Serial2.print(data);
-  Serial.println(data);
+  //Serial.println(data);
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.write(0xff);
@@ -1284,32 +1282,28 @@ void showSize(){
 }
 
 void RdCmd(int Bpin){
-  Serial.println("B PIN");
-  Serial.println(Bpin);
   int Mpin[4];
   int i=0;
   String Histo="";
   while (Bpin > 0)
-{
+  {
     Mpin[i] = Bpin%10;
     Bpin /= 10;
     i++;
-}
-//showMatrix(Mpin,4);
+  }
 if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
    objState[Mpin[3]-1][Mpin[1]+(Mpin[2]*10)-1]=Mpin[0];
 }
  if(Mpin[0]==1)
-    Histo=getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"ON";
+    addHist(getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"ON");
  else
-    Histo=getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"OFF";
-    addHist(Histo);
+    addHist(getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"OFF");
 }
 // Initialisation  les pins des vannes 
 void intValve(){
   for(int i=0;i<=numberObj[2];i++){
     pinMode(i+5,OUTPUT);
-    digitalWrite(i,HIGH);
+    digitalWrite(i+5,HIGH);
   }
 }
 // 

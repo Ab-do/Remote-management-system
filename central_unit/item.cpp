@@ -12,41 +12,37 @@ Item::Item(int id,int number)
 //Function Set Programme *********************************************
 
 void Item::updateProg(){
-  
-  Serial.println("updateProg");
-  Serial.println("IdObj : "+ String(this->IdObj));
-  showMatrix(MatrixTime,5);
-  int k = this->NumberObj * sizeof(MatrixTime);
+  int k = this->NumberObj * sizeof(this->MatrixTime);
   Serial.println(k);
   switch((this->IdObj))
   {
        case 1:
               //pompe immerger
-              if(EEPROM.put(AD_PROG_PIM+k,MatrixTime)){
+              if(EEPROM.put(AD_PROG_PIM+k,this->MatrixTime)){
                 successMessage();
               }
               break;
        case 2:
               //pompe refolemnt
-              if(EEPROM.put(AD_PROG_PR+k,MatrixTime)){
+              if(EEPROM.put(AD_PROG_PR+k,this->MatrixTime)){
                 successMessage();
               }
               break;
        case 3:
               //les vannes 
-              if(EEPROM.put(AD_PROG_VAN+k,MatrixTime)){
-                //successMessage();
+              if(EEPROM.put(AD_PROG_VAN+k,this->MatrixTime)){
+                successMessage();
               }
               break;
        case 4:
               //les pompes angre
-              if(EEPROM.put(AD_PROG_MLG+k,MatrixTime)){
+              if(EEPROM.put(AD_PROG_MLG+k,this->MatrixTime)){
                 successMessage();
               }
               break;
        case 5:
               //Melengeur Angre
-              if(EEPROM.put(AD_PROG_PIM+k,MatrixTime)){
+              if(EEPROM.put(AD_PROG_PIM+k,this->MatrixTime)){
                 successMessage();
               }
               break;
@@ -58,44 +54,44 @@ void Item::updateProg(){
 void Item::setProg(int sHr,int sMin,int eHr,int eMin,int Type)
 {
   //int Matrix[5]= {sHr,sMin,eHr,eMin,Type};
- MatrixTime[0] =sHr+1;
- MatrixTime[1] =sMin+1;
- MatrixTime[2] =eHr+1;
- MatrixTime[3] =eMin+1;
- MatrixTime[4] =Type;
- showMatrix(MatrixTime,5);
+ this->MatrixTime[0] =sHr+1;
+ this->MatrixTime[1] =sMin+1;
+ this->MatrixTime[2] =eHr+1;
+ this->MatrixTime[3] =eMin+1;
+ this->MatrixTime[4] =Type;
+ showMatrix(this->MatrixTime,5);
  this->updateProg();  
 }
 
 
 void Item::getProg(){
-  int k = this->NumberObj * sizeof(MatrixTime);
+  int k = this->NumberObj * sizeof(this->MatrixTime);
   int AD = 0; // Tempor.
   switch((this->IdObj))
   {
        case 1:
               //pompe immerger
-              EEPROM.get(AD_PROG_PIM+k,MatrixTime);
+              EEPROM.get(AD_PROG_PIM+k,this->MatrixTime);
               AD=AD_PROG_PIM+k;
               break;
        case 2:
               //pompe refolemnt
-              EEPROM.get(AD_PROG_PR+k,MatrixTime);
+              EEPROM.get(AD_PROG_PR+k,this->MatrixTime);
               AD=AD_PROG_PR+k;
               break;
        case 3:
               //les vannes 
-              EEPROM.get(AD_PROG_VAN+k,MatrixTime);
+              EEPROM.get(AD_PROG_VAN+k,this->MatrixTime);
               AD=AD_PROG_VAN+k;
               break;
        case 4:
               //les pompes angre
-              EEPROM.get(AD_PROG_MLG+k,MatrixTime);
+              EEPROM.get(AD_PROG_MLG+k,this->MatrixTime);
               AD=AD_PROG_MLG+k;
               break;
        case 5:
               //Melengeur Angre
-              EEPROM.get(AD_PROG_ENG+k,MatrixTime);
+              EEPROM.get(AD_PROG_ENG+k,this->MatrixTime);
               AD=AD_PROG_ENG+k;
               break;
        default:
@@ -107,21 +103,23 @@ void Item::getProg(){
 //  Serial.print(NumberObj);
 //  Serial.print("   Adresse ");
 //  Serial.println(AD);
-    showMatrix(MatrixTime,5);
+//  showMatrix(this->MatrixTime,5);
 }
 
 void Item::autoRun()
 {
-  if(this->MatrixTime[5]==3 || 4){
+  if(this->MatrixTime[4]==3 || this->MatrixTime[4]==4){
    if(Hour==this->MatrixTime[0]-1 && Minute==this->MatrixTime[1]-1 && Second==0) {
-        if(MatrixTime[5]==3){
-          this->MatrixTime[5]=5;
-          this->updateProg();
-        }
-         this->runObj(1);
+        this->runObj(1);
+        delay(800);
       }  else if(Hour==this->MatrixTime[2]-1 && Minute==this->MatrixTime[3]-1 && Second==0)
       {
          this->runObj(2);
+         delay(800);
+         if(this->MatrixTime[4]==3){
+          this->MatrixTime[4]=5;
+          this->updateProg();
+        }
       }
      
   }
@@ -130,18 +128,19 @@ void Item::autoRun()
 
 bool Item::runObj(int Action)
 {
+  //Serial.print("fonction RunObj:"+String(this->IdObj)+" N:"+String(this->NumberObj)+" CMD:"+String(this->Cmd)+"|");
   switch(this->IdObj)
   {
     case 1:
             if(Action==1 && ckeckPmp()){
-             sendCmd(Cmd+Action);
+             sendCmd(this->Cmd+Action);
              return true;
             } else if(Action==1){
              popupMessage("la pompe immérgée: n'a pas démarré");
              return false;
             } else if(Action==2){
              //offObj(1);
-             sendCmd(Cmd+Action);
+             sendCmd(this->Cmd+Action);
              return true;
             }
            break;
@@ -149,7 +148,7 @@ bool Item::runObj(int Action)
           if(Action==1 && ckeckPmp()){
              if(checkVan()) {
                 //runS();
-                sendCmd(Cmd+Action);
+                sendCmd(this->Cmd+Action);
                 return true;
               } else {
                 //Erreur(2);
@@ -162,7 +161,7 @@ bool Item::runObj(int Action)
              return false;
           } else if(Action==2 && checkPae()) {
             //offObj(1);
-             sendCmd(Cmd+Action);
+             sendCmd(this->Cmd+Action);
              return true;
           } else if(Action==2) {
             //Erreur(5);//la pompe a angre n'est pas etainde
@@ -172,14 +171,18 @@ bool Item::runObj(int Action)
            break;
     case 3://****************************************************
            //Vannes
+           //Serial.println("fonction RunObj Switch(3); ");
           if(Action==1) {
             //runS();
              //sendCmd(Cmd+Action);
+             //Serial.println("fonction RunObj Switch(3) Action 1");
+             //Serial.println("VANNE "+String(this->NumberObj)+" ON");
              funValve(this->NumberObj,Action);
              return true;
           } else if(Action==2 && ckeckPrVan()) {
             //offObj(3);
              //sendCmd(Cmd+Action);
+             //Serial.println("VANNE "+String(this->NumberObj)+" OFF");
              funValve(this->NumberObj,Action);
              return true;
           } else if(Action==2)  {
@@ -191,7 +194,7 @@ bool Item::runObj(int Action)
     case 4://****************************************************
           //pompe a angre 
           if(Action==1 && checkPrPae()) {
-             sendCmd(Cmd+Action);
+             sendCmd(this->Cmd+Action);
              return true;
           } else if(Action==1)
           {
@@ -200,12 +203,12 @@ bool Item::runObj(int Action)
              return false; 
           } else if(Action==2)
           {
-            sendCmd(Cmd+Action);
+            sendCmd(this->Cmd+Action);
             return true;
           }
           break;
      case 5:
-          sendCmd(Cmd+Action);
+          sendCmd(this->Cmd+Action);
           break;
     default:
            break;
