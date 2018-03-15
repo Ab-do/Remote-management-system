@@ -39,6 +39,7 @@ const int LED_MODUL_CHECK=4;
 // Déclaration des variables.
 unsigned long last = millis();
 String Phone="669600729"; // numéro de Tel.
+String StePhone="669600729";
 int sysTime=9999;
 int PINcode=11234;
 int Hour,Minute,Second,Date,Month,Year;
@@ -57,7 +58,6 @@ Item pr[5]={{2,1},{2,2},{2,3},{2,4},{2,5}};
 Item van[15]={{3,1},{3,2},{3,3},{3,4},{3,5},{3,6},{3,7},{3,8},{3,9},{3,10},{3,11},{3,12},{3,13},{3,14},{3,15}};
 Item mlg[5]={{4,1},{4,2},{4,3},{4,4},{4,5}};
 Item eng[5]={{5,1},{5,2},{5,3},{5,4},{5,5}};
-
 void setup() {
   // Initialisation les serials ( Moniteur, Gsm , Nextion et HC12)
   Serial.begin(SPEED_SERIAL);
@@ -94,7 +94,7 @@ void setup() {
   {
   popupMessage("SD card begin error");
   return;
-  }else {
+  } else {
    //Serial.println("SD....... OK ! ");
   }
   intValve();
