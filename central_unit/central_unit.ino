@@ -95,7 +95,7 @@ void setup() {
   popupMessage("SD card begin error");
   return;
   } else {
-   //Serial.println("SD....... OK ! ");
+   Serial.println("SD....... OK ! ");
   }
   intValve();
   intLed();
@@ -145,7 +145,7 @@ void getDataNextion(){
 void getDataHc(){
   if(Serial3.available()>0){
     String str=Serial3.readString();
-    //Serial.println(str); // afficher str
+    Serial.println(str); // afficher str
     strToMatrix(str);
   }
 }
@@ -177,11 +177,11 @@ void strToMatrix(String str){
 }
 // Analyse, Commutation des données et Effectuation des actions.
 void switchData(int Matrix[MTR]){
-  //Serial.println("SWITCH");
+  Serial.println("SWITCH");
   switch(Matrix[0]){
     case 1: // int : int + 48.
             // Inclure les données de paramétrage.
-            //Serial.println("Inclure les données de paramétrage.");
+            Serial.println("Inclure les données de paramétrage.");
             if(Matrix[1]==1){
               // les fonction de paramétrage.
               if(Matrix[2]==1){
@@ -213,7 +213,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 2:
              //  // Effectuer une action sur un objet.
-            //Serial.println("// Effectuer une action sur un objet.");
+            Serial.println("// Effectuer une action sur un objet.");
             if(Matrix[1]==1){
               if(ModeSys[0]==1){
                 actionObj(Matrix); 
@@ -228,7 +228,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 3:
              // Fonctions liées à l'horloge.
-            //Serial.println("// Fonctions liées à l'horloge.");
+            Serial.println("// Fonctions liées à l'horloge.");
             if(Matrix[1]==1){ // Réglage la date et l'heure
               setTime(Matrix);
             }else if(Matrix[1]==2) { // Demmande la date et l'heure
@@ -239,7 +239,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 4:
              // mettre les données à propos système.
-            //Serial.println("// mettre les données à propos système.");
+            Serial.println("// mettre les données à propos système.");
             switch(Matrix[2]){
               case 1:
                 showHist(Matrix);
@@ -275,7 +275,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 5:
              // Paramétre
-            //Serial.println("// Paramétre");
+            Serial.println("// Paramétre");
             
             if (Matrix[1]==1){
               smsSetting(Matrix);
@@ -318,7 +318,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 6:
              // Réinitialisation du système 128
-            //Serial.println("Réinitialisation du système.");
+            Serial.println("Réinitialisation du système.");
             switch(Matrix[3]){
               case 1:
                 restSys();
@@ -342,7 +342,7 @@ void switchData(int Matrix[MTR]){
           break;
     case 7:
              // Protection du système.
-            //Serial.println("Protection du système.");
+            Serial.println("Protection du système.");
             if(Matrix[1]==4){
               if(Matrix[2]==1){
                 setDelay(Matrix);
@@ -378,7 +378,7 @@ void switchData(int Matrix[MTR]){
 /// CONFIGURATION.
 //Mettre le numbres , numéro et la puissance de chaque objets.
 void setObj(int Matrix[MTR]){
-    //Serial.println("Mettre le nombre des objets");
+    Serial.println("Mettre le nombre des objets");
     //showMatrix(Matrix,15);
     int j=0;
     for(int i=0;i<6;i++){
@@ -391,7 +391,7 @@ void setObj(int Matrix[MTR]){
     //showMatrix(numberObj,6);
   }
 void setRelation(int Matrix[MTR]){
-    //Serial.println("Mettre les relations");
+    Serial.println("Mettre les relations");
     ////showMatrix(Matrix,15);
     int j=0;
     for(int i=0;i<6;i++){
@@ -404,7 +404,7 @@ void setRelation(int Matrix[MTR]){
     //showMatrix(relationObj);
     }
 void setSec(int Matrix[MTR]){
-    //Serial.println("Mettre les secteurs.");
+    Serial.println("Mettre les secteurs.");
     //showMatrix(Matrix,15);
     int j=0;
     for(int i=0;i<6;i++){
@@ -418,7 +418,7 @@ void setSec(int Matrix[MTR]){
   }
  // Mettre la relation entre les pompes de refoulement et les pompes à engrais.
 void setRelationPae(int Matrix[MTR]){
-    //Serial.println("Mettre la relation entre les pompes de refoulement et les pompes à engaris.");
+    Serial.println("Mettre la relation entre les pompes de refoulement et les pompes à engaris.");
     //showMatrix(Matrix,15);
     relationPae[Matrix[3]-1][0]=toDec(Matrix[4],Matrix[5]);
     relationPae[Matrix[3]-1][1]=toDec(Matrix[6],Matrix[7]);
@@ -429,7 +429,7 @@ void setRelationPae(int Matrix[MTR]){
 }
 //Mettre les données de client
 void setNumPhone(int Matrix[MTR]){
-    //Serial.println("Mettre Numéro de Tel.");
+    Serial.println("Mettre Numéro de Tel.");
     //showMatrix(Matrix,11);
     for(int i=0;i<9;i++){
       numberPhone[i]=Matrix[i+3];
@@ -536,7 +536,7 @@ void showHist(int Matrix[MTR]){
   String HistFile;
   Matrix[3]==9? HistFile = "Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv"         
   :   HistFile = "Hist_"+String(toDec(Matrix[3],Matrix[4]))+"_"+String(toDec(Matrix[5],Matrix[6]))+"_"+String(toDec(Matrix[7],Matrix[8]))+".csv";
-  //Serial.println("Name de fichier : "+HistFile);
+  Serial.println("Name de fichier : "+HistFile);
   if(sd.exists(HistFile.c_str())){
       csv.open(HistFile.c_str(), O_RDWR); 
     } else {
@@ -761,7 +761,7 @@ void sendPinSMS(){
 //////// PARTIE 5 : paramétre
 //// les paramétre des SMS
 void smsSetting(int Matrix[MTR]){
-    //Serial.println("Paramètre SMS");
+    Serial.println("Paramètre SMS");
     //showMatrix(Matrix,8);
     String str="";
     for(int i=0;i<4;i++){
@@ -891,7 +891,7 @@ void restSys(){
       setDataNextion("j0.val="+String(j+10));
     }
   }
-  //Serial.println("le système a été réinitialisé");
+  Serial.println("le système a été réinitialisé");
   setup();
   }
 
@@ -971,7 +971,7 @@ bool loadingData(){
   putDataNextion();
   delay(100);
   setDataNextion("j0.val=95");
-  //Serial.println("le chargement des données a été téléchargé");
+  Serial.println("le chargement des données a été téléchargé");
   return true;
 }
 
@@ -1005,7 +1005,7 @@ bool checkValidity(){
 // Mettre les données à Nextion 
 void setDataNextion(String data) {
   Serial2.print(data);
-  //Serial.println(data);
+  Serial.println(data);
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.write(0xff);
@@ -1055,7 +1055,7 @@ String toString(int Matrix[9]){
   String str="";
   for(int i=0;i<9;i++)
     str+=Matrix[i];
-  //Serial.println(str);
+  Serial.println(str);
   return str; 
 }
 //  Obtenir l'heure d'horloge 
@@ -1136,7 +1136,7 @@ void addHist(String hist)
     popupMessage("Erreur de creation de fichier");
     return 0;
   }
-  //Serial.println("HISTORIQUE : "+hist+" "+Time+" "+Day);
+  Serial.println("HISTORIQUE : "+hist+" "+Time+" "+Day);
   csv.addField(hist.c_str());
   csv.addField(Time.c_str());
   csv.addField(Day.c_str());
@@ -1146,7 +1146,7 @@ void addHist(String hist)
 ////// Initialization de la module carte SD !! 
 bool sdInit(){
   String HistFile="Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv";
-  //Serial.println(HistFile);
+  Serial.println(HistFile);
   //Si le fichier existe,Il s'ouvre.
   if(!sd.exists(HistFile.c_str())){
       csv.open(HistFile.c_str(), O_RDWR | O_CREAT);
