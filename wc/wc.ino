@@ -11,9 +11,10 @@ int settingSMS[6]={0};
 const int MTR=15;
 void setup() {
   Serial.begin(9600);  // Moniteur série
-  Serial1.begin(9600); // Module GSM  SIM800L
+  Serial3.begin(9600); // Module GSM  SIM800L
   Serial2.begin(9600); // Module radio HC12
   Serial.println("Start-up");
+  //Serial2.println("<6111>");
   loadingData();
   pinMode(LED,INPUT);
   checkWirless();
@@ -34,8 +35,8 @@ void getDataSerial(){
 }
 
 void getDataGsm(){
-  if(Serial1.available()>0){
-    String data=Serial1.readString();
+  if(Serial3.available()>0){
+    String data=Serial3.readString();
     Serial.println(data); // afficher str
     filtering(data);
   }
@@ -68,7 +69,7 @@ void getDataHc(){
           data.remove(0,1);
           Serial.println(data);
           Serial2.println("<810"+data+">");
-          //switchSMS("1"+data);
+          switchSMS("9"+data);
       break;
       case 'R':
         data.remove(0,1);
@@ -102,8 +103,9 @@ void filtering(String str){
          //Commutation des données.
          //showMatrix(Matrix,20);
          //switchData(Matrix);
-         Serial.println(dataSend);
-         Serial1.println(dataSend);
+         //Serial.println(dataSend);
+         Serial2.println("<"+dataSend+">");
+         Serial.println("<"+dataSend+">");
          //memset(Matrix,0,sizeof(Matrix));
       }
       else{
@@ -113,10 +115,10 @@ void filtering(String str){
 }
 
 void switchSMS(String str){
-  Serial.print("les données qui la fonction va analyser et l'envoyer par SMS au client.");
+  Serial.print("les données :");
   Serial.println(str);
   String msg;
-  switch(str[1]-48){
+  switch(str[0]-48){
     case 9:
          msg=getName(str[2]-48,toDec(str[3]-48,str[4]-48));
          if(str[5]-48==3){
@@ -174,19 +176,19 @@ void sendSMS(String outMessage,int validity){
   Serial.print("SMS: ");
   Serial.println(outMessage);
   if(validity==1){
-  Serial1.print("AT+CMGF=1\r");
+  Serial3.print("AT+CMGF=1\r");
   delay(500);
   if(Phone=="+212000000000"){
-    Phone="+212770509044";
+    Phone="+212669600729";
   }
-  Serial1.println("AT + CMGS= \"+212" + Phone +"\"" );
+  Serial3.println("AT + CMGS= \"+212" + Phone +"\"" );
   delay(500);
-  Serial1.println(outMessage);
+  Serial3.println(outMessage);
   delay(500);
-  Serial1.write((char)26); //ctrl+z
+  Serial3.write((char)26); //ctrl+z
   delay(500);
-  Serial1.println("AT+CLTS=1");
-  Serial1.println("AT+CCLK?");
+  Serial3.println("AT+CLTS=1");
+  Serial3.println("AT+CCLK?");
   }
 }
 
@@ -258,6 +260,10 @@ void checkWirless(){
     delay(1000);
     digitalWrite(LED,HIGH);
     Serial2.println("<8233>");
+    sendSMS("SYS BOOT",1);
+}
+void checkHC(){
+  
 }
 
 void restSys(){
