@@ -2,25 +2,36 @@
 // le 04/03/2019 Agadir.
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
-const int LED=13;
+const int LED_START=2;
+const int LED_WIRLESS_COM=3;
+const int LED_CHECK_GSM=4;
 const int AD_PHONE=10;
 const int AD_SETTING_SMS=30;
 String Phone="";
 int numberPhone[9]={0};        // nombre des objets de systeme
 int settingSMS[6]={0};
 const int MTR=15;
+unsigned long Last=millis();
+unsigned long CheckSMS=millis();
+bool SMS_Responce=false;
 void setup() {
   Serial.begin(9600);  // Moniteur série
   Serial3.begin(9600); // Module GSM  SIM800L
   Serial2.begin(9600); // Module radio HC12
   Serial.println("Start-up");
-  //Serial2.println("<6111>");
+  pinMode(LED_START,OUTPUT);
+  pinMode(LED_WIRLESS_COM,OUTPUT);
+  pinMode(LED_CHECK_GSM,OUTPUT);
   loadingData();
-  pinMode(LED,INPUT);
+  Last=millis();
+  CheckSMS=millis();
   checkWirless();
+  checkGsm();
+  digitalWrite(LED_START,HIGH);
 }
 
 void loop() {
+  checkNet();
   getDataGsm();
   getDataHc();
   getDataSerial();
@@ -40,7 +51,6 @@ void getDataGsm(){
     Serial.println(data); // afficher str
     filtering(data);
   }
-    
 }
 
 void getDataHc(){
@@ -53,7 +63,6 @@ void getDataHc(){
       case 'W':
          if(data[1]=='c'){
           checkWirless();
-          
          }
       break;
       case 'N':
@@ -69,7 +78,13 @@ void getDataHc(){
           data.remove(0,1);
           Serial.println(data);
           Serial2.println("<810"+data+">");
-          switchSMS("9"+data);
+          //switchSMS("1"+data);
+          if(SMS_Responce==true && millis()-CheckSMS>30000 && settingSMS[0]!=1){
+                settingSMS[0]=1;
+                switchSMS("1"+data);
+                settingSMS[0]=2;
+                SMS_Responce==false;
+           }
       break;
       case 'R':
         data.remove(0,1);
@@ -86,7 +101,7 @@ void getDataHc(){
     }
   }
 }
-
+//filtering data from GSM
 void filtering(String str){
   String dataSend="";
   int i=0;
@@ -103,9 +118,10 @@ void filtering(String str){
          //Commutation des données.
          //showMatrix(Matrix,20);
          //switchData(Matrix);
-         //Serial.println(dataSend);
-         Serial2.println("<"+dataSend+">");
-         Serial.println("<"+dataSend+">");
+         Serial.println(dataSend);
+         Serial2.println(dataSend);
+         SMS_Responce=true;
+         CheckSMS=millis();
          //memset(Matrix,0,sizeof(Matrix));
       }
       else{
@@ -113,12 +129,12 @@ void filtering(String str){
       }     
   }
 }
-
+//switchSMS 
 void switchSMS(String str){
-  Serial.print("les données :");
+  Serial.print("les données que la fonction va analyser et l'envoyer par SMS au client.");
   Serial.println(str);
   String msg;
-  switch(str[0]-48){
+  switch(str[1]-48){
     case 9:
          msg=getName(str[2]-48,toDec(str[3]-48,str[4]-48));
          if(str[5]-48==3){
@@ -146,7 +162,7 @@ void switchSMS(String str){
   
 }
 
-
+//fonction set nemero de telephone du client
 void setNumPhone(String str){
     Serial.println("Mettre Numéro de Tel.");
     //showMatrix(Matrix,11);
@@ -158,7 +174,7 @@ void setNumPhone(String str){
     Serial.print(Phone);
     //showMatrix(numberPhone,3);
 }
-
+//load data from EEPROM
 void loadingData(){
   EEPROM.get(AD_PHONE,numberPhone);
   Phone=toString(numberPhone);
@@ -179,7 +195,7 @@ void sendSMS(String outMessage,int validity){
   Serial3.print("AT+CMGF=1\r");
   delay(500);
   if(Phone=="+212000000000"){
-    Phone="+212669600729";
+    Phone="+212770509044";
   }
   Serial3.println("AT + CMGS= \"+212" + Phone +"\"" );
   delay(500);
@@ -240,7 +256,7 @@ String getName(int Obj,int Number){
     break;
   }
 }
-
+//fonction set setting SMS
 void setSettingSMS(String str){
    for(int i=0;i<4;i++){
      settingSMS[i]=str[i]-48;
@@ -254,18 +270,41 @@ int toDec(int o,int p){
 }
 
 void checkWirless(){
-    digitalWrite(LED,HIGH);
-    delay(1000);
-    digitalWrite(LED,LOW);
-    delay(1000);
-    digitalWrite(LED,HIGH);
-    Serial2.println("<8233>");
-    sendSMS("SYS BOOT",1);
+    digitalWrite(LED_WIRLESS_COM,HIGH);
+    delay(70);
+    digitalWrite(LED_WIRLESS_COM,LOW);
+    delay(70);
+    digitalWrite(LED_WIRLESS_COM,HIGH);
+    Serial2.println("<8200>");
 }
-void checkHC(){
-  
+void checkGsm(){
+    if(Serial3.available()>0){
+    String data=Serial3.readString();
+    if(data.indexOf("AT+CSQ")==0){
+       data.trim();
+       data.remove(0,14);
+       int GsmSgnal=data.toInt();
+       if(GsmSgnal<10){
+        Serial2.print("<820"+String(GsmSgnal)+">");
+        digitalWrite(LED_CHECK_GSM,LOW);
+       }else{
+        Serial2.print("<82"+String(GsmSgnal)+">");
+        if(GsmSgnal<20){
+           digitalWrite(LED_CHECK_GSM,LOW);
+        }else{
+           digitalWrite(LED_CHECK_GSM,HIGH);
+        }
+       }     
+    }
+  }
 }
-
+void checkNet(){
+  if(millis()-Last>60000){
+     Serial3.write("AT+CSQ\r");
+     checkGsm();
+     Last=millis();
+  }
+}
 void restSys(){
     for (int i = 1 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
