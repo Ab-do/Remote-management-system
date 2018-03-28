@@ -17,6 +17,8 @@ bool Century=false;
 bool h12;
 bool PM;
 bool Config=false;
+bool ComWc=false;
+bool ComGsm=false;
 // Déclaration des constantes.
 const int MTR=20;  // Nombre de Rangé de la matrice
 const int AD_VIRGINITY=1;
@@ -32,17 +34,21 @@ const int AD_RELATION_PAE=210; //280
 const int NUMBER_OBJ=5;
 const int NUMBER_MAX=15;
 const double SPEED_SERIAL = 9600;
+const unsigned long PERIOD=70000;
 // Declaration les pins des LED
 const int LED_START=2;
 const int LED_WIRLESS_COM=3;
-const int LED_MODUL_CHECK=4;
+const int LED_CHECK_GSM=4;
 // Déclaration des variables.
+unsigned long Time = millis();
 unsigned long last = millis();
+unsigned long Last = millis();
 String Phone="669600729"; // numéro de Tel.
 String StePhone="669600729";
 int sysTime=9999;
 int PINcode=11234;
 int Hour,Minute,Second,Date,Month,Year;
+int LevelNet=0;
 //boolean ModeSys=false;
 // Déclaration des matrices.
 int numberPhone[9]={0};        // nombre des objets de systeme
@@ -103,6 +109,7 @@ void setup() {
   Serial.println("start-up");
   //showRAM();
   getTime();
+  Last = millis();// tm
   //setDataNextion("page 1");
   addHist("start-up");
 }
@@ -115,6 +122,7 @@ void loop() {
   if(ModeSys[2]==1){
     autoRunObj(); 
   }
+  ckeckHCState();
 }
 //********* OBTEBNIR LES DONNEES
 // Obtenir des données de Serial
@@ -266,7 +274,20 @@ void switchData(int Matrix[MTR]){
                 sendPinSMS();
               break;
               case 9:
-                getModeSys();
+                 switch(Matrix[1]){
+                  case 1:
+                      getModeSys();
+                  break;
+                  case 2: 
+                      getStateWc();
+                  break;
+                  case 3:
+                      getNumClient();
+                  break;
+                  default:
+                      Error();
+                  break;
+                 }
               break;
               default:
                 Error();
@@ -360,8 +381,10 @@ void switchData(int Matrix[MTR]){
          if(Matrix[1]==1){
           Serial.println("81");
           setState(Matrix);
-         }else if (Matrix[1]==2 && Matrix[2]==3){
-          ckeckWirlessState();
+         }else if (Matrix[1]==2){
+            ckeckWirlessState();
+            Last=millis();
+            ckeckGsmState(toDec(Matrix[2],Matrix[3]));
          }else {
           showRAM();
          }
@@ -527,6 +550,7 @@ void setTime(int Matrix[MTR]){
     Clock.setHour(toDec(Matrix[8],Matrix[9]));
     Clock.setMinute(toDec(Matrix[10],Matrix[11]));
     Clock.setSecond(0);
+    successMessage();
   }
 //  Obtenir la date et l'heure to Nextion
 void showTime(){}
@@ -568,7 +592,8 @@ void showHist(int Matrix[MTR]){
     csv.close();
 }
 //// Etats des objets
-void showState(){ 
+void showState(){
+    getStateWc(); 
      int S;
   for(int i=0;i<numberObj[0];i++){
      int k=i+0;
@@ -840,6 +865,32 @@ void getModeSys(){
     }
   }
 }
+void getStateWc(){
+    //getTimeNextion();
+    setDataNextion("t0.txt=\""+toString(Hour)+"\"");
+    setDataNextion("t2.txt=\""+toString(Minute)+"\"");
+    setDataNextion("t3.txt=\""+toString(Date)+"\"");
+    setDataNextion("t5.txt=\""+toString(Month)+"\"");
+    setDataNextion("t8.txt=\""+toString(Year)+"\"");
+    if(ComWc){
+      setDataNextion("t10.txt=\"R\"");
+      digitalWrite(LED_WIRLESS_COM,HIGH);
+    }else {
+      setDataNextion("t10.txt=\"N.R\"");
+      digitalWrite(LED_WIRLESS_COM,LOW);
+    }
+    if(ComGsm){
+      setDataNextion("t6.txt=\""+String((LevelNet/6)-1)+"\"");
+    }else {
+      setDataNextion("t6.txt=\"N.S\"");
+    }
+    
+    
+     
+}
+void getNumClient(){
+   setDataNextion("t0.txt=\""+Phone+"\"");
+}
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
   
@@ -1050,6 +1101,13 @@ void sendSMS(String outMessage,int validity){
 int toDec(int o,int p){
   return o*10+p;
 }
+String toString(int value){
+  if(value<10){
+    return "0"+String(value);
+  }else {
+    return String(value);
+  }
+}
 // Convertir une matrice en texte.
 String toString(int Matrix[9]){
   String str="";
@@ -1068,6 +1126,7 @@ void getTimeNextion(){
 }
 
 void getTime(){
+  Time = millis();
   Year=Clock.getYear();
   Month=Clock.getMonth(Century);
   Date=Clock.getDate();
@@ -1321,23 +1380,47 @@ void funValve(int van,int action){
 void intLed(){
   pinMode(LED_START,OUTPUT);
   pinMode(LED_WIRLESS_COM,OUTPUT);
-  pinMode(LED_MODUL_CHECK,OUTPUT);
+  pinMode(LED_CHECK_GSM,OUTPUT);
   digitalWrite(LED_START,LOW);
   digitalWrite(LED_WIRLESS_COM,LOW);
-  digitalWrite(LED_MODUL_CHECK,LOW);
+  digitalWrite(LED_CHECK_GSM,LOW);
 }
 void ckeckWirless(){
    Serial3.println("Wc1");
 }
 void ckeckWirlessState(){
-   for(int i=0;i<6;i++){
-     digitalWrite(LED_WIRLESS_COM,HIGH);
-     delay(100);
-     digitalWrite(LED_WIRLESS_COM,LOW);
-     delay(100);
-   }
    digitalWrite(LED_WIRLESS_COM,HIGH);
+   delay(70);
+   digitalWrite(LED_WIRLESS_COM,LOW);
+   delay(70);
+   digitalWrite(LED_WIRLESS_COM,HIGH);
+   ComWc=true;
    Serial.println("Communication entre U.C et W.C ... OK");
+}
+void ckeckGsmState(int level){
+  LevelNet=level;
+  Serial.println(LevelNet);
+  if(level>19){
+    digitalWrite(LED_CHECK_GSM,HIGH);
+    delay(70);
+    digitalWrite(LED_CHECK_GSM,LOW);
+    delay(70);
+    digitalWrite(LED_CHECK_GSM,HIGH);
+    ComGsm=true;
+  }else {
+    ComGsm=false;
+    digitalWrite(LED_CHECK_GSM,LOW);
+  }
+    
+}
+void ckeckHCState(){
+  if(millis()-Last>PERIOD && ComWc==true){
+    ComWc=false;
+    ComGsm=false;
+    digitalWrite(LED_WIRLESS_COM,LOW);
+    digitalWrite(LED_CHECK_GSM,LOW);
+    Serial.println("Communication : false");
+  }
 }
 void statPage(){
   

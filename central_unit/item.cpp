@@ -142,6 +142,8 @@ bool Item::runObj(int Action)
              //offObj(1);
              sendCmd(this->Cmd+Action);
              return true;
+            }else if(Action==8){
+              sendCmd(this->Cmd);
             }
            break;
     case 2:
@@ -167,7 +169,9 @@ bool Item::runObj(int Action)
             //Erreur(5);//la pompe a angre n'est pas etainde
              popupMessage("Vous pouvez pas Arreter la pompe de refoulement N : "+String(this->NumberObj));
              return false;
-          }
+          }else if(Action==8){
+              sendCmd(this->Cmd);
+            }
            break;
     case 3://****************************************************
            //Vannes
@@ -189,7 +193,9 @@ bool Item::runObj(int Action)
             //Erreur(3);//
             popupMessage("Vous pouvez pas Arreter la vanne N : "+String(this->NumberObj));
              return false;
-          }
+          }else if(Action==8){
+              sendCmd(this->Cmd);
+            }
            break;
     case 4://****************************************************
           //pompe a angre 
@@ -205,10 +211,16 @@ bool Item::runObj(int Action)
           {
             sendCmd(this->Cmd+Action);
             return true;
-          }
+          }else if(Action==8){
+              sendCmd(this->Cmd);
+            }
           break;
      case 5:
-          sendCmd(this->Cmd+Action);
+          if(Action==1 || Action==2){
+            sendCmd(this->Cmd+Action);
+          } else if(Action==8){
+              sendCmd(this->Cmd);
+          }
           break;
     default:
            break;
