@@ -112,6 +112,7 @@ void setup() {
   Last = millis();// tm
   //setDataNextion("page 1");
   addHist("start-up");
+  digitalWrite(LED_START,HIGH);
 }
 
 void loop() {
@@ -256,7 +257,7 @@ void switchData(int Matrix[MTR]){
                 showState();
               break;
               case 3:
-                showProg(Matrix[3]);
+                showProg(Matrix[1],Matrix[3]);
               break;
               case 4:
                 getState(Matrix);
@@ -593,6 +594,7 @@ void showHist(int Matrix[MTR]){
 }
 //// Etats des objets
 void showState(){
+    ckeckWirless();
     getStateWc(); 
      int S;
   for(int i=0;i<numberObj[0];i++){
@@ -652,17 +654,101 @@ void showState(){
   }
   }
 ///  Programme de démarrage
-void showProg(int Page){
-//      for(int i=0;i<10;i++)
-//      pim[i].autoRun();
-//      for(int i=0;i<5;i++)
-//      pr[i].autoRun();
-//      for(int i=0;i<15;i++)
-//      van[i].autoRun();
-//      for(int i=0;i<5;i++)
-//      mlg[i].autoRun();
-//      for(int i=0;i<5;i++)
-//      eng[i].autoRun();  
+void showProg(int type,int Page){
+    int i=(Page-1)*5;
+    switch(type){
+      case 1:
+        
+          for(int j=0;j<10;j++){
+             if(i<=Page*5){
+              if(pim[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
+                setDataNextion("P"+String(i+1)+".txt=\"PIM "+String(j+1)+"\"");
+                setDataNextion("T"+String(i+1)+".txt=\""+toString(pim[j].MatrixTime[0]-1)+":"+toString(pim[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(i+1)+".txt=\""+toString(pim[j].MatrixTime[2]-1)+":"+toString(pim[j].MatrixTime[3]-1)+"\"");
+                if(pim[j].MatrixTime[4]==3 || pim[j].MatrixTime[4]==4 ){
+                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+               }else if(pim[j].MatrixTime[4]==5 || pim[j].MatrixTime[4]==6){
+                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+               }
+            i++;
+          } }
+          }
+      break;
+      case 2:
+         for(int j=0;j<5;j++){
+           if(i<=Page*5){
+              if(pr[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
+                setDataNextion("P"+String(i+1)+".txt=\"PMP REF "+String(j+1)+"\"");
+                setDataNextion("T"+String(i+1)+".txt=\""+toString(pr[j].MatrixTime[0]-1)+":"+toString(pr[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(i+1)+".txt=\""+toString(pr[j].MatrixTime[2]-1)+":"+toString(pr[j].MatrixTime[3]-1)+"\"");
+                if(pr[j].MatrixTime[4]==3 || pr[j].MatrixTime[4]==4 ){
+                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+               }else if(pr[j].MatrixTime[4]==5 || pr[j].MatrixTime[4]==6){
+                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+               }
+               i++;
+          } }
+          }
+      break;
+      case 3:
+         for(int j=0;j<5;j++){
+            if(i<=Page*5){
+              if(van[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
+                setDataNextion("P"+String(i+1)+".txt=\"VAN "+String(j+1)+"\"");
+                setDataNextion("T"+String(i+1)+".txt=\""+toString(van[j].MatrixTime[0]-1)+":"+toString(van[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(i+1)+".txt=\""+toString(van[j].MatrixTime[2]-1)+":"+toString(van[j].MatrixTime[3]-1)+"\"");
+                if(van[j].MatrixTime[4]==3 || van[j].MatrixTime[4]==4 ){
+                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+               }else if(van[j].MatrixTime[4]==5 || van[j].MatrixTime[4]==6){
+                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+               }
+               i++;
+          } }
+          }
+      break;
+      case 4:
+          for(int j=0;j<5;j++){
+            if(i<=Page*5){
+              if(pr[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
+                setDataNextion("P"+String(i+1)+".txt=\"MLG "+String(j+1)+"\"");
+                setDataNextion("T"+String(i+1)+".txt=\""+toString(pr[j].MatrixTime[0]-1)+":"+toString(pr[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(i+1)+".txt=\""+toString(pr[j].MatrixTime[2]-1)+":"+toString(pr[j].MatrixTime[3]-1)+"\"");
+                if(pr[j].MatrixTime[4]==3 || pr[j].MatrixTime[4]==4 ){
+                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+               }else if(pr[j].MatrixTime[4]==5 || pr[j].MatrixTime[4]==6){
+                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+               }
+               i++;
+          } }
+          }
+      break;
+      case 5:
+          for(int j=0;j<5;j++){
+           if(i<=Page*5){
+              if(eng[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
+                setDataNextion("P"+String(i+1)+".txt=\"PMP ANG "+String(j+1)+"\"");
+                setDataNextion("T"+String(i+1)+".txt=\""+toString(eng[j].MatrixTime[0]-1)+":"+toString(eng[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(i+1)+".txt=\""+toString(eng[j].MatrixTime[2]-1)+":"+toString(eng[j].MatrixTime[3]-1)+"\"");
+                if(eng[j].MatrixTime[4]==3 || eng[j].MatrixTime[4]==4 ){
+                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+               }else if(eng[j].MatrixTime[4]==5 || eng[j].MatrixTime[4]==6){
+                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+               }
+               i++;
+          } }
+          }
+      break;
+    }
+      
+      
+      for(int i=0;i<5;i++)
+      pr[i].autoRun();
+      for(int i=0;i<15;i++)
+      van[i].autoRun();
+      for(int i=0;i<5;i++)
+      mlg[i].autoRun();
+      for(int i=0;i<5;i++)
+      eng[i].autoRun();  
   }
 //// Obtenir l'Etat d'un objet
 void getState(int Matrix[MTR]){
@@ -720,7 +806,7 @@ void getState(int Matrix[MTR]){
   }
 //// dommander l'acès de paramétrage
 void getAccess(){
-    setDataNextion("Pw.txt=\""+String(PINcode-10000)+"\"");
+    setDataNextion("Pw.txt=\""+toStringPin(PINcode-10000)+"\"");
   }
 
 void getProg(int Matrix[MTR]){
@@ -781,6 +867,12 @@ void getSettingSMS(){
 }
 // envoyer le pin par sms.
 void sendPinSMS(){
+  Serial.println(PINcode);
+  if(PINcode>10000){
+    Serial3.println("P"+toStringPin(PINcode-10000));
+  }else {
+    Serial3.println("P1234");
+  }
   
 }
 //////// PARTIE 5 : paramétre
@@ -879,10 +971,16 @@ void getStateWc(){
       setDataNextion("t10.txt=\"N.R\"");
       digitalWrite(LED_WIRLESS_COM,LOW);
     }
+    float PerLev=LevelNet/31.0;
+    Serial.print(PerLev);
+    Serial.print(" ");
+    Serial.println(LevelNet);
     if(ComGsm){
-      setDataNextion("t6.txt=\""+String((LevelNet/6)-1)+"\"");
+      setDataNextion("t6.txt=\""+String(PerLev*100)+"%\"");
     }else {
-      setDataNextion("t6.txt=\"N.S\"");
+      //setDataNextion("t6.txt=\"N.S\"");
+      //setDataNextion("t6.txt=\""+String((LevelNet/31)*100)+"%\"");
+      setDataNextion("t6.txt=\""+String(PerLev*100)+"%\"");
     }
     
     
@@ -1108,6 +1206,17 @@ String toString(int value){
     return String(value);
   }
 }
+String toStringPin(int value){
+  if(value<10){
+    return   "000"+String(value);
+  } if(value <100) {
+     return "00"+String(value);
+  } if(value <1000) {
+     return  "0"+String(value);
+  }else {
+    return String(value);
+  }
+}
 // Convertir une matrice en texte.
 String toString(int Matrix[9]){
   String str="";
@@ -1118,15 +1227,14 @@ String toString(int Matrix[9]){
 }
 //  Obtenir l'heure d'horloge 
 void getTimeNextion(){
-  setDataNextion("va0.val="+String(Hour));
-  setDataNextion("va1.val="+String(Minute));
-  setDataNextion("va2.val="+String(Date));
-  setDataNextion("va3.val="+String(Month));
-  setDataNextion("va4.val="+String(Year));
+  setDataNextion("t3.txt=\""+toString(Hour)+"\"");
+  setDataNextion("t4.txt=\""+toString(Minute)+"\"");
+  setDataNextion("t0.txt=\""+toString(Date)+"\"");
+  setDataNextion("t1.txt=\""+toString(Month)+"\"");
+  setDataNextion("t2.txt=\""+toString(Year)+"\"");
 }
 
 void getTime(){
-  Time = millis();
   Year=Clock.getYear();
   Month=Clock.getMonth(Century);
   Date=Clock.getDate();
@@ -1399,7 +1507,6 @@ void ckeckWirlessState(){
 }
 void ckeckGsmState(int level){
   LevelNet=level;
-  Serial.println(LevelNet);
   if(level>19){
     digitalWrite(LED_CHECK_GSM,HIGH);
     delay(70);
