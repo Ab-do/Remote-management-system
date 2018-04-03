@@ -655,100 +655,94 @@ void showState(){
   }
 ///  Programme de démarrage
 void showProg(int type,int Page){
-    int i=(Page-1)*5;
+    int id=1;
+    int cont=1;
     switch(type){
       case 1:
-        
-          for(int j=0;j<10;j++){
-             if(i<=Page*5){
+          for(int j=0;j<numberObj[0];j++){
               if(pim[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
-                setDataNextion("P"+String(i+1)+".txt=\"PIM "+String(j+1)+"\"");
-                setDataNextion("T"+String(i+1)+".txt=\""+toString(pim[j].MatrixTime[0]-1)+":"+toString(pim[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(i+1)+".txt=\""+toString(pim[j].MatrixTime[2]-1)+":"+toString(pim[j].MatrixTime[3]-1)+"\"");
+                if((Page-1)*5<cont && Page*5>=cont){
+                setDataNextion("P"+String(id)+".txt=\"PIM "+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(pim[j].MatrixTime[0]-1)+":"+toString(pim[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(pim[j].MatrixTime[2]-1)+":"+toString(pim[j].MatrixTime[3]-1)+"\"");
                 if(pim[j].MatrixTime[4]==3 || pim[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
                }else if(pim[j].MatrixTime[4]==5 || pim[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
                }
-            i++;
-          } }
+               id++;  }
+               cont++;
+          } 
           }
       break;
       case 2:
-         for(int j=0;j<5;j++){
-           if(i<=Page*5){
+         for(int j=0;j<numberObj[1];j++){
+           if(id<=Page*5){
               if(pr[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
-                setDataNextion("P"+String(i+1)+".txt=\"PMP REF "+String(j+1)+"\"");
-                setDataNextion("T"+String(i+1)+".txt=\""+toString(pr[j].MatrixTime[0]-1)+":"+toString(pr[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(i+1)+".txt=\""+toString(pr[j].MatrixTime[2]-1)+":"+toString(pr[j].MatrixTime[3]-1)+"\"");
+                setDataNextion("P"+String(id)+".txt=\"PMP REF "+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(pr[j].MatrixTime[0]-1)+":"+toString(pr[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(pr[j].MatrixTime[2]-1)+":"+toString(pr[j].MatrixTime[3]-1)+"\"");
                 if(pr[j].MatrixTime[4]==3 || pr[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
                }else if(pr[j].MatrixTime[4]==5 || pr[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
                }
-               i++;
+               id++;
           } }
           }
       break;
       case 3:
-         for(int j=0;j<5;j++){
-            if(i<=Page*5){
+         for(int j=0;j<numberObj[2];j++){
               if(van[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
-                setDataNextion("P"+String(i+1)+".txt=\"VAN "+String(j+1)+"\"");
-                setDataNextion("T"+String(i+1)+".txt=\""+toString(van[j].MatrixTime[0]-1)+":"+toString(van[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(i+1)+".txt=\""+toString(van[j].MatrixTime[2]-1)+":"+toString(van[j].MatrixTime[3]-1)+"\"");
+                if((Page-1)*5<cont && Page*5>=cont){
+                setDataNextion("P"+String(id)+".txt=\"VAN "+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(van[j].MatrixTime[0]-1)+":"+toString(van[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(van[j].MatrixTime[2]-1)+":"+toString(van[j].MatrixTime[3]-1)+"\"");
                 if(van[j].MatrixTime[4]==3 || van[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
                }else if(van[j].MatrixTime[4]==5 || van[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
                }
-               i++;
-          } }
+               id++;  }
+               cont++;
+          } 
           }
       break;
       case 4:
-          for(int j=0;j<5;j++){
-            if(i<=Page*5){
+          for(int j=0;j<numberObj[3];j++){
+            if(id<=Page*5){
               if(pr[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
-                setDataNextion("P"+String(i+1)+".txt=\"MLG "+String(j+1)+"\"");
-                setDataNextion("T"+String(i+1)+".txt=\""+toString(pr[j].MatrixTime[0]-1)+":"+toString(pr[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(i+1)+".txt=\""+toString(pr[j].MatrixTime[2]-1)+":"+toString(pr[j].MatrixTime[3]-1)+"\"");
+                setDataNextion("P"+String(id)+".txt=\"MLG "+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(pr[j].MatrixTime[0]-1)+":"+toString(pr[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(pr[j].MatrixTime[2]-1)+":"+toString(pr[j].MatrixTime[3]-1)+"\"");
                 if(pr[j].MatrixTime[4]==3 || pr[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
                }else if(pr[j].MatrixTime[4]==5 || pr[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
                }
-               i++;
+               id++;
+               
           } }
           }
       break;
       case 5:
-          for(int j=0;j<5;j++){
-           if(i<=Page*5){
+          for(int j=0;j<numberObj[4];j++){
+           if(id<=Page*5){
               if(eng[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
-                setDataNextion("P"+String(i+1)+".txt=\"PMP ANG "+String(j+1)+"\"");
-                setDataNextion("T"+String(i+1)+".txt=\""+toString(eng[j].MatrixTime[0]-1)+":"+toString(eng[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(i+1)+".txt=\""+toString(eng[j].MatrixTime[2]-1)+":"+toString(eng[j].MatrixTime[3]-1)+"\"");
+                setDataNextion("P"+String(id)+".txt=\"PMP ANG "+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(eng[j].MatrixTime[0]-1)+":"+toString(eng[j].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(eng[j].MatrixTime[2]-1)+":"+toString(eng[j].MatrixTime[3]-1)+"\"");
                 if(eng[j].MatrixTime[4]==3 || eng[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(i+1)+".txt=\"Actif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
                }else if(eng[j].MatrixTime[4]==5 || eng[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(i+1)+".txt=\"Inactif\"");
+                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
                }
-               i++;
+               id++;
           } }
           }
       break;
     }
-      
-      
-      for(int i=0;i<5;i++)
-      pr[i].autoRun();
-      for(int i=0;i<15;i++)
-      van[i].autoRun();
-      for(int i=0;i<5;i++)
-      mlg[i].autoRun();
-      for(int i=0;i<5;i++)
-      eng[i].autoRun();  
+  
   }
 //// Obtenir l'Etat d'un objet
 void getState(int Matrix[MTR]){
@@ -1072,6 +1066,7 @@ void checkState(int Matrix[]){
 ////// Mettre des valeurs 
 void Virginity(int value ){
   EEPROM[AD_VIRGINITY]=value;
+  defaultPar();
   setup();
 }
 // les données
@@ -1529,8 +1524,9 @@ void ckeckHCState(){
     Serial.println("Communication : false");
   }
 }
-void statPage(){
-  
+void defaultPar(){
+  ModeSys[0]=ModeSys[1]=ModeSys[2]=1;
+  EEPROM.put(AD_MODE_SYS,ModeSys);
 }
 // 
 
