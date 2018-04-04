@@ -1,4 +1,4 @@
-// WC 5 : wirless controller.
+// WC 8 : wirless controller.
 // le 04/03/2019 Agadir.
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
@@ -25,13 +25,17 @@ void setup() {
   loadingData();
   Last=millis();
   CheckSMS=millis();
-  checkWirless();
-  checkGsm();
+  //checkWirless();
+  checkNet(true);
+  //Serial3.println("AT+CMGF=1");
+  //Serial3.println("AT+CNMI=1,2,0,0,0");
   digitalWrite(LED_START,HIGH);
+  //Serial3.println("AT+CMGD=1,4");
+  //switchSMS("2"); // tm
 }
 
 void loop() {
-  checkNet();
+  checkNet(false);
   getDataGsm();
   getDataHc();
   getDataSerial();
@@ -63,6 +67,7 @@ void getDataHc(){
       case 'W':
          if(data[1]=='c'){
           checkWirless();
+          checkNet(true);
          }
       break;
       case 'N':
@@ -79,12 +84,20 @@ void getDataHc(){
           Serial.println(data);
           Serial2.println("<810"+data+">");
           //switchSMS("1"+data);
-          if(SMS_Responce==true && millis()-CheckSMS>30000 && settingSMS[0]!=1){
+          if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[0]!=1){
+                Serial.println("SMS send");
                 settingSMS[0]=1;
-                switchSMS("1"+data);
+                switchSMS("9"+data);
                 settingSMS[0]=2;
                 SMS_Responce==false;
+           }else {
+                switchSMS("9"+data);
+                SMS_Responce==false;
            }
+      break;
+      case 'P':
+        data.remove(0,1);
+        switchSMS("3"+data);
       break;
       case 'R':
         data.remove(0,1);
@@ -131,19 +144,20 @@ void filtering(String str){
 }
 //switchSMS 
 void switchSMS(String str){
-  Serial.print("les données que la fonction va analyser et l'envoyer par SMS au client.");
+  Serial.print("les données ...");
   Serial.println(str);
   String msg;
-  switch(str[1]-48){
+  switch(str[0]-48){
     case 9:
-         msg=getName(str[2]-48,toDec(str[3]-48,str[4]-48));
-         if(str[5]-48==3){
+         msg=getName(str[1]-48,toDec(str[2]-48,str[3]-48));
+         if(str[4]-48==3){
             msg+=" ON";
-         }else if(str[5]-48==4) {
+         }else if(str[4]-48==4) {
             msg+=" OFF";
-         }else if(str[5]-48==5) {
+         }else if(str[4]-48==5) {
             msg+=" Erreur!";
          }
+         Serial.println(msg);
          sendSMS(msg,settingSMS[0]);
     break;
     case 2:
@@ -152,7 +166,9 @@ void switchSMS(String str){
     break;
     case 3:
        msg="votre PIN code : ";
-       msg+=str.substring(2);
+       str.remove(0,1);
+       msg+=str;
+       Serial.println(msg);
        sendSMS(msg,1);
     break;
     case 4:
@@ -275,9 +291,10 @@ void checkWirless(){
     digitalWrite(LED_WIRLESS_COM,LOW);
     delay(70);
     digitalWrite(LED_WIRLESS_COM,HIGH);
-    Serial2.println("<8200>");
+    //Serial2.println("<8200>");
 }
 void checkGsm(){
+    delay(2000);
     if(Serial3.available()>0){
     String data=Serial3.readString();
     if(data.indexOf("AT+CSQ")==0){
@@ -285,23 +302,32 @@ void checkGsm(){
        data.remove(0,14);
        int GsmSgnal=data.toInt();
        if(GsmSgnal<10){
-        Serial2.print("<820"+String(GsmSgnal)+">");
+        Serial2.println("<820"+String(GsmSgnal)+">");
+        Serial2.println("<820"+String(GsmSgnal)+">");
         digitalWrite(LED_CHECK_GSM,LOW);
        }else{
-        Serial2.print("<82"+String(GsmSgnal)+">");
+        Serial2.println("<82"+String(GsmSgnal)+">");
+        Serial.println("<82"+String(GsmSgnal)+">");
         if(GsmSgnal<20){
            digitalWrite(LED_CHECK_GSM,LOW);
         }else{
            digitalWrite(LED_CHECK_GSM,HIGH);
         }
        }     
+    }else {
+       Serial2.println("<8200>");
+       digitalWrite(LED_CHECK_GSM,LOW);
     }
+  }else {
+    Serial2.println("<8200>");
+    digitalWrite(LED_CHECK_GSM,LOW);
   }
 }
-void checkNet(){
-  if(millis()-Last>60000){
+void checkNet(bool mode){
+  if(millis()-Last>60000 || mode==true){
      Serial3.write("AT+CSQ\r");
      checkGsm();
+     Serial.println("Check Net");
      Last=millis();
   }
 }
