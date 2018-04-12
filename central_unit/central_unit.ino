@@ -258,6 +258,7 @@ void switchData(int Matrix[MTR]){
               break;
               case 3:
                 showProg(Matrix[1],Matrix[3]);
+                //showProg(Matrix[1]);
               break;
               case 4:
                 getState(Matrix);
@@ -743,6 +744,27 @@ void showProg(int type,int Page){
       break;
     }
   
+  }
+
+
+  void showProg(int Page){
+    int id=1;
+      for(int h=0;h<24;h++){
+        for(int i=0;i<15;i++){
+          if(van[i].MatrixTime[0]-1==h){
+                setDataNextion("P"+String(id)+".txt=\"VAN "+String(i+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(van[i].MatrixTime[0]-1)+":"+toString(van[i].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(van[i].MatrixTime[2]-1)+":"+toString(van[i].MatrixTime[3]-1)+"\"");
+                id++;
+          }
+          if(pim[i].MatrixTime[0]-1==h){
+                setDataNextion("P"+String(id)+".txt=\"PIM "+String(i+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(pim[i].MatrixTime[0]-1)+":"+toString(pim[i].MatrixTime[1]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(pim[i].MatrixTime[2]-1)+":"+toString(pim[i].MatrixTime[3]-1)+"\"");
+                id++;
+          }
+        }
+      }
   }
 //// Obtenir l'Etat d'un objet
 void getState(int Matrix[MTR]){
