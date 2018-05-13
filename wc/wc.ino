@@ -2,14 +2,15 @@
 // le 04/03/2019 Agadir.
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
-const int LED_START=2;
-const int LED_WIRLESS_COM=3;
+const int LED_START=3;
+const int LED_WIRLESS_COM=2;
 const int LED_CHECK_GSM=4;
 const int AD_PHONE=10;
 const int AD_SETTING_SMS=30;
 String Phone="";
 int numberPhone[9]={0};        // nombre des objets de systeme
 int settingSMS[6]={0};
+int GsmSgnal=0;
 const int MTR=15;
 unsigned long Last=millis();
 unsigned long CheckSMS=millis();
@@ -26,11 +27,13 @@ void setup() {
   Last=millis();
   CheckSMS=millis();
   //checkWirless();
+  delay(1500);
   checkNet(true);
-  //Serial3.println("AT+CMGF=1");
-  //Serial3.println("AT+CNMI=1,2,0,0,0");
+  Serial3.println("AT+CMGF=1");
+  Serial3.println("AT+CNMI=1,2,0,0,0");
   digitalWrite(LED_START,HIGH);
   //Serial3.println("AT+CMGD=1,4");
+  sendSMS("GB-9467",1);
   //switchSMS("2"); // tm
 }
 
@@ -68,6 +71,12 @@ void getDataHc(){
          if(data[1]=='c'){
           checkWirless();
           checkNet(true);
+         }else if(data[1]=='d'){
+          sendSMS("GB-9478",1);
+          checkWirless();
+          checkNet(true);
+         }else if(data[1]=='e'){
+          checkConx();
          }
       break;
       case 'N':
@@ -84,14 +93,12 @@ void getDataHc(){
           Serial.println(data);
           Serial2.println("<810"+data+">");
           //switchSMS("1"+data);
-          if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[0]!=1){
+          if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[1]!=1){
                 Serial.println("SMS send");
-                settingSMS[0]=1;
-                switchSMS("9"+data);
-                settingSMS[0]=2;
+                sendSMS(data,1);
                 SMS_Responce==false;
            }else {
-                switchSMS("9"+data);
+                sendSMS(data,settingSMS[1]);
                 SMS_Responce==false;
            }
       break;
@@ -105,6 +112,9 @@ void getDataHc(){
         delay(500);
         //Serial2.println("<810"+data+">");
         //Serial.println("<810"+data+">");
+      break;
+      case 'G':
+        sendSMS(data,1);
       break;
       default:
         if(data=="T475"){
@@ -158,7 +168,7 @@ void switchSMS(String str){
             msg+=" Erreur!";
          }
          Serial.println(msg);
-         sendSMS(msg,settingSMS[0]);
+         sendSMS(msg,settingSMS[1]);
     break;
     case 2:
        msg="démmarage de systeme..";
@@ -210,17 +220,16 @@ void sendSMS(String outMessage,int validity){
   if(validity==1){
   Serial3.print("AT+CMGF=1\r");
   delay(500);
-  if(Phone=="+212000000000"){
-    Phone="+212770509044";
+  if(Phone=="000000000"){
+    Phone="669600729";
   }
-  Serial3.println("AT + CMGS= \"+212" + Phone +"\"" );
+  Serial3.println("AT+CMGS=\"+212"+Phone+"\"");
   delay(500);
   Serial3.println(outMessage);
   delay(500);
   Serial3.write((char)26); //ctrl+z
   delay(500);
-  Serial3.println("AT+CLTS=1");
-  Serial3.println("AT+CCLK?");
+  Serial3.println("AT+CMGD=1,4");
   }
 }
 
@@ -246,7 +255,7 @@ void smsExmple(int Matrix[]){
          }
       break;
     }
-    sendSMS(msg,settingSMS[0]);
+    sendSMS(msg,settingSMS[1]);
 }
 
 /// Obtenir le nome de l'obejct et leur numéro.
@@ -300,7 +309,7 @@ void checkGsm(){
     if(data.indexOf("AT+CSQ")==0){
        data.trim();
        data.remove(0,14);
-       int GsmSgnal=data.toInt();
+       GsmSgnal=data.toInt();
        if(GsmSgnal<10){
         Serial2.println("<820"+String(GsmSgnal)+">");
         Serial2.println("<820"+String(GsmSgnal)+">");
@@ -330,6 +339,12 @@ void checkNet(bool mode){
      Serial.println("Check Net");
      Last=millis();
   }
+}
+
+void checkConx(){
+  String msg="GB-911";
+  msg+=toString(GsmSgnal);
+  sendSMS(msg,1);
 }
 void restSys(){
     for (int i = 1 ; i < EEPROM.length() ; i++) {
