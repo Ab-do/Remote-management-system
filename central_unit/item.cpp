@@ -20,30 +20,35 @@ void Item::updateProg(){
               //pompe immerger
               if(EEPROM.put(AD_PROG_PIM+k,this->MatrixTime)){
                 successMessage();
+                sendStateApp(22,1000+k*10+1);
               }
               break;
        case 2:
               //pompe refolemnt
               if(EEPROM.put(AD_PROG_PR+k,this->MatrixTime)){
                 successMessage();
+                sendStateApp(22,2000+k*10+1);
               }
               break;
        case 3:
               //les vannes 
               if(EEPROM.put(AD_PROG_VAN+k,this->MatrixTime)){
                 successMessage();
+                sendStateApp(22,3000+k*10+1);
               }
               break;
        case 4:
               //les pompes angre
               if(EEPROM.put(AD_PROG_MLG+k,this->MatrixTime)){
                 successMessage();
+                sendStateApp(22,4000+k*10+1);
               }
               break;
        case 5:
               //Melengeur Angre
               if(EEPROM.put(AD_PROG_PIM+k,this->MatrixTime)){
                 successMessage();
+                sendStateApp(22,5000+k*10+1);
               }
               break;
        default:
@@ -134,13 +139,16 @@ bool Item::runObj(int Action)
     case 1:
             if(Action==1 && ckeckPmp()){
              sendCmd(this->Cmd+Action);
+             //sendStateApp(this->Cmd+Action);
              return true;
             } else if(Action==1){
              popupMessage("la pompe immérgée: n'a pas démarré");
+             sendStateApp(21,this->Cmd+5);
              return false;
             } else if(Action==2){
              //offObj(1);
              sendCmd(this->Cmd+Action);
+             //sendStateApp(this->Cmd+Action);
              return true;
             }else if(Action==8){
               sendCmd(this->Cmd);
@@ -151,23 +159,28 @@ bool Item::runObj(int Action)
              if(checkVan()) {
                 //runS();
                 sendCmd(this->Cmd+Action);
+                //sendStateApp(this->Cmd+Action);
                 return true;
               } else {
                 //Erreur(2);
                 popupMessage("la pompe de refoulement : n'a pas démarré a cause de nombre des vannes.");
+                sendStateApp(21,this->Cmd+5);
                 return false;
               }
           } else if(Action==1) {
             //Erreur(1);
              popupMessage("la pompe de refoulement : n'a pas démarré.");
+             sendStateApp(21,this->Cmd+6);
              return false;
           } else if(Action==2 && checkPae()) {
             //offObj(1);
              sendCmd(this->Cmd+Action);
+             //sendStateApp(this->Cmd+Action);
              return true;
           } else if(Action==2) {
             //Erreur(5);//la pompe a angre n'est pas etainde
              popupMessage("Vous pouvez pas Arreter la pompe de refoulement N : "+String(this->NumberObj));
+             sendStateApp(21,this->Cmd+7);
              return false;
           }else if(Action==8){
               sendCmd(this->Cmd);
@@ -182,16 +195,19 @@ bool Item::runObj(int Action)
              //Serial.println("fonction RunObj Switch(3) Action 1");
              //Serial.println("VANNE "+String(this->NumberObj)+" ON");
              funValve(this->NumberObj,Action);
+             sendStateApp(21,this->Cmd+3);
              return true;
           } else if(Action==2 && ckeckPrVan()) {
             //offObj(3);
              //sendCmd(Cmd+Action);
              //Serial.println("VANNE "+String(this->NumberObj)+" OFF");
              funValve(this->NumberObj,Action);
+             sendStateApp(21,this->Cmd+4);
              return true;
           } else if(Action==2)  {
             //Erreur(3);//
             popupMessage("Vous pouvez pas Arreter la vanne N : "+String(this->NumberObj));
+            sendStateApp(21,this->Cmd+5);
              return false;
           }else if(Action==8){
               sendCmd(this->Cmd);
@@ -201,15 +217,18 @@ bool Item::runObj(int Action)
           //pompe a angre 
           if(Action==1 && checkPrPae()) {
              sendCmd(this->Cmd+Action);
+             //sendStateApp(this->Cmd+Action);
              return true;
           } else if(Action==1)
           {
              //sendCmd(Cmd+Action);
              popupMessage("Vous pouvez pas démarrer la pompe à engrais N : "+String(this->NumberObj));
+             sendStateApp(21,this->Cmd+5);
              return false; 
           } else if(Action==2)
           {
             sendCmd(this->Cmd+Action);
+            //sendStateApp(this->Cmd+Action);
             return true;
           }else if(Action==8){
               sendCmd(this->Cmd);
@@ -218,6 +237,7 @@ bool Item::runObj(int Action)
      case 5:
           if(Action==1 || Action==2){
             sendCmd(this->Cmd+Action);
+            //sendStateApp(,this->Cmd+Action);
           } else if(Action==8){
               sendCmd(this->Cmd);
           }
