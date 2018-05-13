@@ -6,22 +6,16 @@ SoftwareSerial HC12(3, 2);
 #define INFOCONTACT2 6
 //#define LED 12
 #define LEDOBJECT 12
-#define RELAY1 10
-#define RELAY2 11
+#define RELAY1 7
+#define RELAY2 8
 #define ADRESS 22
 int PINCODE;
-int BottonState1;
-int StateContact1;
-int StateContact2;
 unsigned long last=millis();
-unsigned long lastRec=millis();
-bool contact1 = true, contact2 = true;
-bool State=0;
+bool contact1 = false, contact2 = false;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   HC12.begin(9600);
-  HC12.setTimeout(50);
   pinMode(CONFPIN, INPUT);
   pinMode(INFOCONTACT1, INPUT);
   pinMode(INFOCONTACT2, INPUT);
@@ -31,19 +25,14 @@ void setup() {
   pinMode(LEDOBJECT, OUTPUT);
   digitalWrite(RELAY1, 1);
   digitalWrite(RELAY2, 1);
-  contact1 = false;
-  contact2 = false;
+  // EEPROM.put(ADRESS,pi);
   EEPROM.get(ADRESS, PINCODE);
+  Serial.print("le code est : ");
+  Serial.println(PINCODE);
   Object();
-  if(State>0){
+  if(PINCODE>0){
     digitalWrite(LEDOBJECT, HIGH);
   }else{
-    digitalWrite(LEDOBJECT, HIGH);
-    delay(1000);
-    digitalWrite(LEDOBJECT, LOW);
-    delay(1000);
-    digitalWrite(LEDOBJECT, HIGH);
-    delay(1000);
     digitalWrite(LEDOBJECT, LOW);
   }
 }
@@ -54,67 +43,49 @@ void Object()
   {
     i = 1;
     j = (PINCODE - 1000) / 10;
-    State=1;
   }
   else if (PINCODE > 2000 && PINCODE < 3000)
   {
     i = 2;
     j = (PINCODE - 2000) / 10;
-    State=1;
-  }  else if(PINCODE > 4000 && PINCODE < 5000)
+  }  else
   {
     i = 4;
     j = (PINCODE - 4000) / 10;
-    State=2;
-  }else {
-    State=0;
   }
-  if(State!=0){
-    delay(1000);
-    for (int k = 0; k < i; k++) {
+  delay(1000);
+  for (int k = 0; k < i; k++) {
     digitalWrite(LEDOBJECT, HIGH);
-    delay(500);
-    digitalWrite(LEDOBJECT, LOW);
-    }
     delay(1000);
-    for (int k = 0; k < j; k++) {
-    digitalWrite(LEDOBJECT, HIGH);
-    delay(500);
     digitalWrite(LEDOBJECT, LOW);
-    }
-    delay(1000);
+    delay(500);
   }
-  
+  delay(1000);
+  for (int k = 0; k < j; k++) {
+    digitalWrite(LEDOBJECT, HIGH);
+    delay(100);
+    digitalWrite(LEDOBJECT, LOW);
+    delay(100);
+  }
 }
 void loop() {
-  BottonState1 = digitalRead(CONFPIN);
+  int BottonState1 = digitalRead(CONFPIN);
   if (BottonState1 == 1) configN();
-  if(HC12.available() > 0) {
-    if(HC12.read()=='C'){
-    int str = HC12.parseInt();
-    if(str >1000 && str<6000){
-      controle(str);
-      str = 0;
-    }
-     HC12.flush();
-    }else {
-       HC12.flush();
-    }
+  while (HC12.available() > 0) {
+    int cmd = HC12.parseInt();
+    controle(cmd);
+    cmd = 0;
+    HC12.flush();
   }
   InfoContact();
-  delay(60);
 }
-
 void configN()
 {
   digitalWrite(LEDOBJECT, HIGH);
   delay(200);
   digitalWrite(LEDOBJECT, LOW);
   while (HC12.available() == 0) {
-    digitalWrite(LEDOBJECT, HIGH);
-    delay(500);
-    digitalWrite(LEDOBJECT, LOW);
-    delay(500);
+    ;
   }
   while (HC12.available() > 0) {
     int data = HC12.parseInt();
@@ -126,7 +97,6 @@ void configN()
         digitalWrite(LEDOBJECT, LOW);
         delay(50);
       }
-      delay(1500);
       HC12.println("9" + String(data));
       setup();
     }
@@ -145,48 +115,14 @@ void controle(int cmd)
 void motorFun(int cmd)
 {
   if (cmd == PINCODE + 1) {
-    if(!contact1){
-          delay(150);
-          digitalWrite(RELAY1, HIGH);
-          StateContact1 = digitalRead(INFOCONTACT1);
-          if(StateContact1==0){
-          HC12.println("J" + String(PINCODE + 5));
-          }else {
-          delay(5000);
-          digitalWrite(RELAY1, LOW);
-          }
-     }else {
-      digitalWrite(RELAY1, LOW);
-    }
+    digitalWrite(RELAY1, LOW);
   }
   else if (cmd == PINCODE + 2) {
-    if(contact1){
-       delay(150);
-       HC12.println("J" + String(PINCODE + 4));
-    }else {
     digitalWrite(RELAY1, HIGH);
-    }
   } else if (cmd == PINCODE + 1001) {
-    if(!contact2){
-       delay(150);
-          digitalWrite(RELAY2, HIGH);
-          StateContact2 = digitalRead(INFOCONTACT2);
-          if(StateContact2==0){
-          HC12.println("J" + String(PINCODE + 1005));
-          }else {
-          delay(5000);
-          digitalWrite(RELAY2, LOW);
-          }
-    }else {
-      digitalWrite(RELAY2, LOW);
-    }
+    digitalWrite(RELAY2, LOW);
   } else if (cmd == PINCODE + 1002) {
-    if(contact2){
-      delay(150);
-      HC12.println("J" + String(PINCODE + 1004));
-    }else {
     digitalWrite(RELAY2, HIGH);
-    }
   }
 }
 
@@ -194,80 +130,54 @@ void pmpFun(int cmd)
 {
   if (cmd == PINCODE + 1)
   {
-    if(!contact1){
-      delay(150);
-      digitalWrite(RELAY2, LOW);
-      delay(500);
-      digitalWrite(RELAY2, HIGH);
-      StateContact1 = digitalRead(INFOCONTACT1);
-      if(StateContact1==0){
-        HC12.println("J" + String(PINCODE + 5));
-      }else {
-        delay(5000);
-        digitalWrite(RELAY1, LOW);
-        delay(500);
-        digitalWrite(RELAY1, HIGH);
-      }
-    }else {
-      digitalWrite(RELAY1, LOW);
-      delay(500);
-      digitalWrite(RELAY1, HIGH);
-    }
+    digitalWrite(RELAY1, LOW);
+    delay(1500);
+    digitalWrite(RELAY1, HIGH);
   }
   else if (cmd == PINCODE + 2)
   {
-    if(contact1){
-      delay(150);
-      HC12.println("J" + String(PINCODE + 4));
-    }else {
-      digitalWrite(RELAY2, LOW);
-      delay(500);
-      digitalWrite(RELAY2, HIGH);
-    }
+    digitalWrite(RELAY2, LOW);
+    delay(1500);
+    digitalWrite(RELAY2, HIGH);
   }
 }
 
 void InfoContact()
 {
-  StateContact1 = digitalRead(INFOCONTACT1);
-  StateContact2 = digitalRead(INFOCONTACT2);
+  int StateContact1 = digitalRead(INFOCONTACT1);
+  int StateContact2 = digitalRead(INFOCONTACT2);
   if (StateContact1 == HIGH && contact1 == false && millis() - last > 250) {
-    delay(1500);
-    HC12.println("J" + String(PINCODE + 4));
-    //HC12.println("<810" + String(PINCODE + 4)+">"); //<8104013>
-
+    HC12.println("8" + String(PINCODE + 3));
     contact1 = true;
     last = millis();
   } else if (StateContact1 == LOW && contact1 == true && millis() - last > 250) {
-    delay(1500);
-    HC12.println("J" + String(PINCODE + 3));
-    //HC12.println("<810" + String(PINCODE + 3)+">");
+    HC12.println("8" + String(PINCODE + 4));
     contact1 = false;
     last = millis();
-  }else if (StateContact2 == HIGH && contact2 == false && PINCODE > 4000 && PINCODE < 6000 && millis() - last > 250)
+  }
+  //button 2  is HIGH
+  if (StateContact2 == HIGH && contact2 == false && PINCODE > 4000 && PINCODE < 6000 && millis() - last > 250)
   {
-    delay(1500);
-    HC12.println("J" + String(PINCODE + 1004));
+    HC12.println("8" + String(PINCODE + 1003));
     contact2 = true;
     last = millis();
   }
   else if (StateContact2 == HIGH && contact2 == false && PINCODE > 1000 && PINCODE < 3000 && millis() - last > 250)
-  { 
-    delay(1500);
-    HC12.println("J" + String(PINCODE + 5));
+  {
+    HC12.println("8" + String(PINCODE + 3));
     contact2 = true;
     last = millis();
-  }else if (StateContact2 == LOW && contact2 == true && PINCODE > 4000 && PINCODE < 6000 && millis() - last > 250)
-  { 
-    delay(1500);
-    HC12.println("J" + String(PINCODE + 1003));
+  }
+  // button 2 is LOW
+  if (StateContact2 == LOW && contact2 == true && PINCODE > 4000 && PINCODE < 6000 && millis() - last > 250)
+  {
+    HC12.println("8" + String(PINCODE + 1004));
     contact2 = false;
     last = millis();
   }
   else if (StateContact2 == LOW && contact2 == true && PINCODE > 1000 && PINCODE < 3000 && millis() - last > 250)
-  { 
-    delay(1500);
-    HC12.println("N" + String(PINCODE));
+  {
+    HC12.println("8" + String(PINCODE + 4));
     contact2 = false;
     last = millis();
   }
