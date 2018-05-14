@@ -106,6 +106,7 @@ void setup() {
   }
   intValve();
   intLed();
+  ckeckWirless();
   Serial.println("start-up");
   //showRAM();
   getTime();
