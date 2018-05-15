@@ -91,7 +91,7 @@ uint8_t SIM800L::getCallStatus(){
 
 
 
-bool SIM800L::sendSms(char* number,char* text){
+bool SIM800L::sendSms(String number,char* text){
 
     Serial3.print (F("AT+CMGF=1\r")); //set sms to text mode  
     _buffer=_readSerial();

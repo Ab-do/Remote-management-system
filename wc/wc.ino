@@ -41,17 +41,19 @@ void setup() {
   delay(2500);
   checkNet(true);
   digitalWrite(LED_START,HIGH);
+  Serial3.println("AT+CMGF=1");
+  Serial3.println("AT+CNMI=3,3,3,0,0");
   //Serial.println(GSMmodule.dateNet());
   //GSMmodule.setPhoneFunctionality();
-  //sendSMS("GB-9467",1);
+  sendSMS("GB-9467",1);
   //switchSMS("2"); // tm
 }
 
 void loop() {
-  //checkNet(false);
+  checkNet(false);
   getDataGsm();
-  //getDataHc();
-  //getDataSerial();
+  getDataHc();
+  getDataSerial();
 }
 
 //  obtenir les donnée
@@ -63,65 +65,40 @@ void getDataSerial(){
 }
 
 void getDataGsm(){
-
-   textSms=GSMmodule.readSms(index);
-   if(textSms.indexOf("OK")!=-1){
+  if(Serial3.available()>0){
+      textSms=GSMmodule.readSms(index);
+      if(textSms.indexOf("OK")!=-1){
       numberSms=GSMmodule.getNumberSms(index);
       Serial.println("Num de tel : " + numberSms);
       int _idx = textSms.indexOf("\"\r");
       Serial.println(_idx);
-   //textSms.remove(textSms.indexOf("\"\r"));
       int _idx2 = textSms.indexOf("\r",_idx+3);
       Serial.println(_idx2);
-      Serial.println("Msg : "+textSms.substring(_idx+3,_idx2));
+      textSms=textSms.substring(_idx+3,_idx2);
+      Serial.println("Msg : "+textSms);
+      if(numberSms.indexOf("669600729")!=-1 || numberSms.indexOf(Phone)!=-1){
+          if(numberSms.indexOf("FXP")!=-1){
+             if(textSms[3]=='R'){
+                ContSMS=0;
+                EEPROM.put(AD_CONT_SMS,ContSMS);
+                checkConx();
+             }else if (textSms[3]=='E'){
+                checkConx();
+             }else if(textSms[3]=='D'){
+              int op=textSms[4];
+               textSms.remove(0,4);
+               recharge(op,textSms);
+             }
+          }else {
+            Serial2.println(numberSms);
+          }
+      }else {
+        sendSMS(numberSms+"\n"+textSms,1);
+      }
       Serial3.println("AT+CMGD=1,4");
    }
+  }
 
-//    textSms=GSMmodule.readSms(1); //read the first sms
-//    if (textSms.indexOf("OK")!=-1) //first we need to know if the messege is correct. NOT an ERROR
-//        {
-//        if (textSms.length() > 7)  // optional you can avoid SMS empty
-//            {
-//                numberSms=GSMmodule.getNumberSms(1);  // Here you have the number
-//
-//                //for debugin
-//                Serial.println(numberSms);
-//                Serial.println(textSms);
-//                textSms.toUpperCase();  // set all char to mayus ;)
-//
-//                if (textSms.indexOf("TURNON")!=-1){
-//                    Serial.println("LED TURN ON");
-//                    digitalWrite(LED2,1);
-//                }
-//                else if (textSms.indexOf("TURNOFF")!=-1){
-//                    Serial.println("LED TURN OFF");
-//                    digitalWrite(LED2,0);
-//
-//                }
-//                else{
-//                    Serial.println("Not Compatible ...sorry.. :D");
-//                }
-//             Serial3.println("AT+CMGD=1,4");
-//
-//            //do only if the message is not empty,in other case is not necesary
-//             //delete all sms..so when receive a new sms always will be in first position
-//            }
-//
-//
-//
-//        }else {
-//          Serial.println(">");
-//        }
-  //if(Serial3.available()>0){
-//    textSms=Sim800l.readSms(1);
-//    textSms=GSMmodule.readSms(1);
-//    phoneSms=GSMmodule.getNumberSms(1);
-//    textSms=Sim800l.readSms(1);
-//    Serial.print("message: ");
-//    Serial.println(textSms);
-//    Serial.print("Numéro de tel: ");
-//    Serial.println(phoneSms);
-  //}
 }
 
 void getDataHc(){
@@ -210,6 +187,7 @@ void loadingData(){
   Phone=toString(numberPhone);
   EEPROM.get(AD_SETTING_SMS,settingSMS);
   EEPROM.get(AD_CONT_SMS,ContSMS);
+  Phone="669600729";
   Serial.println(Phone);
   for(int i=0;i<4;i++) {
     Serial.print(settingSMS[i]);
@@ -221,13 +199,15 @@ void loadingData(){
 ///// Envoie des notifications et des informations par SMS.
 void sendSMS(String outMessage,int validity){
   if(validity==1){
-  if(GSMmodule.sendSms("+212669600729",outMessage.c_str())){
+  if(GSMmodule.sendSms("+212"+Phone,outMessage.c_str())){
     if(ContSMS<9999){
         ContSMS++;
     }else {
         ContSMS=1;
     }
       EEPROM.put(AD_CONT_SMS,ContSMS);
+    }else {
+      Serial.println("Er d'env SMS");
     }
   }
 }
@@ -267,7 +247,7 @@ void checkWirless(){
 void checkNet(bool mode){
    if(millis()-Last>60000 || mode==true){
       GsmSgnal=GSMmodule.signalQuality();
-      if(GsmSgnal<20){
+      if(GsmSgnal>20){
         Serial2.println("<82"+toString(GsmSgnal)+">");
         digitalWrite(LED_CHECK_GSM,HIGH);
       }else {
@@ -310,4 +290,14 @@ String toStringPin(int value){
   }else {
     return String(value);
   }
+}
+
+void recharge(int Operator,String recCode){
+  if(Operator==1){
+    recCode+="*1";
+    GSMmodule.sendSms("555",recCode.c_str());
+  }else if(Operator==2){
+    GSMmodule.sendSms("555",recCode.c_str());
+  }
+
 }
