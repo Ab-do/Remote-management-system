@@ -7,7 +7,7 @@
 #define RESET_PIN 2   // pin to the reset pin sim800l
 
 #define LED true // used for indicator led, in case that you don want set to false . 
-#define LED_PIN 4 //pin to indicate states. 
+#define LED_PIN 13 //pin to indicate states. 
 
 
 
@@ -36,7 +36,7 @@ class SIM800L
   String getNumberSms(uint8_t index); //return the number of the sms..   
   bool delAllSms();     // return :  OK or ERROR .. 
 
-  void signalQuality();
+  int signalQuality();
   void setPhoneFunctionality();
   void activateBearerProfile();
   void deactivateBearerProfile();

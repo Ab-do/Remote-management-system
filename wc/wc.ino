@@ -10,6 +10,12 @@ const int AD_PHONE=10;
 const int AD_SETTING_SMS=30;
 const int AD_CONT_SMS=60;
 String Phone="";
+uint8_t index=1;
+String textSms;
+String numberSms;
+uint8_t index1;
+uint8_t LED2=13; // use what you need
+bool error;
 int numberPhone[9]={0};        // nombre des objets de systeme
 int settingSMS[6]={0};
 int GsmSgnal=0;
@@ -18,9 +24,11 @@ const int MTR=15;
 unsigned long Last=millis();
 unsigned long CheckSMS=millis();
 bool SMS_Responce=false;
+SIM800L GSMmodule;
 void setup() {
   Serial.begin(9600);  // Moniteur série
   Serial3.begin(9600); // Module GSM  SIM800L
+  GSMmodule.begin();
   Serial2.begin(9600); // Module radio HC12
   Serial.println("Start-up");
   pinMode(LED_START,OUTPUT);
@@ -30,21 +38,20 @@ void setup() {
   Last=millis();
   CheckSMS=millis();
   //checkWirless();
-  delay(1500);
+  delay(2500);
   checkNet(true);
-  Serial3.println("AT+CMGF=1");
-  Serial3.println("AT+CNMI=1,2,0,0,0");
   digitalWrite(LED_START,HIGH);
-  Serial3.println("AT+CMGD=1,4");
-  sendSMS("GB-9467",1);
+  //Serial.println(GSMmodule.dateNet());
+  //GSMmodule.setPhoneFunctionality();
+  //sendSMS("GB-9467",1);
   //switchSMS("2"); // tm
 }
 
 void loop() {
-  checkNet(false);
+  //checkNet(false);
   getDataGsm();
-  getDataHc();
-  getDataSerial();
+  //getDataHc();
+  //getDataSerial();
 }
 
 //  obtenir les donnée
@@ -56,11 +63,65 @@ void getDataSerial(){
 }
 
 void getDataGsm(){
-  if(Serial3.available()>0){
-    String data=Serial3.readString();
-    Serial.println(data); // afficher str
-    filtering(data);
-  }
+
+   textSms=GSMmodule.readSms(index);
+   if(textSms.indexOf("OK")!=-1){
+      numberSms=GSMmodule.getNumberSms(index);
+      Serial.println("Num de tel : " + numberSms);
+      int _idx = textSms.indexOf("\"\r");
+      Serial.println(_idx);
+   //textSms.remove(textSms.indexOf("\"\r"));
+      int _idx2 = textSms.indexOf("\r",_idx+3);
+      Serial.println(_idx2);
+      Serial.println("Msg : "+textSms.substring(_idx+3,_idx2));
+      Serial3.println("AT+CMGD=1,4");
+   }
+
+//    textSms=GSMmodule.readSms(1); //read the first sms
+//    if (textSms.indexOf("OK")!=-1) //first we need to know if the messege is correct. NOT an ERROR
+//        {
+//        if (textSms.length() > 7)  // optional you can avoid SMS empty
+//            {
+//                numberSms=GSMmodule.getNumberSms(1);  // Here you have the number
+//
+//                //for debugin
+//                Serial.println(numberSms);
+//                Serial.println(textSms);
+//                textSms.toUpperCase();  // set all char to mayus ;)
+//
+//                if (textSms.indexOf("TURNON")!=-1){
+//                    Serial.println("LED TURN ON");
+//                    digitalWrite(LED2,1);
+//                }
+//                else if (textSms.indexOf("TURNOFF")!=-1){
+//                    Serial.println("LED TURN OFF");
+//                    digitalWrite(LED2,0);
+//
+//                }
+//                else{
+//                    Serial.println("Not Compatible ...sorry.. :D");
+//                }
+//             Serial3.println("AT+CMGD=1,4");
+//
+//            //do only if the message is not empty,in other case is not necesary
+//             //delete all sms..so when receive a new sms always will be in first position
+//            }
+//
+//
+//
+//        }else {
+//          Serial.println(">");
+//        }
+  //if(Serial3.available()>0){
+//    textSms=Sim800l.readSms(1);
+//    textSms=GSMmodule.readSms(1);
+//    phoneSms=GSMmodule.getNumberSms(1);
+//    textSms=Sim800l.readSms(1);
+//    Serial.print("message: ");
+//    Serial.println(textSms);
+//    Serial.print("Numéro de tel: ");
+//    Serial.println(phoneSms);
+  //}
 }
 
 void getDataHc(){
@@ -110,7 +171,7 @@ void getDataHc(){
       break;
       case 'P':
         data.remove(0,1);
-        switchSMS("3"+data);
+        //switchSMS("3"+data);
       break;
       case 'R':
         data.remove(0,1);
@@ -129,69 +190,6 @@ void getDataHc(){
       break;
     }
   }
-}
-//filtering data from GSM
-void filtering(String str){
-  String dataSend="";
-  int i=0;
-  while(i<str.length()){
-      if(str[i]==60){
-        i++;
-        int j=0;
-          while(str[i]!=62){
-            dataSend +=str[i];
-            j++;
-            i++;
-            if(i>str.length()) return 0;
-         }
-         //Commutation des données.
-         //showMatrix(Matrix,20);
-         //switchData(Matrix);
-         //Serial.println(dataSend);
-         Serial2.println("<"+dataSend+">");
-         SMS_Responce=true;
-         CheckSMS=millis();
-         //memset(Matrix,0,sizeof(Matrix));
-      }
-      else{
-         i++;
-      }
-  }
-}
-//switchSMS
-void switchSMS(String str){
-  Serial.print("les données ...");
-  Serial.println(str);
-  String msg;
-  switch(str[0]-48){
-    case 9:
-         msg=getName(str[1]-48,toDec(str[2]-48,str[3]-48));
-         if(str[4]-48==3){
-            msg+=" ON";
-         }else if(str[4]-48==4) {
-            msg+=" OFF";
-         }else if(str[4]-48==5) {
-            msg+=" Erreur!";
-         }
-         Serial.println(msg);
-         sendSMS(msg,settingSMS[1]);
-    break;
-    case 2:
-       msg="démmarage de systeme..";
-       sendSMS(msg,1);
-    break;
-    case 3:
-       msg="votre PIN code : ";
-       str.remove(0,1);
-       msg+=str;
-       Serial.println(msg);
-       sendSMS(msg,1);
-    break;
-    case 4:
-
-    break;
-  };
-
 }
 
 //fonction set nemero de telephone du client
@@ -223,18 +221,14 @@ void loadingData(){
 ///// Envoie des notifications et des informations par SMS.
 void sendSMS(String outMessage,int validity){
   if(validity==1){
-  Serial3.println("AT+CMGF=1");
-  delay(500);
-  if(Phone=="000000000"){
-    Phone="669600729";
-  }
-  Serial3.println("AT+CMGS=\"+212669600729\"");
-  delay(500);
-  Serial3.println(outMessage);
-  delay(500);
-  Serial3.write((char)26); //ctrl+z
-  delay(500);
-  contSMS();
+  if(GSMmodule.sendSms("+212669600729",outMessage.c_str())){
+    if(ContSMS<9999){
+        ContSMS++;
+    }else {
+        ContSMS=1;
+    }
+      EEPROM.put(AD_CONT_SMS,ContSMS);
+    }
   }
 }
 
@@ -246,46 +240,8 @@ String toString(int Matrix[9]){
   return str;
 }
 
-void smsExmple(int Matrix[]){
-    String msg="";
-    switch(Matrix[2]){
-      case 1:
-             msg=getName(Matrix[1],toDec(Matrix[2],Matrix[3]));
-         if(Matrix[4]==3){
-            msg+=" ON";
-         }else if(Matrix[5]==4) {
-            msg+=" OFF";
-         }else if(Matrix[4]==5) {
-            msg+=" Erreur!";
-         }
-      break;
-    }
-    sendSMS(msg,settingSMS[1]);
-}
 
-/// Obtenir le nome de l'obejct et leur numéro.
-String getName(int Obj,int Number){
-  switch(Obj){
-    case 1 : //pim
-    return "POMPE IMMERGEE "+String(Number)+" ";
-    break;
-    case 2 : //pr
-    return "POMPE ROUF "+String(Number)+" ";
-    break;
-    case 3 : //Vn
-    return "VANNE "+String(Number)+" ";
-    break;
-    case 4 : //Vn
-    return "MELANGEUR "+String(Number)+" ";
-    break;
-    case 5 : //Vn
-    return "PMP ENGRIS "+String(Number)+" ";
-    break;
-    case 6 : //Vn
-    return "SECTEUR "+String(Number)+" ";
-    break;
-  }
-}
+
 //fonction set setting SMS
 void setSettingSMS(String str){
    for(int i=0;i<4;i++){
@@ -307,41 +263,18 @@ void checkWirless(){
     digitalWrite(LED_WIRLESS_COM,HIGH);
     //Serial2.println("<8200>");
 }
-void checkGsm(){
-    delay(2000);
-    if(Serial3.available()>0){
-    String data=Serial3.readString();
-    if(data.indexOf("AT+CSQ")==0){
-       data.trim();
-       data.remove(0,14);
-       GsmSgnal=data.toInt();
-       if(GsmSgnal<10){
-        Serial2.println("<820"+String(GsmSgnal)+">");
-        Serial2.println("<820"+String(GsmSgnal)+">");
-        digitalWrite(LED_CHECK_GSM,LOW);
-       }else{
-        Serial2.println("<82"+String(GsmSgnal)+">");
-        Serial.println("<82"+String(GsmSgnal)+">");
-        if(GsmSgnal<20){
-           digitalWrite(LED_CHECK_GSM,LOW);
-        }else{
-           digitalWrite(LED_CHECK_GSM,HIGH);
-        }
-       }
-    }else {
-       Serial2.println("<8200>");
-       digitalWrite(LED_CHECK_GSM,LOW);
-    }
-  }else {
-    Serial2.println("<8200>");
-    digitalWrite(LED_CHECK_GSM,LOW);
-  }
-}
+
 void checkNet(bool mode){
-  if(millis()-Last>60000 || mode==true){
-     Serial3.write("AT+CSQ\r");
-     checkGsm();
-     Serial.println("Check Net");
+   if(millis()-Last>60000 || mode==true){
+      GsmSgnal=GSMmodule.signalQuality();
+      if(GsmSgnal<20){
+        Serial2.println("<82"+toString(GsmSgnal)+">");
+        digitalWrite(LED_CHECK_GSM,HIGH);
+      }else {
+        Serial2.println("<82"+toString(GsmSgnal)+">");
+        digitalWrite(LED_CHECK_GSM,LOW);
+      }
+     Serial.println("Niveau signal : "+toString(GsmSgnal));
      Last=millis();
   }
 }
@@ -377,14 +310,4 @@ String toStringPin(int value){
   }else {
     return String(value);
   }
-}
-
-void contSMS(){
-  if(ContSMS<9999){
-    ContSMS++;
-  }else {
-    ContSMS=1;
-  }
-  EEPROM.put(AD_CONT_SMS,ContSMS);
-  Serial3.println("AT+CMGD=1,4");
 }
