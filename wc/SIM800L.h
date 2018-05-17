@@ -23,9 +23,9 @@ class SIM800L
   void reset(); 
 
   // Methods for calling || Funciones de llamadas. 
-  bool answerCall();  
+
   void callNumber(char* number);
-  bool hangoffCall();
+
   uint8_t getCallStatus();   
   //Methods for sms || Funciones de SMS.
   bool sendSms(String number,char* text);   
@@ -34,13 +34,6 @@ class SIM800L
   bool delAllSms();     // return :  OK or ERROR .. 
 
   int signalQuality();
-  void setPhoneFunctionality();
-  void activateBearerProfile();
-  void deactivateBearerProfile();
-  //get time with the variables by reference
-  void RTCtime(int *day,int *month, int *year,int *hour,int *minute, int *second);  
-  String dateNet(); //return date,time, of the network
-  bool updateRtc(int utc);  //Update the RTC Clock with de Time AND Date of red-.
 };
 
 #endif 

@@ -4,9 +4,6 @@
 
 void SIM800L::begin(){
   Serial3.begin(9600);
-  #if (LED) 
-    pinMode(OUTPUT,LED_PIN);
-  #endif
   _buffer.reserve(255); //reserve memory to prevent intern fragmention
 }
 
@@ -16,12 +13,11 @@ void SIM800L::begin(){
 //
 String SIM800L::_readSerial(){
   _timeout=0;
-  while  (!Serial3.available() && _timeout < 12000  ) 
+  while  (!Serial3.available() && _timeout < 1200  ) // default 12000
   {
-    delay(13);
+    delay(5);  // default 13
     _timeout++;
-
-
+    if(_timeout>=1200) return "ERR";
   }
   if (Serial3.available()) {
   return Serial3.readString();
@@ -44,10 +40,15 @@ int SIM800L::signalQuality(){
   int Signal=0;
   Serial3.print (F("AT+CSQ\r\n"));
   str=_readSerial();
-  str=str.substring(16,18);
-  str.trim();
-  Signal=str.toInt();
-  return Signal;
+  if(!str.equals("ERR")){
+    str=str.substring(15,17);
+    str.trim();
+    Signal=str.toInt();
+    return Signal;
+  }else {
+    return -1;
+  }
+  
 }
 
 

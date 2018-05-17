@@ -16,6 +16,7 @@ String numberSms;
 uint8_t index1;
 uint8_t LED2=13; // use what you need
 bool error;
+bool GSMcon=false;
 int numberPhone[9]={0};        // nombre des objets de systeme
 int settingSMS[6]={0};
 int GsmSgnal=0;
@@ -39,13 +40,17 @@ void setup() {
   CheckSMS=millis();
   //checkWirless();
   delay(2500);
+  Serial.println("1");
   checkNet(true);
+  Serial.println("2");
   digitalWrite(LED_START,HIGH);
   Serial3.println("AT+CMGF=1");
-  Serial3.println("AT+CNMI=3,3,3,0,0");
+  Serial3.println("AT+CNMI=3,3,0,0,0");
   //Serial.println(GSMmodule.dateNet());
   //GSMmodule.setPhoneFunctionality();
+  Serial.println("3");
   sendSMS("GB-9467",1);
+  Serial.println("4");
   //switchSMS("2"); // tm
 }
 
@@ -69,15 +74,16 @@ void getDataGsm(){
       textSms=GSMmodule.readSms(index);
       if(textSms.indexOf("OK")!=-1){
       numberSms=GSMmodule.getNumberSms(index);
-      Serial.println("Num de tel : " + numberSms);
+      Serial2.println("Num de tel : " + numberSms);
       int _idx = textSms.indexOf("\"\r");
       Serial.println(_idx);
       int _idx2 = textSms.indexOf("\r",_idx+3);
       Serial.println(_idx2);
       textSms=textSms.substring(_idx+3,_idx2);
-      Serial.println("Msg : "+textSms);
+      Serial2.println("Msg : "+textSms);
       if(numberSms.indexOf("669600729")!=-1 || numberSms.indexOf(Phone)!=-1){
-          if(numberSms.indexOf("FXP")!=-1){
+          if(textSms.indexOf("FXP")!=-1){
+            textSms.trim();
              if(textSms[3]=='R'){
                 ContSMS=0;
                 EEPROM.put(AD_CONT_SMS,ContSMS);
@@ -90,13 +96,17 @@ void getDataGsm(){
                recharge(op,textSms);
              }
           }else {
-            Serial2.println(numberSms);
+            Serial2.println(textSms);
+            Serial.println(textSms);
           }
       }else {
         sendSMS(numberSms+"\n"+textSms,1);
       }
       Serial3.println("AT+CMGD=1,4");
    }
+   Last=millis();
+   textSms="";
+   numberSms="";
   }
 
 }
@@ -115,13 +125,14 @@ void getDataHc(){
          }else if(data[1]=='d'){
           sendSMS("GB-9478",1);
           checkNet(true);
-         }else if(data[1]=='e'){
-          checkConx();
-         }else if(data[1]=='r'){
-          ContSMS=0;
-          EEPROM.put(AD_CONT_SMS,ContSMS);
-          checkConx();
-         }
+          }
+//         else if(data[1]=='e'){
+//          checkConx();
+//         }else if(data[1]=='r'){
+//          ContSMS=0;
+//          EEPROM.put(AD_CONT_SMS,ContSMS);
+//          checkConx();
+//         }
       break;
       case 'N':
         data.remove(0,1);
@@ -187,7 +198,6 @@ void loadingData(){
   Phone=toString(numberPhone);
   EEPROM.get(AD_SETTING_SMS,settingSMS);
   EEPROM.get(AD_CONT_SMS,ContSMS);
-  Phone="669600729";
   Serial.println(Phone);
   for(int i=0;i<4;i++) {
     Serial.print(settingSMS[i]);
@@ -205,9 +215,10 @@ void sendSMS(String outMessage,int validity){
     }else {
         ContSMS=1;
     }
-      EEPROM.put(AD_CONT_SMS,ContSMS);
+    EEPROM.put(AD_CONT_SMS,ContSMS);
+    Last=millis();
     }else {
-      Serial.println("Er d'env SMS");
+      Serial2.println("Er d'env SMS");
     }
   }
 }
@@ -247,11 +258,17 @@ void checkWirless(){
 void checkNet(bool mode){
    if(millis()-Last>60000 || mode==true){
       GsmSgnal=GSMmodule.signalQuality();
-      if(GsmSgnal>20){
+      if(GsmSgnal==-1){
+        Serial.println("module GSM : Erreur");
+        digitalWrite(LED_CHECK_GSM,LOW);
+        GSMcon=true;
+      }else if(GsmSgnal>20){
         Serial2.println("<82"+toString(GsmSgnal)+">");
+        GSMcon=true;
         digitalWrite(LED_CHECK_GSM,HIGH);
       }else {
         Serial2.println("<82"+toString(GsmSgnal)+">");
+        GSMcon=false;
         digitalWrite(LED_CHECK_GSM,LOW);
       }
      Serial.println("Niveau signal : "+toString(GsmSgnal));
@@ -261,7 +278,11 @@ void checkNet(bool mode){
 
 void checkConx(){
   String msg="GB-91";
-  msg+=toString(GsmSgnal);
+  if(GsmSgnal!=-1){
+    msg+=toString(0);
+  }else {
+    msg+=toString(GsmSgnal);
+  }
   msg+=toStringPin(ContSMS);
   sendSMS(msg,1);
   Serial2.println(msg);
