@@ -10,7 +10,11 @@ SoftwareSerial HC12(3, 2);
 #define RELAY2 8
 #define ADRESS 22
 int PINCODE;
+int BottonState1;
+int StateContact1;
+int StateContact2;
 unsigned long last=millis();
+unsigned long lastRec=millis();
 bool contact1 = false, contact2 = false;
 void setup() {
   // put your setup code here, to run once:
@@ -33,6 +37,12 @@ void setup() {
   if(PINCODE>0){
     digitalWrite(LEDOBJECT, HIGH);
   }else{
+    digitalWrite(LEDOBJECT, HIGH);
+    delay(600);
+    digitalWrite(LEDOBJECT, LOW);
+    delay(600);
+    digitalWrite(LEDOBJECT, HIGH);
+    delay(600);
     digitalWrite(LEDOBJECT, LOW);
   }
 }
@@ -69,13 +79,16 @@ void Object()
   }
 }
 void loop() {
-  int BottonState1 = digitalRead(CONFPIN);
+  BottonState1 = digitalRead(CONFPIN);
   if (BottonState1 == 1) configN();
-  while (HC12.available() > 0) {
+  while (HC12.available() > 0 ) {
+    if(millis() - lastRec > 250){
     int cmd = HC12.parseInt();
     controle(cmd);
     cmd = 0;
+    millis() - lastRec > 250;
     HC12.flush();
+    }
   }
   InfoContact();
 }
@@ -85,7 +98,9 @@ void configN()
   delay(200);
   digitalWrite(LEDOBJECT, LOW);
   while (HC12.available() == 0) {
-    ;
+    digitalWrite(LEDOBJECT, HIGH);
+    delay(200);
+    digitalWrite(LEDOBJECT, LOW);
   }
   while (HC12.available() > 0) {
     int data = HC12.parseInt();
@@ -144,8 +159,8 @@ void pmpFun(int cmd)
 
 void InfoContact()
 {
-  int StateContact1 = digitalRead(INFOCONTACT1);
-  int StateContact2 = digitalRead(INFOCONTACT2);
+  StateContact1 = digitalRead(INFOCONTACT1);
+  StateContact2 = digitalRead(INFOCONTACT2);
   if (StateContact1 == HIGH && contact1 == false && millis() - last > 250) {
     HC12.println("8" + String(PINCODE + 3));
     contact1 = true;
@@ -154,9 +169,7 @@ void InfoContact()
     HC12.println("8" + String(PINCODE + 4));
     contact1 = false;
     last = millis();
-  }
-  //button 2  is HIGH
-  if (StateContact2 == HIGH && contact2 == false && PINCODE > 4000 && PINCODE < 6000 && millis() - last > 250)
+  }else if (StateContact2 == HIGH && contact2 == false && PINCODE > 4000 && PINCODE < 6000 && millis() - last > 250)
   {
     HC12.println("8" + String(PINCODE + 1003));
     contact2 = true;
@@ -164,12 +177,10 @@ void InfoContact()
   }
   else if (StateContact2 == HIGH && contact2 == false && PINCODE > 1000 && PINCODE < 3000 && millis() - last > 250)
   {
-    HC12.println("8" + String(PINCODE + 3));
+    HC12.println("8" + String(PINCODE + 5));
     contact2 = true;
     last = millis();
-  }
-  // button 2 is LOW
-  if (StateContact2 == LOW && contact2 == true && PINCODE > 4000 && PINCODE < 6000 && millis() - last > 250)
+  }else if (StateContact2 == LOW && contact2 == true && PINCODE > 4000 && PINCODE < 6000 && millis() - last > 250)
   {
     HC12.println("8" + String(PINCODE + 1004));
     contact2 = false;
@@ -177,7 +188,7 @@ void InfoContact()
   }
   else if (StateContact2 == LOW && contact2 == true && PINCODE > 1000 && PINCODE < 3000 && millis() - last > 250)
   {
-    HC12.println("8" + String(PINCODE + 4));
+    HC12.println("8" + String(PINCODE + 6));
     contact2 = false;
     last = millis();
   }
