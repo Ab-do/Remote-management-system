@@ -19,7 +19,7 @@ bool error;
 bool GSMcon=false;
 int numberPhone[9]={0};        // nombre des objets de systeme
 int settingSMS[6]={0};
-int GsmSgnal=0;
+int GsmSgnal=-1;
 int ContSMS=0;
 const int MTR=15;
 unsigned long Last=millis();
@@ -132,8 +132,6 @@ void getDataHc(){
           checkNet(true);
          }else if(data[1]=='d'){
           sendSMS("GB-9478",1);
-          delay(500);
-          checkWirless();
           checkNet(true);
           }
 //         else if(data[1]=='e'){
@@ -167,6 +165,7 @@ void getDataHc(){
                 SMS_Responce==false;
            }
            waitingPIN=true;
+           starRep=false;
       break;
       case 'P':
         data.remove(0,1);
@@ -174,10 +173,12 @@ void getDataHc(){
       break;
       case 'R':
         data.remove(0,1);
-        delay(100);
         Serial2.println(data);
         replayCmd=millis();
-        starRep==true;
+        starRep=true;
+        waitingPIN=false;
+        delay(100);
+        
         //Serial2.println("<810"+data+">");
         //Serial.println("<810"+data+">");
       break;
@@ -190,6 +191,7 @@ void getDataHc(){
         }
       break;
     }
+    LastHC=millis();
   }
 }
 
@@ -336,10 +338,10 @@ void recharge(int Operator,String recCode){
   
 }
 
-
 void waitReplay(){
-      if(starRep==true && millis()-replayCmd>30000 && waitingPIN==false){
+      if(starRep==true && millis()-replayCmd>20000 && waitingPIN==false){
+      Serial.println("Erreur ID 5");
+      starRep=false;
       sendSMS("Erreur ID 5",1);
-      starRep==false;
       }
 }
