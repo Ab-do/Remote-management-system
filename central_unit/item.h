@@ -13,7 +13,6 @@ extern void successMessage(int retCode);
 extern void successMessage();
 extern void funValve(int van,int action);
 extern void sendStateApp(int key,int value);
-void showMatrix(int Matrix[20],int a);
 int const AD_PROG_PIM=500;
 int const AD_PROG_PR=610;
 int const AD_PROG_VAN=790;

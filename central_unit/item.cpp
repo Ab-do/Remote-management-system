@@ -64,7 +64,6 @@ void Item::setProg(int sHr,int sMin,int eHr,int eMin,int Type)
  this->MatrixTime[2] =eHr+1;
  this->MatrixTime[3] =eMin+1;
  this->MatrixTime[4] =Type;
- showMatrix(this->MatrixTime,5);
  this->updateProg();  
 }
 
