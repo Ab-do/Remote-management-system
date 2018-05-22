@@ -42,7 +42,9 @@ const int LED_WIRLESS_COM=33;
 const int LED_CHECK_GSM=32;
 // Déclaration des variables.
 unsigned long Time = millis();
+unsigned long last = millis();
 unsigned long Last = millis();
+unsigned long lastRec = millis();
 String Phone="669600729"; // numéro de Tel.
 String StePhone="669600729";
 int sysTime=9999;
@@ -155,10 +157,11 @@ void getDataNextion(){
 }
 // Obtenir des données d Module radio HC12
 void getDataHc(){
-  if(Serial3.available()>0 && millis() - Time > 250){
+  if(Serial3.available()>0 && millis() - lastRec > 250){
+    
     String str=Serial3.readString();
+    Serial.println(str); // afficher str
     strToMatrix(str);
-    Time = millis();
     dataFromNex=false;
   }
 }
@@ -398,7 +401,6 @@ void switchData(int Matrix[MTR]){
             }
             break;
      case 8:
-         Last=millis();
          if(Matrix[1]==1){
           Serial.println("81");
           setState(Matrix);
@@ -622,7 +624,7 @@ void showState(){
     S=objState[0][i];
     if(S==1){
     setDataNextion("b"+String(k)+".picc=30");
-    }else if(S==2 || S==0) {
+    }else if(S==2 || S==0 ) {
     setDataNextion("b"+String(k)+".picc=31");
     }else {
     setDataNextion("b"+String(k)+".picc=32");
@@ -664,8 +666,8 @@ void showState(){
     for(int i=0;i<numberObj[4];i++){
      int k=i+50;
     S=objState[4][i];
-    if(S==1){
-     setDataNextion("b"+String(k)+".picc=30");
+     if(S==1){
+    setDataNextion("b"+String(k)+".picc=30");
     }else if(S==2 || S==0) {
     setDataNextion("b"+String(k)+".picc=31");
     }else {
@@ -791,18 +793,18 @@ void getState(int Matrix[MTR]){
    switch(Matrix[3]){
       case 1:
           if(St==1){
-          setDataNextion("p0.pic=57");
-          }else if (St==2 || St==0){
           setDataNextion("p0.pic=52");
+          }else if (St==2 || St==0){
+          setDataNextion("p0.pic=57");
           }else {
           setDataNextion("p0.pic=49");
           }
       break;
       case 2:
           if(St==1){
-          setDataNextion("p0.pic=54");
-          }else if (St==2 || St==0){
           setDataNextion("p0.pic=50");
+          }else if (St==2 || St==0){
+          setDataNextion("p0.pic=54");
           }else {
           setDataNextion("p0.pic=51");
           }
@@ -1026,17 +1028,18 @@ void getNumClient(){
 }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
+  
   if(Matrix[3]<=NUMBER_OBJ && toDec(Matrix[4],Matrix[5])<=NUMBER_MAX){
     objState[Matrix[3]-1][toDec(Matrix[4],Matrix[5])-1]=Matrix[6]-2;
     if(Matrix[6]==3){
       addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"ON");
     }else if(Matrix[6]==4){
       addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"OFF");
-    }else if(Matrix[6]==9) {
-      addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"DEF");
-    }else {
+    }else if(Matrix[6]==9){
       addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"ERR");
-    } 
+    }else {
+      addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"DEF");
+    }
     getState(Matrix);  //4  1 4 101 < 8 1 0 102 2
   }
 }
@@ -1334,7 +1337,12 @@ void autoRunObj(){
 
 
 void sendCmd(int cmd){
+  if(millis() - last > 250){
+      Serial.println(cmd);
       Serial3.println("R"+String(cmd));
+      //RdCmd(cmd);  // tm
+      }
+      last = millis();
 }
 // fonction pour ajouter l'historique.
 void addHist(String hist)
