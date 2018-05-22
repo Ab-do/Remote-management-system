@@ -44,6 +44,7 @@ const int LED_CHECK_GSM=32;
 unsigned long Time = millis();
 unsigned long last = millis();
 unsigned long Last = millis();
+unsigned long lastRec=millis();
 String Phone="669600729"; // numéro de Tel.
 String StePhone="669600729";
 int sysTime=9999;
@@ -106,7 +107,6 @@ void setup() {
   }
   intValve();
   intLed();
-  ckeckWirless();
   Serial.println("start-up");
   //showRAM();
   getTime();
@@ -115,6 +115,7 @@ void setup() {
   addHist("start-up");
   digitalWrite(LED_START,HIGH);
   Serial3.println("Wd1");
+  Serial.println(" SETEP");
 }
 
 void loop() {
@@ -157,10 +158,10 @@ void getDataNextion(){
 }
 // Obtenir des données d Module radio HC12
 void getDataHc(){
-  if(Serial3.available()>0){
+  if(Serial3.available()>0 && millis() - lastRec > 250){
     String str=Serial3.readString();
-    Serial.println(str); // afficher str
     strToMatrix(str);
+    lastRec = millis();
     dataFromNex=false;
   }
 }
@@ -1359,6 +1360,7 @@ void addHist(String hist)
   csv.addField(Day.c_str());
   csv.addLine();
   csv.close();
+  Serial.println("HIS...DONE");
 }
 ////// Initialization de la module carte SD !! 
 bool sdInit(){
