@@ -40,12 +40,12 @@ bool waitingPIN=false;
 bool starRep=false;
 SIM800L GSMmodule;
 void setup() {
-  Serial.begin(9600);  // Moniteur série
+  //Serial.begin(9600);  // Moniteur série
   Serial3.begin(9600); // Module GSM  SIM800L
   GSMmodule.begin();
   Serial2.begin(9600); // Module radio HC12
   Serial2.setTimeout(100);
-  Serial.println("Start-up");
+  //Serial.println("Start-up");
   pinMode(LED_START,OUTPUT);
   pinMode(LED_WIRLESS_COM,OUTPUT);
   pinMode(LED_CHECK_GSM,OUTPUT);
@@ -55,17 +55,17 @@ void setup() {
   LastHC=millis();
   //checkWirless();
   delay(2500);
-  Serial.println("1");
+  //Serial.println("1");
   checkNet(true);
-  Serial.println("2");
+  //Serial.println("2");
   digitalWrite(LED_START,HIGH);
   Serial3.println("AT+CMGF=1");
   Serial3.println("AT+CNMI=3,3,3,0,0");
-  //Serial.println(GSMmodule.dateNet());
+  ////Serial.println(GSMmodule.dateNet());
   //GSMmodule.setPhoneFunctionality();
-  Serial.println("3");
+  //Serial.println("3");
   sendSMS("GB-9467",1);
-  Serial.println("4");
+  //Serial.println("4");
   //switchSMS("2"); // tm
 }
 
@@ -73,30 +73,24 @@ void loop() {
   checkNet(false);
   getDataGsm();
   getDataHc();
-  getDataSerial();
   waitReplay();
 }
 
 //  obtenir les donnée 
-void getDataSerial(){
-  if(Serial.available()>0){
-    String data=Serial.readString();
-    Serial.println(data); // afficher str
-  }
-}
+
 
 void getDataGsm(){
   if(Serial3.available()>0){
       textSms=GSMmodule.readSms(index); 
       if(textSms.indexOf("OK")!=-1){
       numberSms=GSMmodule.getNumberSms(index); 
-      Serial.println("Num de tel : " + numberSms);
+      //Serial.println("Num de tel : " + numberSms);
       int _idx = textSms.indexOf("\"\r");
-      Serial.println(_idx);
+      //Serial.println(_idx);
       int _idx2 = textSms.indexOf("\r",_idx+3);
-      Serial.println(_idx2);
+      //Serial.println(_idx2);
       textSms=textSms.substring(_idx+3,_idx2);
-      Serial.println("Msg : "+textSms);
+      //Serial.println("Msg : "+textSms);
       if(numberSms.indexOf("669600729")!=-1 || numberSms.indexOf(Phone)!=-1){
           if(textSms.indexOf("FXP")!=-1){
             textSms.trim();
@@ -113,7 +107,7 @@ void getDataGsm(){
              }
           }else {
             Serial2.println(textSms);
-            Serial.println(textSms);
+            //Serial.println(textSms);
           }
       }else {
         sendSMS(numberSms+"\n"+textSms,1);
@@ -132,12 +126,12 @@ void getDataGsm(){
 void getDataHc(){
   if(Serial2.available()>0 && millis() - LastHC > 250){
     String data=Serial2.readString();
-    Serial.println(data.length());
-    Serial.println(".....");
+    //Serial.println(data.length());
+    //Serial.println(".....");
     if(data.length()<30){
     data.trim();
-    Serial.print(data+" nChar : ");
-    Serial.println();
+    //Serial.print(data+" nChar : ");
+    //Serial.println();
     switch(data[0]){
       case 'W':
          digitalWrite(LED_WIRLESS_COM,HIGH);
@@ -155,16 +149,16 @@ void getDataHc(){
       break;
       case 'S':
         data.remove(0,1);
-        Serial.println(data);
+        //Serial.println(data);
         setSettingSMS(data);
       break;
       case '8':
           data.remove(0,1);
-          Serial.println(data);
+          //Serial.println(data);
           Serial2.println("<810"+data+">");
           //switchSMS("1"+data);
           if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[1]!=1){
-                Serial.println("SMS send");
+                //Serial.println("SMS send");
                 sendSMS("Gx21"+data,1);
                 SMS_Responce==false;
            }else {
@@ -200,14 +194,14 @@ void getDataHc(){
 
 //fonction set nemero de telephone du client
 void setNumPhone(String str){
-    Serial.println("Mettre Numéro de Tel.");
+    //Serial.println("Mettre Numéro de Tel.");
     //showMatrix(Matrix,11);
     for(int i=0;i<9;i++){
       numberPhone[i]=str[i]-48;
     }
     Phone=toString(numberPhone);
     EEPROM.put(AD_PHONE,numberPhone);
-    Serial.print(Phone);
+    //Serial.print(Phone);
     //showMatrix(numberPhone,3);
 }
 //load data from EEPROM
@@ -216,12 +210,12 @@ void loadingData(){
   Phone=toString(numberPhone);
   EEPROM.get(AD_SETTING_SMS,settingSMS);
   EEPROM.get(AD_CONT_SMS,ContSMS);
-  Serial.println(Phone);
+  //Serial.println(Phone);
   for(int i=0;i<4;i++) {
-    Serial.print(settingSMS[i]);
-    Serial.print("-");
+    //Serial.print(settingSMS[i]);
+    //Serial.print("-");
   }
-  Serial.println();
+  //Serial.println();
 }
 
 ///// Envoie des notifications et des informations par SMS.
@@ -236,7 +230,7 @@ void sendSMS(String outMessage,int validity){
     EEPROM.put(AD_CONT_SMS,ContSMS);
     Last=millis();
     }else {
-      Serial.println("Er d'env SMS");
+      //Serial.println("Er d'env SMS");
     }
   }
 }
@@ -256,7 +250,7 @@ void setSettingSMS(String str){
    for(int i=0;i<4;i++){
      settingSMS[i]=str[i]-48;
    }
-   Serial.println(str);
+   //Serial.println(str);
    EEPROM.put(AD_SETTING_SMS,settingSMS);
 }
 /// Convertir deux nombres en un nombre décimal
@@ -277,7 +271,7 @@ void checkNet(bool mode){
    if(millis()-Last>60000 || mode==true){
       GsmSgnal=GSMmodule.signalQuality();
       if(GsmSgnal==-1){
-        Serial.println("module GSM : Erreur");
+        //Serial.println("module GSM : Erreur");
         digitalWrite(LED_CHECK_GSM,LOW);
         GSMcon=true;
       }else if(GsmSgnal>20){
@@ -289,7 +283,7 @@ void checkNet(bool mode){
         GSMcon=false;
         digitalWrite(LED_CHECK_GSM,LOW);
       }
-     Serial.println("Niveau signal : "+toString(GsmSgnal));
+     //Serial.println("Niveau signal : "+toString(GsmSgnal));
      Last=millis();
   }
 }
@@ -303,7 +297,7 @@ void checkConx(){
   }
   msg+=toStringPin(ContSMS);
   sendSMS(msg,1);
-  Serial.println(msg);
+  //Serial.println(msg);
 }
 void restSys(){
     for (int i = 1 ; i < EEPROM.length() ; i++) {
@@ -347,7 +341,7 @@ void waitReplay(){
         if(val[i].waiting==true){
           if(millis()-val[i]._time>TIME_WAIT && val[i].Rep==false){
             msg+=val[i].PIN+"9>";
-            Serial.println("ERR ID= "+String(i)+" "+val[i].PIN);
+            //Serial.println("ERR ID= "+String(i)+" "+val[i].PIN);
             Serial2.println(msg);
             sendSMS("Gx21"+val[i].PIN+"9",1);
             val[i].waiting=false;
