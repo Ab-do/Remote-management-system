@@ -13,7 +13,6 @@ Item::Item(int id,int number)
 
 void Item::updateProg(){
   int k = this->NumberObj * sizeof(this->MatrixTime);
-  Serial.println(k);
   switch((this->IdObj))
   {
        case 1:
@@ -101,13 +100,7 @@ void Item::getProg(){
        default:
               break;
   }
-//  Serial.print("Objet : ");
-//  Serial.print(IdObj);
-//  Serial.print("   Numéro : ");
-//  Serial.print(NumberObj);
-//  Serial.print("   Adresse ");
-//  Serial.println(AD);
-//  showMatrix(this->MatrixTime,5);
+
 }
 
 void Item::autoRun()
@@ -132,7 +125,6 @@ void Item::autoRun()
 
 bool Item::runObj(int Action)
 {
-  //Serial.print("fonction RunObj:"+String(this->IdObj)+" N:"+String(this->NumberObj)+" CMD:"+String(this->Cmd)+"|");
   switch(this->IdObj)
   {
     case 1:
@@ -186,20 +178,11 @@ bool Item::runObj(int Action)
             }
            break;
     case 3://****************************************************
-           //Vannes
-           //Serial.println("fonction RunObj Switch(3); ");
           if(Action==1) {
-            //runS();
-             //sendCmd(Cmd+Action);
-             //Serial.println("fonction RunObj Switch(3) Action 1");
-             //Serial.println("VANNE "+String(this->NumberObj)+" ON");
              funValve(this->NumberObj,Action);
              sendStateApp(21,this->Cmd+3);
              return true;
           } else if(Action==2 && ckeckPrVan()) {
-            //offObj(3);
-             //sendCmd(Cmd+Action);
-             //Serial.println("VANNE "+String(this->NumberObj)+" OFF");
              funValve(this->NumberObj,Action);
              sendStateApp(21,this->Cmd+4);
              return true;
@@ -256,7 +239,7 @@ bool Item::ckeckPmp(){
       if(objState[i][j]==1)
       {
         count++;
-        if(count>numberObj[6]) return false;
+        if(count>=numberObj[5]) return false;
       }
     }
   }
@@ -266,6 +249,7 @@ bool Item::ckeckPmp(){
 
 bool Item::checkVan() {
   int count=0;
+  if(relationObj[this->NumberObj-1][5]!=0){
   for(int i=0;i<5;i++)
   {
     if(objState[2][(relationObj[this->NumberObj-1][i])-1]==1)
@@ -273,9 +257,11 @@ bool Item::checkVan() {
        count++;
        if(count>=relationObj[this->NumberObj-1][5]) return true;
     }
-  }
-  //if(count<relationObj[this->numberObj-1][5]) 
+  } 
     return false;
+  }else {
+    return true;
+  }
 }
 
 
@@ -300,8 +286,8 @@ bool Item::checkPrPae()
 }
 //**************************condition 5***************************
 bool Item::checkPae()
-{
-  if(objState[3][relationPae[(this->NumberObj)-1][0]]==1){ return false; }
+{ 
+  if(objState[3][relationPae[(this->NumberObj)-1][0]-1]==1){ return false; }
   return true;
 }
 
