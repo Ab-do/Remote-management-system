@@ -70,7 +70,7 @@ void setup() {
   Serial1.begin(SPEED_SERIAL);
   Serial2.begin(SPEED_SERIAL);
   Serial3.begin(SPEED_SERIAL);
-  Serial3.setTimeout(100);
+  Serial3.setTimeout(60);
   Wire.begin();
   while(!checkValidity()){
     setDataNextion("page Info");
@@ -133,37 +133,45 @@ void getDataNextion(){
   }
 }
 // Obtenir des données d Module radio HC12
+//void getDataHc(){
+//  if(Serial3.available()>0 && millis()-Last>150){
+//      char c=Serial3.read();
+//      if(c=='<' && Serial3.available()<13){
+//          String str=Serial3.readString();
+//          if(str.length()<MTR){
+//          ckeckWirlessState();
+//          str.trim();
+//          strToMatrix("<"+str);
+//          Serial.println("<"+str);
+//          //dataFromNex=false;
+//         }
+//        Time = millis(); //tmp
+//      }if(c=='8' && Serial3.available()<13){
+//          String str=Serial3.readString();
+//          if(str.length()<6){
+//          str.trim();
+//          strToMatrix("<810"+str+">");
+//          Serial.println("<810"+str+">");
+//          Time = millis(); //tmp
+//          }else {
+//            
+//          }
+//      }else {
+//        Serial3.parseInt();
+//        delay(60);
+//      }
+//      Serial3.flush();
+//  }
+//}
+
 void getDataHc(){
-  if(Serial3.available()>0 && millis()-Last>150){
-      char c=Serial3.read();
-      if(c=='<' && Serial3.available()<13){
-          String str=Serial3.readString();
-          if(str.length()<MTR){
-          ckeckWirlessState();
-          str.trim();
-          strToMatrix("<"+str);
-          Serial.println("<"+str);
-          //dataFromNex=false;
-         }
-        Time = millis(); //tmp
-      }if(c=='8' && Serial3.available()<13){
-          String str=Serial3.readString();
-          if(str.length()<6){
-          str.trim();
-          strToMatrix("<810"+str+">");
-          Serial.println("<810"+str+">");
-          Time = millis(); //tmp
-          }else {
-            
-          }
-      }else {
-        Serial3.parseInt();
-        delay(60);
-      }
-      Serial3.flush();
+  if(Serial3.available()>0 && millis() - Time > 100){
+    String str=Serial3.readString();
+    strToMatrix(str);
+    Time = millis();
+    //dataFromNex=false;
   }
 }
-
 
 // Convertir de string à matrice
 void strToMatrix(String str){
@@ -939,30 +947,30 @@ void getModeSys(){
 }
 void getStateWc(){
     //getTimeNextion();
-    setDataNextion("t5_0.txt=\""+toString(Hour)+"\"");
-    setDataNextion("t5_2.txt=\""+toString(Minute)+"\"");
-    setDataNextion("t5_3.txt=\""+toString(Date)+"\"");
-    setDataNextion("t5_5.txt=\""+toString(Month)+"\"");
-    setDataNextion("t5_8.txt=\""+toString(Year)+"\"");
+    setDataNextion("t0.txt=\""+toString(Hour)+"\"");
+    setDataNextion("t2.txt=\""+toString(Minute)+"\"");
+    setDataNextion("t3.txt=\""+toString(Date)+"\"");
+    setDataNextion("t5.txt=\""+toString(Month)+"\"");
+    setDataNextion("t8.txt=\""+toString(Year)+"\"");
     if(ComWc){
-      setDataNextion("t5_10.txt=\"R\"");
+      setDataNextion("t10.txt=\"R\"");
       digitalWrite(LED_WIRLESS_COM,HIGH);
     }else {
-      setDataNextion("t5_10.txt=\"N.R\"");
+      setDataNextion("t10.txt=\"N.R\"");
       digitalWrite(LED_WIRLESS_COM,LOW);
     }
     float PerLev=LevelNet/31.0;
     if(ComGsm){
-      setDataNextion("t5_6.txt=\""+String(PerLev*100)+"%\"");
+      setDataNextion("t6.txt=\""+String(PerLev*100)+"%\"");
     }else {
-      setDataNextion("t5_6.txt=\""+String(PerLev*100)+"%\"");
+      setDataNextion("t6.txt=\""+String(PerLev*100)+"%\"");
     }
     
     
      
 }
 void getNumClient(){
-   setDataNextion("t27_0.txt=\""+Phone+"\"");
+   setDataNextion("t0.txt=\""+Phone+"\"");
 }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
@@ -999,7 +1007,7 @@ void restSys(){
     for (int i = 1 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
     if(i%400==0){
-      setDataNextion("j30_0.val="+String(j+10));
+      setDataNextion("j0.val="+String(j+10));
     }
   }
   setup();
@@ -1019,7 +1027,7 @@ void tryProto(int Matrix[MTR]){}
 void sysLock(int Matrix[MTR]){
     EEPROM[AD_VALIDITY]=3;
     setDataNextion("page Info"); //t0.txt=\"Certificat de securite non valide.\"
-    setDataNextion("t13_0.txt=\"Système a ete blocker...!\"");
+    setDataNextion("t0.txt=\"Système a ete blocker...!\"");
   }
   
 ///////////////////////////////
