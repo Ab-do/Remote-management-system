@@ -3,13 +3,14 @@
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
 #include "SIM800L.h"
-#define TIME_WAIT 10000
+#define TIME_WAIT 18000
 #define CAS_NAM 3
 struct waiting {
   bool Rep=false;
   bool waiting=false;
   String PIN;
   unsigned long _time=millis(); 
+  bool app=false;
 };
 waiting val[CAS_NAM];
 const int LED_START=3;
@@ -30,6 +31,7 @@ int numberPhone[9]={0};        // nombre des objets de systeme
 int settingSMS[6]={0};
 int GsmSgnal=-1;
 int ContSMS=0;
+int ContErr=0;
 const int MTR=15;
 unsigned long Last=millis();
 unsigned long CheckSMS=millis();
@@ -40,11 +42,11 @@ bool waitingPIN=false;
 bool starRep=false;
 SIM800L GSMmodule;
 void setup() {
-  //Serial.begin(9600);  // Moniteur série
+  Serial.begin(9600);  // Moniteur série
   Serial3.begin(9600); // Module GSM  SIM800L
   GSMmodule.begin();
   Serial2.begin(9600); // Module radio HC12
-  Serial2.setTimeout(100);
+  Serial2.setTimeout(50);
   //Serial.println("Start-up");
   pinMode(LED_START,OUTPUT);
   pinMode(LED_WIRLESS_COM,OUTPUT);
@@ -60,13 +62,13 @@ void setup() {
   //Serial.println("2");
   digitalWrite(LED_START,HIGH);
   Serial3.println("AT+CMGF=1");
-  Serial3.println("AT+CNMI=3,3,3,0,0");
-  ////Serial.println(GSMmodule.dateNet());
-  //GSMmodule.setPhoneFunctionality();
-  //Serial.println("3");
-  sendSMS("GB-9467",1);
-  //Serial.println("4");
-  //switchSMS("2"); // tm
+  Serial3.println("AT+CNMI=3,3,0,0,0");
+  delay(300);
+  sendSMS("GB-9467",settingSMS[1]);
+  Serial3.println(F("AT+CMGDA=\"DEL ALL\""));
+  delay(300);
+  Serial2.println("<83>");
+  Serial.println("Start Sys");
 }
 
 void loop() {
@@ -113,7 +115,10 @@ void getDataGsm(){
         sendSMS(numberSms+"\n"+textSms,1);
       }
       delay(30);
+      Serial3.println("AT+CMGD=1");
+      delay(100);
       Serial3.println(F("AT+CMGDA=\"DEL ALL\""));
+      delay(100);
       Serial3.print("AT+CMGD=1,4\n\r");
    }
    Last=millis();
@@ -124,14 +129,10 @@ void getDataGsm(){
 }
 
 void getDataHc(){
-  if(Serial2.available()>0 && millis() - LastHC > 250){
+  if(Serial2.available()>0){
     String data=Serial2.readString();
-    //Serial.println(data.length());
-    //Serial.println(".....");
     if(data.length()<30){
     data.trim();
-    //Serial.print(data+" nChar : ");
-    //Serial.println();
     switch(data[0]){
       case 'W':
          digitalWrite(LED_WIRLESS_COM,HIGH);
@@ -139,7 +140,7 @@ void getDataHc(){
           checkWirless();
           checkNet(true);
          }else if(data[1]=='d'){
-          sendSMS("GB-9478",1);
+          sendSMS("GB-9478",settingSMS[1]);
           checkNet(true);
           }
       break;
@@ -154,15 +155,14 @@ void getDataHc(){
       break;
       case '8':
           data.remove(0,1);
-          //Serial.println(data);
-          Serial2.println("<810"+data+">");
-          //switchSMS("1"+data);
-          if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[1]!=1){
+          Serial2.println("<818"+data+">");
+          Serial.println(data);
+          if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[0]!=1){
                 //Serial.println("SMS send");
                 sendSMS("Gx21"+data,1);
                 SMS_Responce==false;
            }else {
-                sendSMS("Gx21"+data,settingSMS[1]);
+                sendSMS("Gx21"+data,settingSMS[0]);
                 SMS_Responce==false;
            }
            checkRep(data);
@@ -174,8 +174,8 @@ void getDataHc(){
       case 'R':
         data.remove(0,1);
         Serial2.println(data);
+        Serial.println(data);
         saveToWaiting(data);
-        delay(100);
       break;
       case 'G':
         sendSMS(data,1);
@@ -186,7 +186,6 @@ void getDataHc(){
         }
       break;
     }
-    LastHC=millis();
     }
     Serial2.flush();
   }
@@ -220,7 +219,7 @@ void loadingData(){
 
 ///// Envoie des notifications et des informations par SMS.
 void sendSMS(String outMessage,int validity){
-  if(validity==1){
+  if(validity==1 && GsmSgnal!=-1){
   if(GSMmodule.sendSms("+212"+Phone,outMessage.c_str())){
     if(ContSMS<9999){
         ContSMS++;
@@ -230,7 +229,7 @@ void sendSMS(String outMessage,int validity){
     EEPROM.put(AD_CONT_SMS,ContSMS);
     Last=millis();
     }else {
-      //Serial.println("Er d'env SMS");
+      Serial2.println("<86>");
     }
   }
 }
@@ -283,18 +282,19 @@ void checkNet(bool mode){
         GSMcon=false;
         digitalWrite(LED_CHECK_GSM,LOW);
       }
-     //Serial.println("Niveau signal : "+toString(GsmSgnal));
+     Serial.println("Niveau signal : "+toString(GsmSgnal));
      Last=millis();
   }
 }
 
 void checkConx(){
   String msg="GB-91";
-  if(GsmSgnal==-1){
-    msg+=toString(0);
-  }else {
-    msg+=toString(GsmSgnal);
-  }
+//  if(GsmSgnal==-1){
+//    msg+=toString(0);
+//  }else {
+//    msg+=toString(GsmSgnal);
+//  }
+  msg+=toString(GsmSgnal); //
   msg+=toStringPin(ContSMS);
   sendSMS(msg,1);
   //Serial.println(msg);
@@ -336,12 +336,13 @@ void recharge(int Operator,String recCode){
 }
 
 void waitReplay(){
-      String msg="<810";
+      String msg="<818";
       for(int i=0;i<CAS_NAM;i++){
         if(val[i].waiting==true){
           if(millis()-val[i]._time>TIME_WAIT && val[i].Rep==false){
             msg+=val[i].PIN+"9>";
             //Serial.println("ERR ID= "+String(i)+" "+val[i].PIN);
+            delay(80);
             Serial2.println(msg);
             sendSMS("Gx21"+val[i].PIN+"9",1);
             val[i].waiting=false;
@@ -366,16 +367,17 @@ void saveToWaiting(String PIN){
   val[i].waiting=true;
   val[i].Rep=false;
   val[i].PIN=PIN;
+  Serial.println("val.pin= "+val[i].PIN);
   val[i]._time=millis();
 }
 
 bool checkRep(String PIN){
     for(int i=0;i<CAS_NAM;i++){
-      PIN.remove(3,1);
       if(val[i].waiting==true && PIN.indexOf(val[i].PIN)!=-1){
         val[i].waiting=false;
         val[i].Rep=true;
         val[i].PIN="";
+        Serial.println("...OK");
       }
     }
 }
