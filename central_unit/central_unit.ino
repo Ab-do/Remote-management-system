@@ -70,7 +70,7 @@ void setup() {
   Serial1.begin(SPEED_SERIAL);
   Serial2.begin(SPEED_SERIAL);
   Serial3.begin(SPEED_SERIAL);
-  Serial3.setTimeout(60);
+  Serial3.setTimeout(50);
   Wire.begin();
   while(!checkValidity()){
     setDataNextion("page Info");
@@ -133,46 +133,18 @@ void getDataNextion(){
   }
 }
 // Obtenir des données d Module radio HC12
-//void getDataHc(){
-//  if(Serial3.available()>0 && millis()-Last>150){
-//      char c=Serial3.read();
-//      if(c=='<' && Serial3.available()<13){
-//          String str=Serial3.readString();
-//          if(str.length()<MTR){
-//          ckeckWirlessState();
-//          str.trim();
-//          strToMatrix("<"+str);
-//          Serial.println("<"+str);
-//          //dataFromNex=false;
-//         }
-//        Time = millis(); //tmp
-//      }if(c=='8' && Serial3.available()<13){
-//          String str=Serial3.readString();
-//          if(str.length()<6){
-//          str.trim();
-//          strToMatrix("<810"+str+">");
-//          Serial.println("<810"+str+">");
-//          Time = millis(); //tmp
-//          }else {
-//            
-//          }
-//      }else {
-//        Serial3.parseInt();
-//        delay(60);
-//      }
-//      Serial3.flush();
-//  }
-//}
-
 void getDataHc(){
-  if(Serial3.available()>0 && millis() - Time > 100){
+  if(Serial3.available()>0){
     String str=Serial3.readString();
-    strToMatrix(str);
-    Time = millis();
-    //dataFromNex=false;
+    str.trim();
+    if(str[0]=='<'){
+    if( str.length()<30 && str.indexOf('>')!=-1){
+      strToMatrix(str);
+      dataFromNex=false;
+    }
+    }
   }
 }
-
 // Convertir de string à matrice
 void strToMatrix(String str){
   int Matrix[MTR]={0};
@@ -399,6 +371,8 @@ void switchData(int Matrix[MTR]){
             ckeckWirless();
          }else if(Matrix[1]==6){
             popupMessage("echec d'envoi SMS");
+         }else {
+          
          }
      break;
      case 9:
@@ -478,10 +452,10 @@ void actionObj(int Matrix[MTR]){
     case 3:
         van[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
     break;
-    case 4:
+    case 5:
         mlg[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
     break;
-    case 5:
+    case 4:
         eng[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
     break;
     case 6:
@@ -510,10 +484,10 @@ void progObj(int Matrix[MTR]){
     case 3:
         van[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
     break;
-    case 4:
+    case 5:
         mlg[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
     break;
-    case 5:
+    case 4:
         eng[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
     break;
     case 6:
@@ -855,7 +829,7 @@ void getProg(int Matrix[MTR]){
 void getSettingSMS(){
   for(int i=0;i<6;i++){
     if(settingSMS[i]==1){
-      setDataNextion("bt"+String(i+1)+".val=1");
+      setDataNextion("bt17_"+String(i+1)+".val=1");
     }
   }
 }
@@ -887,13 +861,12 @@ void getNumObj(){
   }
 void getNumPae(){
   for(int i=0;i<numberObj[1];i++){
-    
     if(relationPae[i][0]>0 && relationPae[i][0]<6){
-      setDataNextion("b"+String(i+2)+".picc=62");
+      setDataNextion("b32_"+String(i+2)+".picc=62");
     }else {
-      setDataNextion("b"+String(i+2)+".picc=63");
+      setDataNextion("b32_"+String(i+2)+".picc=60");
     }
-    setDataNextion("vis b"+String(i+2)+",1");
+    setDataNextion("vis b32_"+String(i+2)+",1");
   }
   }
 void getPae(int pr){
@@ -905,7 +878,7 @@ void getNumSector(){
   int count=0;
   for(int i=0;i<6;i++){
     if(sector[i][0]>0 && sector[i][0]<numberObj[2]){
-      setDataNextion("vis b"+String(i+2)+",1");
+      setDataNextion("vis b29_"+String(i+2)+",1");
       count++;
     }
   }
@@ -921,12 +894,12 @@ void getNumRelation(){
   int count=0;
   for(int i=0;i<numberObj[1];i++){
     if(relationObj[i][0]>0 && relationObj[i][0]<numberObj[2]){
-      setDataNextion("b"+String(i+2)+".picc=61");
+      setDataNextion("b31_"+String(i+2)+".picc=61");
       count++;
     }else {
-      setDataNextion("b"+String(i+2)+".picc=60");
+      setDataNextion("b31_"+String(i+2)+".picc=60");
     }
-    setDataNextion("vis b"+String(i+2)+",1");
+    setDataNextion("vis b31_"+String(i+2)+",1");
   }
 }
 
@@ -941,36 +914,36 @@ void getRelation(int pr){
 void getModeSys(){
    for(int i=0;i<3;i++){
     if(ModeSys[i]==1){
-      setDataNextion("bt"+String(i)+".val=1");
+      setDataNextion("bt15_"+String(i)+".val=1");
     }
   }
 }
 void getStateWc(){
     //getTimeNextion();
-    setDataNextion("t0.txt=\""+toString(Hour)+"\"");
-    setDataNextion("t2.txt=\""+toString(Minute)+"\"");
-    setDataNextion("t3.txt=\""+toString(Date)+"\"");
-    setDataNextion("t5.txt=\""+toString(Month)+"\"");
-    setDataNextion("t8.txt=\""+toString(Year)+"\"");
+    setDataNextion("t5_0.txt=\""+toString(Hour)+"\"");
+    setDataNextion("t5_2.txt=\""+toString(Minute)+"\"");
+    setDataNextion("t5_3.txt=\""+toString(Date)+"\"");
+    setDataNextion("t5_5.txt=\""+toString(Month)+"\"");
+    setDataNextion("t5_8.txt=\""+toString(Year)+"\"");
     if(ComWc){
-      setDataNextion("t10.txt=\"R\"");
+      setDataNextion("t5_10.txt=\"R\"");
       digitalWrite(LED_WIRLESS_COM,HIGH);
     }else {
-      setDataNextion("t10.txt=\"N.R\"");
+      setDataNextion("t5_10.txt=\"N.R\"");
       digitalWrite(LED_WIRLESS_COM,LOW);
     }
     float PerLev=LevelNet/31.0;
     if(ComGsm){
-      setDataNextion("t6.txt=\""+String(PerLev*100)+"%\"");
+      setDataNextion("t5_6.txt=\""+String(PerLev*100)+"%\"");
     }else {
-      setDataNextion("t6.txt=\""+String(PerLev*100)+"%\"");
+      setDataNextion("t5_6.txt=\""+String(PerLev*100)+"%\"");
     }
     
     
      
 }
 void getNumClient(){
-   setDataNextion("t0.txt=\""+Phone+"\"");
+   setDataNextion("t27_0.txt=\""+Phone+"\"");
 }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
@@ -1007,7 +980,7 @@ void restSys(){
     for (int i = 1 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
     if(i%400==0){
-      setDataNextion("j0.val="+String(j+10));
+      setDataNextion("j30_0.val="+String(j+10));
     }
   }
   setup();
@@ -1027,7 +1000,7 @@ void tryProto(int Matrix[MTR]){}
 void sysLock(int Matrix[MTR]){
     EEPROM[AD_VALIDITY]=3;
     setDataNextion("page Info"); //t0.txt=\"Certificat de securite non valide.\"
-    setDataNextion("t0.txt=\"Système a ete blocker...!\"");
+    setDataNextion("t13_0.txt=\"Système a ete blocker...!\"");
   }
   
 ///////////////////////////////
@@ -1089,7 +1062,7 @@ bool loadingData(){
   putDataNextion();
   delay(100);
   setDataNextion("j0.val=95");
-  st();
+  intState();
   return true;
 }
 
@@ -1183,11 +1156,11 @@ String toString(int Matrix[9]){
 }
 //  Obtenir l'heure d'horloge 
 void getTimeNextion(){
-  setDataNextion("t3.txt=\""+toString(Hour)+"\"");
-  setDataNextion("t4.txt=\""+toString(Minute)+"\"");
-  setDataNextion("t0.txt=\""+toString(Date)+"\"");
-  setDataNextion("t1.txt=\""+toString(Month)+"\"");
-  setDataNextion("t2.txt=\""+toString(Year)+"\"");
+  setDataNextion("t28_3.txt=\""+toString(Hour)+"\"");
+  setDataNextion("t28_4.txt=\""+toString(Minute)+"\"");
+  setDataNextion("t28_0.txt=\""+toString(Date)+"\"");
+  setDataNextion("t28_1.txt=\""+toString(Month)+"\"");
+  setDataNextion("t28_2.txt=\""+toString(Year)+"\"");
 }
 
 void getTime(){
@@ -1353,6 +1326,7 @@ void ckeckGsmState(int level){
     ComGsm=false;
     digitalWrite(LED_CHECK_GSM,LOW);
   }
+  ckeckWirlessState();
 }
 void ckeckHCState(){
   if(millis()-Last>PERIOD && ComWc==true){
@@ -1414,7 +1388,7 @@ void sendStateApp(int key,int value){
     msg+=String(value);
     Serial3.println(msg);
 }
-void st(){
+void intState(){
     for(int i=0;i<numberObj[0];i++){
       objState[0][i]=2;
     }
