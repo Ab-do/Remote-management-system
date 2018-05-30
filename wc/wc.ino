@@ -153,10 +153,9 @@ void getDataHc(){
         //Serial.println(data);
         setSettingSMS(data);
       break;
-      case '8':
+      case 'J':
           data.remove(0,1);
           Serial2.println("<818"+data+">");
-          Serial.println(data);
           if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[0]!=1){
                 //Serial.println("SMS send");
                 sendSMS("Gx21"+data,1);
@@ -169,12 +168,11 @@ void getDataHc(){
       break;
       case 'P':
         data.remove(0,1);
-        //switchSMS("3"+data);
+        sendSMS("PIN-"+data,1);
       break;
       case 'R':
         data.remove(0,1);
-        Serial2.println(data);
-        Serial.println(data);
+        Serial2.println("C"+data);
         saveToWaiting(data);
       break;
       case 'G':
@@ -193,15 +191,11 @@ void getDataHc(){
 
 //fonction set nemero de telephone du client
 void setNumPhone(String str){
-    //Serial.println("Mettre Numéro de Tel.");
-    //showMatrix(Matrix,11);
     for(int i=0;i<9;i++){
       numberPhone[i]=str[i]-48;
     }
     Phone=toString(numberPhone);
     EEPROM.put(AD_PHONE,numberPhone);
-    //Serial.print(Phone);
-    //showMatrix(numberPhone,3);
 }
 //load data from EEPROM
 void loadingData(){
@@ -209,12 +203,6 @@ void loadingData(){
   Phone=toString(numberPhone);
   EEPROM.get(AD_SETTING_SMS,settingSMS);
   EEPROM.get(AD_CONT_SMS,ContSMS);
-  //Serial.println(Phone);
-  for(int i=0;i<4;i++) {
-    //Serial.print(settingSMS[i]);
-    //Serial.print("-");
-  }
-  //Serial.println();
 }
 
 ///// Envoie des notifications et des informations par SMS.
@@ -282,18 +270,13 @@ void checkNet(bool mode){
         GSMcon=false;
         digitalWrite(LED_CHECK_GSM,LOW);
       }
-     Serial.println("Niveau signal : "+toString(GsmSgnal));
+     //Serial.println("Niveau signal : "+toString(GsmSgnal));
      Last=millis();
   }
 }
 
 void checkConx(){
   String msg="GB-91";
-//  if(GsmSgnal==-1){
-//    msg+=toString(0);
-//  }else {
-//    msg+=toString(GsmSgnal);
-//  }
   msg+=toString(GsmSgnal); //
   msg+=toStringPin(ContSMS);
   sendSMS(msg,1);
@@ -367,7 +350,6 @@ void saveToWaiting(String PIN){
   val[i].waiting=true;
   val[i].Rep=false;
   val[i].PIN=PIN;
-  Serial.println("val.pin= "+val[i].PIN);
   val[i]._time=millis();
 }
 
@@ -377,7 +359,11 @@ bool checkRep(String PIN){
         val[i].waiting=false;
         val[i].Rep=true;
         val[i].PIN="";
-        Serial.println("...OK");
       }
     }
+}
+
+
+void Test(){
+  
 }
