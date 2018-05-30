@@ -128,6 +128,7 @@ void loop() {
 void getDataNextion(){
   if(Serial2.available()>0){
     String str=Serial2.readString();
+    Serial.println(str); //Tmp
     strToMatrix(str);
     dataFromNex=true;
   }
@@ -829,7 +830,7 @@ void getProg(int Matrix[MTR]){
 void getSettingSMS(){
   for(int i=0;i<6;i++){
     if(settingSMS[i]==1){
-      setDataNextion("bt17_"+String(i+1)+".val=1");
+      setDataNextion("bt"+String(i+1)+".val=1");
     }
   }
 }
@@ -861,12 +862,13 @@ void getNumObj(){
   }
 void getNumPae(){
   for(int i=0;i<numberObj[1];i++){
+    
     if(relationPae[i][0]>0 && relationPae[i][0]<6){
-      setDataNextion("b32_"+String(i+2)+".picc=62");
+      setDataNextion("b"+String(i+2)+".picc=62");
     }else {
-      setDataNextion("b32_"+String(i+2)+".picc=60");
+      setDataNextion("b"+String(i+2)+".picc=63");
     }
-    setDataNextion("vis b32_"+String(i+2)+",1");
+    setDataNextion("vis b"+String(i+2)+",1");
   }
   }
 void getPae(int pr){
@@ -878,7 +880,7 @@ void getNumSector(){
   int count=0;
   for(int i=0;i<6;i++){
     if(sector[i][0]>0 && sector[i][0]<numberObj[2]){
-      setDataNextion("vis b29_"+String(i+2)+",1");
+      setDataNextion("vis b"+String(i+2)+",1");
       count++;
     }
   }
@@ -894,12 +896,12 @@ void getNumRelation(){
   int count=0;
   for(int i=0;i<numberObj[1];i++){
     if(relationObj[i][0]>0 && relationObj[i][0]<numberObj[2]){
-      setDataNextion("b31_"+String(i+2)+".picc=61");
+      setDataNextion("b"+String(i+2)+".picc=61");
       count++;
     }else {
-      setDataNextion("b31_"+String(i+2)+".picc=60");
+      setDataNextion("b"+String(i+2)+".picc=60");
     }
-    setDataNextion("vis b31_"+String(i+2)+",1");
+    setDataNextion("vis b"+String(i+2)+",1");
   }
 }
 
@@ -914,7 +916,7 @@ void getRelation(int pr){
 void getModeSys(){
    for(int i=0;i<3;i++){
     if(ModeSys[i]==1){
-      setDataNextion("bt15_"+String(i)+".val=1");
+      setDataNextion("bt"+String(i)+".val=1");
     }
   }
 }
@@ -1096,6 +1098,7 @@ bool checkValidity(){
 // Mettre les données à Nextion 
 void setDataNextion(String data) {
   Serial2.print(data);
+  Serial.println(data);
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.write(0xff);
@@ -1156,11 +1159,11 @@ String toString(int Matrix[9]){
 }
 //  Obtenir l'heure d'horloge 
 void getTimeNextion(){
-  setDataNextion("t28_3.txt=\""+toString(Hour)+"\"");
-  setDataNextion("t28_4.txt=\""+toString(Minute)+"\"");
-  setDataNextion("t28_0.txt=\""+toString(Date)+"\"");
-  setDataNextion("t28_1.txt=\""+toString(Month)+"\"");
-  setDataNextion("t28_2.txt=\""+toString(Year)+"\"");
+  setDataNextion("t3.txt=\""+toString(Hour)+"\"");
+  setDataNextion("t4.txt=\""+toString(Minute)+"\"");
+  setDataNextion("t0.txt=\""+toString(Date)+"\"");
+  setDataNextion("t1.txt=\""+toString(Month)+"\"");
+  setDataNextion("t2.txt=\""+toString(Year)+"\"");
 }
 
 void getTime(){
