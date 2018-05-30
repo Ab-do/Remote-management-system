@@ -1,5 +1,5 @@
 // WC 8 : wirless controller.
-// le 04/03/2019 Agadir.
+// le 04/03/2018 Agadir.
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
 #include "SIM800L.h"
@@ -9,7 +9,7 @@ struct waiting {
   bool Rep=false;
   bool waiting=false;
   String PIN;
-  unsigned long _time=millis(); 
+  unsigned long _time=millis();
   bool app=false;
 };
 waiting val[CAS_NAM];
@@ -24,7 +24,7 @@ uint8_t index=1;
 String textSms;
 String numberSms;
 uint8_t index1;
-uint8_t LED2=13; // use what you need 
+uint8_t LED2=13; // use what you need
 bool error;
 bool GSMcon=false;
 int numberPhone[9]={0};        // nombre des objets de systeme
@@ -78,14 +78,14 @@ void loop() {
   waitReplay();
 }
 
-//  obtenir les donnée 
+//  obtenir les donnée
 
 
 void getDataGsm(){
   if(Serial3.available()>0){
-      textSms=GSMmodule.readSms(index); 
+      textSms=GSMmodule.readSms(index);
       if(textSms.indexOf("OK")!=-1){
-      numberSms=GSMmodule.getNumberSms(index); 
+      numberSms=GSMmodule.getNumberSms(index);
       //Serial.println("Num de tel : " + numberSms);
       int _idx = textSms.indexOf("\"\r");
       //Serial.println(_idx);
@@ -125,7 +125,7 @@ void getDataGsm(){
    textSms="";
    numberSms="";
   }
-   
+
 }
 
 void getDataHc(){
@@ -153,9 +153,10 @@ void getDataHc(){
         //Serial.println(data);
         setSettingSMS(data);
       break;
-      case 'J':
+      case '8':
           data.remove(0,1);
           Serial2.println("<818"+data+">");
+          Serial.println(data);
           if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[0]!=1){
                 //Serial.println("SMS send");
                 sendSMS("Gx21"+data,1);
@@ -172,7 +173,8 @@ void getDataHc(){
       break;
       case 'R':
         data.remove(0,1);
-        Serial2.println("C"+data);
+        Serial2.println(data);
+        Serial.println(data);
         saveToWaiting(data);
       break;
       case 'G':
@@ -227,7 +229,7 @@ String toString(int Matrix[9]){
   String str="";
   for(int i=0;i<9;i++)
     str+=Matrix[i];
-  return str; 
+  return str;
 }
 
 
@@ -315,7 +317,7 @@ void recharge(int Operator,String recCode){
   }else if(Operator==2){
     GSMmodule.sendSms("555",recCode.c_str());
   }
-  
+
 }
 
 void waitReplay(){
@@ -350,6 +352,7 @@ void saveToWaiting(String PIN){
   val[i].waiting=true;
   val[i].Rep=false;
   val[i].PIN=PIN;
+  Serial.println("val.pin= "+val[i].PIN+" i="+String(i));
   val[i]._time=millis();
 }
 
@@ -359,11 +362,12 @@ bool checkRep(String PIN){
         val[i].waiting=false;
         val[i].Rep=true;
         val[i].PIN="";
+        Serial.println("...OK");
       }
     }
 }
 
 
 void Test(){
-  
+
 }
