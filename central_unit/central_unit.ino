@@ -452,10 +452,10 @@ void actionObj(int Matrix[MTR]){
     case 3:
         van[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
     break;
-    case 5:
+    case 4:
         mlg[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
     break;
-    case 4:
+    case 5:
         eng[toDec(Matrix[3],Matrix[4])-1].runObj(Matrix[5]);
     break;
     case 6:
@@ -484,10 +484,10 @@ void progObj(int Matrix[MTR]){
     case 3:
         van[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
     break;
-    case 5:
+    case 4:
         mlg[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
     break;
-    case 4:
+    case 5:
         eng[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
     break;
     case 6:

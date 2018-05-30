@@ -36,15 +36,15 @@ void Item::updateProg(){
                 sendStateApp(22,3000+k*10+1);
               }
               break;
-       case 5:
-              //Mélangeur
+       case 4:
+              //les pompes angre
               if(EEPROM.put(AD_PROG_MLG+k,this->MatrixTime)){
                 successMessage();
                 sendStateApp(22,4000+k*10+1);
               }
               break;
-       case 4:
-              //Pompe à engrais
+       case 5:
+              //Melengeur Angre
               if(EEPROM.put(AD_PROG_PIM+k,this->MatrixTime)){
                 successMessage();
                 sendStateApp(22,5000+k*10+1);
@@ -87,13 +87,13 @@ void Item::getProg(){
               EEPROM.get(AD_PROG_VAN+k,this->MatrixTime);
               AD=AD_PROG_VAN+k;
               break;
-       case 5:
-              //Mélangeur
+       case 4:
+              //les pompes angre
               EEPROM.get(AD_PROG_MLG+k,this->MatrixTime);
               AD=AD_PROG_MLG+k;
               break;
-       case 4:
-              //pompe à engrais
+       case 5:
+              //Melengeur Angre
               EEPROM.get(AD_PROG_ENG+k,this->MatrixTime);
               AD=AD_PROG_ENG+k;
               break;
@@ -195,7 +195,7 @@ bool Item::runObj(int Action)
               sendCmd(this->Cmd);
             }
            break;
-    case 5://****************************************************
+    case 4://****************************************************
           //pompe a angre 
           if(Action==1 && checkPrPae()) {
              sendCmd(this->Cmd+Action);
@@ -216,7 +216,7 @@ bool Item::runObj(int Action)
               sendCmd(this->Cmd);
             }
           break;
-     case 4:
+     case 5:
           if(Action==1 || Action==2){
             sendCmd(this->Cmd+Action);
             //sendStateApp(,this->Cmd+Action);
