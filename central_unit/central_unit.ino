@@ -1365,6 +1365,7 @@ void getAppNumObj(){
 
 void getAppState(){
     String msg="GS-";
+    delay(60);
     for(int i=0;i<numberObj[0];i++){
       msg+=String(objState[0][i]);
     }
@@ -1379,9 +1380,6 @@ void getAppState(){
     }
     for(int i=0;i<numberObj[4];i++){
       msg+=String(objState[4][i]);
-    }
-    for(int i=0;i<numberObj[5];i++){
-      msg+=String(objState[5][i]);
     }
     Serial3.println(msg);
 }
