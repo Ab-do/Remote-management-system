@@ -1,5 +1,5 @@
 // le 04/03/2019 Agadir
-// Etape 40  :  Integration les vannes en u.c.
+// Etape 40  :  change la vitesse serial
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -128,7 +128,6 @@ void loop() {
 void getDataNextion(){
   if(Serial2.available()>0){
     String str=Serial2.readString();
-    Serial.println(str); //Tmp
     strToMatrix(str);
     dataFromNex=true;
   }
@@ -138,6 +137,7 @@ void getDataHc(){
   if(Serial3.available()>0){
     String str=Serial3.readString();
     str.trim();
+    Serial.println("#"+str);
     if(str[0]=='<'){
     if( str.length()<30 && str.indexOf('>')!=-1){
       strToMatrix(str);
@@ -758,20 +758,20 @@ void getState(int Matrix[MTR]){
       break;
       case 4:
           if(St==1){
-          setDataNextion("p0.pic=44");
-          }else if (St==2 || St==0){
-          setDataNextion("p0.pic=46");
-          }else {
-          setDataNextion("p0.pic=45");
-          }
-      break;
-      case 5:
-          if(St==1){
           setDataNextion("p0.pic=55");
           }else if (St==2 || St==0){
           setDataNextion("p0.pic=47");
           }else {
           setDataNextion("p0.pic=48");
+          }
+      break;
+      case 5:
+          if(St==1){
+          setDataNextion("p0.pic=44");
+          }else if (St==2 || St==0){
+          setDataNextion("p0.pic=46");
+          }else {
+          setDataNextion("p0.pic=45");
           }
       break;
       default:
@@ -830,7 +830,7 @@ void getProg(int Matrix[MTR]){
 void getSettingSMS(){
   for(int i=0;i<6;i++){
     if(settingSMS[i]==1){
-      setDataNextion("bt"+String(i+1)+".val=1");
+      setDataNextion("bt17_"+String(i+1)+".val=1");
     }
   }
 }
@@ -862,13 +862,12 @@ void getNumObj(){
   }
 void getNumPae(){
   for(int i=0;i<numberObj[1];i++){
-    
     if(relationPae[i][0]>0 && relationPae[i][0]<6){
-      setDataNextion("b"+String(i+2)+".picc=62");
+      setDataNextion("b32_"+String(i+2)+".picc=62");
     }else {
-      setDataNextion("b"+String(i+2)+".picc=63");
+      setDataNextion("b32_"+String(i+2)+".picc=60");
     }
-    setDataNextion("vis b"+String(i+2)+",1");
+    setDataNextion("vis b32_"+String(i+2)+",1");
   }
   }
 void getPae(int pr){
@@ -880,7 +879,7 @@ void getNumSector(){
   int count=0;
   for(int i=0;i<6;i++){
     if(sector[i][0]>0 && sector[i][0]<numberObj[2]){
-      setDataNextion("vis b"+String(i+2)+",1");
+      setDataNextion("vis b29_"+String(i+2)+",1");
       count++;
     }
   }
@@ -896,12 +895,12 @@ void getNumRelation(){
   int count=0;
   for(int i=0;i<numberObj[1];i++){
     if(relationObj[i][0]>0 && relationObj[i][0]<numberObj[2]){
-      setDataNextion("b"+String(i+2)+".picc=61");
+      setDataNextion("b31_"+String(i+2)+".picc=61");
       count++;
     }else {
-      setDataNextion("b"+String(i+2)+".picc=60");
+      setDataNextion("b31_"+String(i+2)+".picc=60");
     }
-    setDataNextion("vis b"+String(i+2)+",1");
+    setDataNextion("vis b31_"+String(i+2)+",1");
   }
 }
 
@@ -916,7 +915,7 @@ void getRelation(int pr){
 void getModeSys(){
    for(int i=0;i<3;i++){
     if(ModeSys[i]==1){
-      setDataNextion("bt"+String(i)+".val=1");
+      setDataNextion("bt15_"+String(i)+".val=1");
     }
   }
 }
@@ -1098,7 +1097,6 @@ bool checkValidity(){
 // Mettre les données à Nextion 
 void setDataNextion(String data) {
   Serial2.print(data);
-  Serial.println(data);
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.write(0xff);
@@ -1159,11 +1157,11 @@ String toString(int Matrix[9]){
 }
 //  Obtenir l'heure d'horloge 
 void getTimeNextion(){
-  setDataNextion("t3.txt=\""+toString(Hour)+"\"");
-  setDataNextion("t4.txt=\""+toString(Minute)+"\"");
-  setDataNextion("t0.txt=\""+toString(Date)+"\"");
-  setDataNextion("t1.txt=\""+toString(Month)+"\"");
-  setDataNextion("t2.txt=\""+toString(Year)+"\"");
+  setDataNextion("t28_3.txt=\""+toString(Hour)+"\"");
+  setDataNextion("t28_4.txt=\""+toString(Minute)+"\"");
+  setDataNextion("t28_0.txt=\""+toString(Date)+"\"");
+  setDataNextion("t28_1.txt=\""+toString(Month)+"\"");
+  setDataNextion("t28_2.txt=\""+toString(Year)+"\"");
 }
 
 void getTime(){
