@@ -135,15 +135,17 @@ void getDataNextion(){
 // Obtenir des données d Module radio HC12
 void getDataHc(){
   if(Serial3.available()>0){
+    if(Serial3.read()=='<'){
     String str=Serial3.readString();
     str.trim();
-    Serial.println("#"+str);
-    if(str[0]=='<'){
-    if( str.length()<30 && str.indexOf('>')!=-1){
-      strToMatrix(str);
+    int n=str.indexOf('>');
+    if( str.length()<30 && n!=-1){
+      strToMatrix("<"+str.substring(0,n+1));
       dataFromNex=false;
     }
-    }
+  }else {
+    Serial3.flush();
+  }
   }
 }
 // Convertir de string à matrice
