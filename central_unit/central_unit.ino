@@ -74,8 +74,11 @@ void setup() {
   Wire.begin();
   while(!checkValidity()){
     setDataNextion("page Info");
-    setDataNextion("t0.txt=\"Certificat de securite non valide.\"");
-    while(1);
+    setDataNextion("t13_0.txt=\"The system has been blocked, contact your supplier !\"");
+    Serial2.end();
+    while(1){
+      getDataHc();
+    }
     }
    setDataNextion("page 0");
    delay(200);setDataNextion("j0.val=10");
@@ -341,6 +344,7 @@ void switchData(int Matrix[MTR]){
             };
           break;
     case 7:
+        if(Matrix[1]==1){
            switch(Matrix[2]){
             case 1:
               getAppPin(Matrix);
@@ -355,7 +359,7 @@ void switchData(int Matrix[MTR]){
               Error();
             break;
            }
-            if(Matrix[1]==4){
+        }else if(Matrix[1]==4){
               if(Matrix[2]==1){
                 setDelay(Matrix);
               }else if(Matrix[2]==3){
@@ -1001,9 +1005,11 @@ void getValuePae(){
 void setDelay(int Matrix[MTR]){}
 void tryProto(int Matrix[MTR]){}
 void sysLock(int Matrix[MTR]){
-    EEPROM[AD_VALIDITY]=3;
+    EEPROM[AD_VALIDITY]=toDec(Matrix[3],Matrix[5]);
+    Serial3.println("T7"+toString(toDec(Matrix[3],Matrix[5])));
     setDataNextion("page Info"); //t0.txt=\"Certificat de securite non valide.\"
-    setDataNextion("t13_0.txt=\"Système a ete blocker...!\"");
+    setDataNextion("t13_0.txt=\"The system has been blocked, contact your supplier !\"");
+    Serial2.end();
   }
   
 ///////////////////////////////
@@ -1092,7 +1098,7 @@ bool checkVirginity(){
   //  Vérification la validité
 bool checkValidity(){
   bool k;
-  EEPROM[AD_VALIDITY]==3? k=false : k=true;
+  EEPROM[AD_VALIDITY]==95? k=false : k=true;
   return k;
 }
 /////////////// NEXTION
@@ -1387,7 +1393,9 @@ void sendStateApp(int key,int value){
     String msg="Gx";
     msg+=String(key);
     msg+=String(value);
-    Serial3.println(msg);
+    if(!dataFromNex || settingSMS[1]==1){
+      Serial3.println(msg);
+    }
 }
 void intState(){
     for(int i=0;i<numberObj[0];i++){
