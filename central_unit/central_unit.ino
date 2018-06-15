@@ -37,9 +37,9 @@ const int NUMBER_MAX=15;
 const double SPEED_SERIAL = 9600;
 const unsigned long PERIOD=110000;
 // Declaration les pins des LED
-const int LED_START=34;
-const int LED_WIRLESS_COM=33;
-const int LED_CHECK_GSM=32;
+const int LED_START=2;
+const int LED_WIRLESS_COM=3;
+const int LED_CHECK_GSM=4;
 // Déclaration des variables.
 unsigned long Time = millis();
 unsigned long Last = millis();
@@ -1286,17 +1286,17 @@ if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
 // Initialisation  les pins des vannes 
 void intValve(){
   for(int i=0;i<=numberObj[2];i++){
-    pinMode(i+2,OUTPUT);
-    digitalWrite(i+2,HIGH);
+    pinMode(i+5,OUTPUT);
+    digitalWrite(i+5,HIGH);
   }
 }
 // 
 void funValve(int van,int action){
     if(action==1){
-      digitalWrite(van+1,LOW);
+      digitalWrite(van+4,LOW);
       RdCmd(3001+van*10);
     }else if(action==2){
-      digitalWrite(van+1,HIGH);
+      digitalWrite(van+4,HIGH);
       RdCmd(3002+van*10);
     }
 }
