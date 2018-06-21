@@ -133,7 +133,7 @@ bool Item::runObj(int Action)
              //sendStateApp(this->Cmd+Action);
              return true;
             } else if(Action==1){
-             popupMessage("la pompe immérgée: n'a pas démarré");
+             popupMessage("Vous avez atteint le nombre max des pompes démarrées",64);
              sendStateApp(21,this->Cmd+5);
              return false;
             } else if(Action==2){
@@ -154,13 +154,13 @@ bool Item::runObj(int Action)
                 return true;
               } else {
                 //Erreur(2);
-                popupMessage("la pompe de refoulement : n'a pas démarré a cause de nombre des vannes.");
+                popupMessage("Les vannes sont fermées",65);
                 sendStateApp(21,this->Cmd+5);
                 return false;
               }
           } else if(Action==1) {
             //Erreur(1);
-             popupMessage("la pompe de refoulement : n'a pas démarré.");
+             popupMessage("Vous avez atteint le nombre max des pompes démarrées.",64);
              sendStateApp(21,this->Cmd+6);
              return false;
           } else if(Action==2 && checkPae()) {
@@ -170,7 +170,7 @@ bool Item::runObj(int Action)
              return true;
           } else if(Action==2) {
             //Erreur(5);//la pompe a angre n'est pas etainde
-             popupMessage("Vous pouvez pas Arreter la pompe de refoulement N : "+String(this->NumberObj));
+             popupMessage("Vous pouvez pas éteindre la pompe de refoulement N : "+String(this->NumberObj),66);
              sendStateApp(21,this->Cmd+7);
              return false;
           }else if(Action==8){
@@ -188,7 +188,7 @@ bool Item::runObj(int Action)
              return true;
           } else if(Action==2)  {
             //Erreur(3);//
-            popupMessage("Vous pouvez pas Arreter la vanne N : "+String(this->NumberObj));
+            popupMessage("Vous pouvez pas éteindre la vanne N : "+String(this->NumberObj),67);
             sendStateApp(21,this->Cmd+5);
              return false;
           }else if(Action==8){
@@ -204,7 +204,7 @@ bool Item::runObj(int Action)
           } else if(Action==1)
           {
              //sendCmd(Cmd+Action);
-             popupMessage("Vous pouvez pas démarrer la pompe à engrais N : "+String(this->NumberObj));
+             popupMessage("Vous pouvez pas démarrer la pompe à engrais N : "+String(this->NumberObj),68);
              sendStateApp(21,this->Cmd+5);
              return false; 
           } else if(Action==2)

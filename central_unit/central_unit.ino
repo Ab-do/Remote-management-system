@@ -28,7 +28,7 @@ const int AD_VALIDITY=0;
 const int AD_PIN=18;
 const int AD_PHONE=20;
 const int AD_NUMBER_OBJ=38;
-const int AD_SETTING_SMS=50;
+const int AD_SETTING_SMS=51;
 const int AD_SECTOR=62;
 const int AD_RELATION_OBJ=134; 
 const int AD_RELATION_PAE=210; //280
@@ -38,8 +38,8 @@ const double SPEED_SERIAL = 9600;
 const unsigned long PERIOD=110000;
 // Declaration les pins des LED
 const int LED_START=2;
-const int LED_WIRLESS_COM=3;
-const int LED_CHECK_GSM=4;
+const int LED_WIRLESS_COM=4;
+const int LED_CHECK_GSM=3;
 // Déclaration des variables.
 unsigned long Time = millis();
 unsigned long Last = millis();
@@ -53,7 +53,7 @@ int LevelNet=0;
 // Déclaration des matrices.
 int numberPhone[9]={0};        // nombre des objets de systeme
 int numberObj[6]={0};        // nombre des objets de systeme
-int settingSMS[6]={0};        // nombre des objets de systeme
+int settingSMS[4]={0};        // nombre des objets de systeme
 int objState[NUMBER_OBJ][NUMBER_MAX]={0};        // les etates des objets
 int sector[6][6]={0};        // les secteurs 
 int relationObj[6][6]={0}; // les relation entre les pompes de refoulements et les vannes
@@ -95,13 +95,15 @@ void setup() {
   }
   delay(200);setDataNextion("j0.val=20");
   while(!loadingData()){
-    popupMessage("Il y a un problème de téléchargement.");
+    popupMessage("Il y a un problème de téléchargement.",73);
     delay(5000);
   }
+  
   setDataNextion("j0.val=100");
   if (!sd.begin(PIN_SD_CS, SD_CARD_SPEED))
   {
-  popupMessage("SD card begin error");
+  popupMessage("La carte SD non lue!",70);
+  
   return;
   }
   intValve();
@@ -116,6 +118,7 @@ void setup() {
 }
 
 void loop() {
+  
   getTime(); // Mettre le temps à jour. 
   getDataHc();
   getDataNextion();
@@ -210,7 +213,6 @@ void switchData(int Matrix[MTR]){
             break;
     case 2:
              //  // Effectuer une action sur un objet.
-          
             if(Matrix[1]==1){
               if(ModeSys[0]==1){
                 actionObj(Matrix); 
@@ -377,7 +379,7 @@ void switchData(int Matrix[MTR]){
          }else if(Matrix[1]==3){
             ckeckWirless();
          }else if(Matrix[1]==6){
-            popupMessage("echec d'envoi SMS");
+            popupMessage("echec d'envoi SMS",71);
          }else {
           
          }
@@ -531,7 +533,7 @@ void showHist(int Matrix[MTR]){
   if(sd.exists(HistFile.c_str())){
       csv.open(HistFile.c_str(), O_RDWR); 
     } else {
-      popupMessage("File not existe");  
+      popupMessage("Aucun historique trouvé",72);  
       return 0; 
       }
   csv.gotoBeginOfFile();
@@ -834,7 +836,7 @@ void getProg(int Matrix[MTR]){
 }
 
 void getSettingSMS(){
-  for(int i=0;i<6;i++){
+  for(int i=0;i<4;i++){
     if(settingSMS[i]==1){
       setDataNextion("bt17_"+String(i+1)+".val=1");
     }
@@ -941,9 +943,9 @@ void getStateWc(){
     }
     float PerLev=LevelNet/31.0;
     if(ComGsm){
-      setDataNextion("t5_6.txt=\""+String(PerLev*100)+"%\"");
+      setDataNextion("t5_6.txt=\""+String(PerLev*100)+"\"");
     }else {
-      setDataNextion("t5_6.txt=\""+String(PerLev*100)+"%\"");
+      setDataNextion("t5_6.txt=\""+String(PerLev*100)+"\"");
     }
     
     
@@ -1071,6 +1073,7 @@ bool loadingData(){
   putDataNextion();
   delay(100);
   setDataNextion("j0.val=95");
+  
   intState();
   return true;
 }
@@ -1114,9 +1117,9 @@ void setDataNextion(String data) {
 
 }
 // Affiche les informations et les erreurs.
-void popupMessage(String msg){
+void popupMessage(String msg,int Id){
    setDataNextion("page errors");
-   setDataNextion("msg.txt=\""+msg+"\"");
+   setDataNextion("p14_0.pic="+String(Id));
    addHist(msg);
 }
 // Affiche les informations 
@@ -1222,7 +1225,12 @@ void autoRunObj(){
 
 
 void sendCmd(int cmd){
-      Serial3.println("R"+String(cmd));
+  if(ComWc){
+    Serial3.println("R"+String(cmd));
+  }else {
+    popupMessage("Err! La boite de contact est éteint.",74);
+  }
+      
 }
 // fonction pour ajouter l'historique.
 void addHist(String hist)
@@ -1233,7 +1241,7 @@ void addHist(String hist)
   if(Date<10)   { Day   ="0"+String(Date); }    else { Day=String(Date); }
   if(Month<10)  { Day+="/0"+String(Month); }   else { Day+="/"+String(Month); }
   if(!sdInit()){
-    popupMessage("Erreur de creation de fichier");
+    popupMessage("Erreur de creation de fichier",73);
     return 0;
   }
   csv.addField(hist.c_str());
@@ -1390,12 +1398,27 @@ void getAppState(){
     Serial3.println(msg);
 }
 void sendStateApp(int key,int value){
+  if(settingSMS[3]==1){
     String msg="Gx";
     msg+=String(key);
     msg+=String(value);
-    if(!dataFromNex || settingSMS[1]==1){
+    if(key==21){
+      value=value%1000;
+      value=value%100;
+      value=value%10;
+      if(!dataFromNex || settingSMS[0]==1){
+        Serial3.println(msg);
+      }else if (settingSMS[2]==1){
+        if(value!=3 && value!=4){
+          Serial3.println(msg);
+        }
+      }
+    }else {
+      if(!dataFromNex || settingSMS[1]==1){
       Serial3.println(msg);
+      }
     }
+  }
 }
 void intState(){
     for(int i=0;i<numberObj[0];i++){
@@ -1412,9 +1435,6 @@ void intState(){
     }
     for(int i=0;i<numberObj[4];i++){
       objState[4][i]=2;
-    }
-    for(int i=0;i<numberObj[5];i++){
-      objState[5][i]=2;
     }
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
