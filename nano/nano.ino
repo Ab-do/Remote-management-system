@@ -31,7 +31,7 @@ void setup() {
   pinMode(LEDOBJECT, OUTPUT);
   digitalWrite(RELAY1, 1);
   digitalWrite(RELAY2, 1);
-  EEPROM.get(ADRESS, PINCODE);
+  EEPROM.read(ADRESS, PINCODE);
   
   Object();
   Serial.println(PINCODE);
@@ -47,6 +47,7 @@ void setup() {
     delay(1000);
     digitalWrite(LEDOBJECT, LOW);
   }
+  Serial.println("88888");
 }
 void Object()
 {
