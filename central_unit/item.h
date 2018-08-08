@@ -35,7 +35,6 @@ class Item{
       //void static setTime(int Hr,int Min,int Sec);
     private :
       int IdObj,NumberObj,Cmd;
-      
       bool ckeckPmp();
       bool checkVan();
       bool ckeckPrVan();
