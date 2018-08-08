@@ -1,5 +1,5 @@
 // WC 8 : wirless controller.
-// le 04/03/2018 Agadir.
+// le 04/03/2019 Agadir.
 #include <SoftwareSerial.h>
 #include<EEPROM.h>
 #include "SIM800L.h"
@@ -9,7 +9,7 @@ struct waiting {
   bool Rep=false;
   bool waiting=false;
   String PIN;
-  unsigned long _time=millis();
+  unsigned long _time=millis(); 
   bool app=false;
 };
 waiting val[CAS_NAM];
@@ -20,15 +20,16 @@ const int AD_PHONE=10;
 const int AD_SETTING_SMS=30;
 const int AD_CONT_SMS=60;
 String Phone="";
+String PHONE_ADM="669600729";
 uint8_t index=1;
 String textSms;
 String numberSms;
 uint8_t index1;
-uint8_t LED2=13; // use what you need
+uint8_t LED2=13; // use what you need 
 bool error;
 bool GSMcon=false;
 int numberPhone[9]={0};        // nombre des objets de systeme
-int settingSMS[6]={0};
+int settingSMS[4]={0};
 int GsmSgnal=-1;
 int ContSMS=0;
 int ContErr=0;
@@ -40,13 +41,14 @@ unsigned long replayCmd=millis();
 bool SMS_Responce=false;
 bool waitingPIN=false;
 bool starRep=false;
+bool AdminLes=false;
 SIM800L GSMmodule;
 void setup() {
   Serial.begin(9600);  // Moniteur série
   Serial3.begin(9600); // Module GSM  SIM800L
   GSMmodule.begin();
   Serial2.begin(9600); // Module radio HC12
-  Serial2.setTimeout(50);
+  Serial2.setTimeout(70);
   //Serial.println("Start-up");
   pinMode(LED_START,OUTPUT);
   pinMode(LED_WIRLESS_COM,OUTPUT);
@@ -64,11 +66,10 @@ void setup() {
   Serial3.println("AT+CMGF=1");
   Serial3.println("AT+CNMI=3,3,0,0,0");
   delay(300);
-  sendSMS("GB-9467",settingSMS[1]);
+  sendSMS("GB-9467",1);
   Serial3.println(F("AT+CMGDA=\"DEL ALL\""));
   delay(300);
   Serial2.println("<83>");
-  Serial.println("Start Sys");
 }
 
 void loop() {
@@ -78,14 +79,14 @@ void loop() {
   waitReplay();
 }
 
-//  obtenir les donnée
+//  obtenir les donnée 
 
 
 void getDataGsm(){
   if(Serial3.available()>0){
-      textSms=GSMmodule.readSms(index);
+      textSms=GSMmodule.readSms(index); 
       if(textSms.indexOf("OK")!=-1){
-      numberSms=GSMmodule.getNumberSms(index);
+      numberSms=GSMmodule.getNumberSms(index); 
       //Serial.println("Num de tel : " + numberSms);
       int _idx = textSms.indexOf("\"\r");
       //Serial.println(_idx);
@@ -115,7 +116,7 @@ void getDataGsm(){
         sendSMS(numberSms+"\n"+textSms,1);
       }
       delay(30);
-      Serial3.println("AT+CMGD=1");
+      Serial3.println("AT+CMGD=1");  
       delay(100);
       Serial3.println(F("AT+CMGDA=\"DEL ALL\""));
       delay(100);
@@ -125,14 +126,16 @@ void getDataGsm(){
    textSms="";
    numberSms="";
   }
-
+   
 }
 
 void getDataHc(){
-  if(Serial2.available()>0){
+  if(Serial2.available()>1){
     String data=Serial2.readString();
-    if(data.length()<30){
     data.trim();
+    Serial.print("->");
+    Serial.println(data);
+    if(data.length()<30){
     switch(data[0]){
       case 'W':
          digitalWrite(LED_WIRLESS_COM,HIGH);
@@ -140,7 +143,7 @@ void getDataHc(){
           checkWirless();
           checkNet(true);
          }else if(data[1]=='d'){
-          sendSMS("GB-9478",settingSMS[1]);
+          sendSMS("GB-9478",1);
           checkNet(true);
           }
       break;
@@ -153,16 +156,22 @@ void getDataHc(){
         //Serial.println(data);
         setSettingSMS(data);
       break;
-      case '8':
+      case 'J':
+          
           data.remove(0,1);
+          delay(200);
           Serial2.println("<818"+data+">");
-          Serial.println(data);
+          
           if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[0]!=1){
                 //Serial.println("SMS send");
                 sendSMS("Gx21"+data,1);
                 SMS_Responce==false;
            }else {
-                sendSMS("Gx21"+data,settingSMS[0]);
+                if(data[3]=='3' || data[3]=='4'){
+                  sendSMS("Gx21"+data,settingSMS[0]);
+                }else {
+                  sendSMS("Gx21"+data,settingSMS[2]);
+                }
                 SMS_Responce==false;
            }
            checkRep(data);
@@ -172,13 +181,17 @@ void getDataHc(){
         sendSMS("PIN-"+data,1);
       break;
       case 'R':
-        data.remove(0,1);
-        Serial2.println(data);
-        Serial.println(data);
+        data=data.substring(1,5);
+        delay(200);
+        Serial2.println("C"+data);
         saveToWaiting(data);
       break;
       case 'G':
         sendSMS(data,1);
+      break;
+      case 'T':
+        data.remove(0,1);
+        sendSMS("GC"+data,9);
       break;
       default:
         if(data=="T475"){
@@ -209,7 +222,7 @@ void loadingData(){
 
 ///// Envoie des notifications et des informations par SMS.
 void sendSMS(String outMessage,int validity){
-  if(validity==1 && GsmSgnal!=-1){
+  if(validity==1  && settingSMS[3]==1){ //&& GsmSgnal!=-1
   if(GSMmodule.sendSms("+212"+Phone,outMessage.c_str())){
     if(ContSMS<9999){
         ContSMS++;
@@ -222,6 +235,9 @@ void sendSMS(String outMessage,int validity){
       Serial2.println("<86>");
     }
   }
+  if(AdminLes || validity==9){
+    GSMmodule.sendSms("+212"+PHONE_ADM,outMessage.c_str());
+  }
 }
 
 // Convertir une matrice en texte.
@@ -229,7 +245,7 @@ String toString(int Matrix[9]){
   String str="";
   for(int i=0;i<9;i++)
     str+=Matrix[i];
-  return str;
+  return str; 
 }
 
 
@@ -317,7 +333,7 @@ void recharge(int Operator,String recCode){
   }else if(Operator==2){
     GSMmodule.sendSms("555",recCode.c_str());
   }
-
+  
 }
 
 void waitReplay(){
@@ -329,7 +345,7 @@ void waitReplay(){
             //Serial.println("ERR ID= "+String(i)+" "+val[i].PIN);
             delay(80);
             Serial2.println(msg);
-            sendSMS("Gx21"+val[i].PIN+"9",1);
+            sendSMS("Gx21"+val[i].PIN+"9",settingSMS[3]);
             val[i].waiting=false;
             val[i].Rep=false;
             val[i].PIN="";
@@ -352,7 +368,6 @@ void saveToWaiting(String PIN){
   val[i].waiting=true;
   val[i].Rep=false;
   val[i].PIN=PIN;
-  Serial.println("val.pin= "+val[i].PIN+" i="+String(i));
   val[i]._time=millis();
 }
 
@@ -362,12 +377,11 @@ bool checkRep(String PIN){
         val[i].waiting=false;
         val[i].Rep=true;
         val[i].PIN="";
-        Serial.println("...OK");
       }
     }
 }
 
 
 void Test(){
-
+  
 }
