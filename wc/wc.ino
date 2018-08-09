@@ -269,7 +269,7 @@ void checkWirless(){
     digitalWrite(LED_WIRLESS_COM,LOW);
     delay(70);
     digitalWrite(LED_WIRLESS_COM,HIGH);
-    //Serial2.println("<8200>");
+    //Serial2.println("<8200>"); tm
 }
 
 void checkNet(bool mode){
