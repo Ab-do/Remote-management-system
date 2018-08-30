@@ -32,7 +32,6 @@ void setup() {
   digitalWrite(RELAY1, 1);
   digitalWrite(RELAY2, 1);
   EEPROM.get(ADRESS, PINCODE);
-  
   Object();
   Serial.println(PINCODE);
   Serial.println(State);
@@ -157,8 +156,14 @@ void motorFun(int cmd)
   if (cmd == PINCODE + 1) {
     if(!contact1){
           delay(150);
-          HC12.println("J" + String(PINCODE + 3));
-    }else {
+          digitalWrite(RELAY1, HIGH);
+          StateContact1 = digitalRead(INFOCONTACT1);
+          if(StateContact1==0){
+          HC12.println("J" + String(PINCODE + 5));
+          }else {
+          digitalWrite(RELAY1, LOW);
+          }
+     }else {
       digitalWrite(RELAY1, LOW);
     }
   }
@@ -172,7 +177,13 @@ void motorFun(int cmd)
   } else if (cmd == PINCODE + 1001) {
     if(!contact2){
        delay(150);
-       HC12.println("J" + String(PINCODE + 1003));
+          digitalWrite(RELAY2, HIGH);
+          StateContact2 = digitalRead(INFOCONTACT2);
+          if(StateContact2==0){
+          HC12.println("J" + String(PINCODE + 1005));
+          }else {
+          digitalWrite(RELAY2, LOW);
+          }
     }else {
       digitalWrite(RELAY2, LOW);
     }
@@ -192,7 +203,17 @@ void pmpFun(int cmd)
   {
     if(!contact1){
       delay(150);
-      HC12.println("J" + String(PINCODE + 3));
+      digitalWrite(RELAY2, LOW);
+      delay(1000);
+      digitalWrite(RELAY2, HIGH);
+      StateContact1 = digitalRead(INFOCONTACT1);
+      if(StateContact1==0){
+        HC12.println("J" + String(PINCODE + 5));
+      }else {
+        digitalWrite(RELAY1, LOW);
+        delay(1000);
+        digitalWrite(RELAY1, HIGH);
+      }
     }else {
       digitalWrite(RELAY1, LOW);
       delay(1000);
