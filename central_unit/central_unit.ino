@@ -1,4 +1,4 @@
-// le 04/03/2018 Agadir
+// le 04/03/2019 Agadir
 // Etape 40  :  change la vitesse serial
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
@@ -8,7 +8,7 @@
 #include <SdFat.h>
 #include <CSVFile.h>
 #define PIN_SD_CS 53
-#define SD_CARD_SPEED SPI_FULL_SPEED
+#define SD_CARD_SPEED SPI_FULL_SPEED 
 //Définition RTC
 DS3231 Clock;
 SdFat sd;
@@ -30,7 +30,7 @@ const int AD_PHONE=20;
 const int AD_NUMBER_OBJ=38;
 const int AD_SETTING_SMS=51;
 const int AD_SECTOR=62;
-const int AD_RELATION_OBJ=134;
+const int AD_RELATION_OBJ=134; 
 const int AD_RELATION_PAE=210; //280
 const int NUMBER_OBJ=5;
 const int NUMBER_MAX=15;
@@ -55,7 +55,7 @@ int numberPhone[9]={0};        // nombre des objets de systeme
 int numberObj[6]={0};        // nombre des objets de systeme
 int settingSMS[4]={0};        // nombre des objets de systeme
 int objState[NUMBER_OBJ][NUMBER_MAX]={0};        // les etates des objets
-int sector[6][6]={0};        // les secteurs
+int sector[6][6]={0};        // les secteurs 
 int relationObj[6][6]={0}; // les relation entre les pompes de refoulements et les vannes
 int relationPae[5][2]={0};
 int ModeSys[3]={0};
@@ -98,12 +98,12 @@ void setup() {
     popupMessage("Il y a un problème de téléchargement.",73);
     delay(5000);
   }
-
+  
   setDataNextion("j0.val=100");
   if (!sd.begin(PIN_SD_CS, SD_CARD_SPEED))
   {
   popupMessage("La carte SD non lue!",70);
-
+  
   return;
   }
   intValve();
@@ -118,12 +118,12 @@ void setup() {
 }
 
 void loop() {
-
-  getTime(); // Mettre le temps à jour.
+  
+  getTime(); // Mettre le temps à jour. 
   getDataHc();
   getDataNextion();
   if(ModeSys[2]==1){
-    autoRunObj();
+    autoRunObj(); 
   }
   ckeckHCState();
 }
@@ -150,6 +150,7 @@ void getDataHc(){
       delay(200);
       dataFromNex=false;
     }
+   Last = millis();
   }else {
     Serial3.flush();
   }
@@ -165,7 +166,7 @@ void strToMatrix(String str){
         int j=0;
           while(str[i]!=62){
             Matrix[j]=str[i]-48;
-            j++;
+            j++; 
             i++;
             if(i>str.length()) return 0;
          }
@@ -173,13 +174,13 @@ void strToMatrix(String str){
          memset(Matrix,0,sizeof(Matrix));
       }
       else{
-         i++;
-      }
+         i++; 
+      }     
   }
 }
 // Analyse, Commutation des données et Effectuation des actions.
 void switchData(int Matrix[MTR]){
-
+ 
   switch(Matrix[0]){
     case 1: // int : int + 48.
             // Inclure les données de paramétrage.
@@ -194,7 +195,7 @@ void switchData(int Matrix[MTR]){
               }else if(Matrix[2]==4){
                 setRelationPae(Matrix);
               }else {
-
+              
                 // Erreur.
               Error();
               }
@@ -216,7 +217,7 @@ void switchData(int Matrix[MTR]){
              //  // Effectuer une action sur un objet.
             if(Matrix[1]==1){
               if(ModeSys[0]==1){
-                actionObj(Matrix);
+                actionObj(Matrix); 
               }else {
                 Error();
               }
@@ -228,7 +229,7 @@ void switchData(int Matrix[MTR]){
             break;
     case 3:
              // Fonctions liées à l'horloge.
-
+           
             if(Matrix[1]==1){ // Réglage la date et l'heure
               setTime(Matrix);
             }else if(Matrix[1]==2) { // Demmande la date et l'heure
@@ -269,7 +270,7 @@ void switchData(int Matrix[MTR]){
                   case 1:
                       getModeSys();
                   break;
-                  case 2:
+                  case 2: 
                       getStateWc();
                   break;
                   case 3:
@@ -317,14 +318,14 @@ void switchData(int Matrix[MTR]){
                     break;
                     default:
                     break;
-
+             
                   }
             }else {
               Error();
             }
             break;
     case 6:
-
+           
             switch(Matrix[3]){
               case 1:
                 restSys();
@@ -382,7 +383,7 @@ void switchData(int Matrix[MTR]){
          }else if(Matrix[1]==6){
             popupMessage("echec d'envoi SMS",71);
          }else {
-
+          
          }
      break;
      case 9:
@@ -444,7 +445,7 @@ void setNumPhone(int Matrix[MTR]){
     Serial3.println("N"+Phone);
   }
 void setPIN(int Matrix[MTR]){
-    PINcode= 10000+Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6];
+    PINcode= 10000+Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6]; 
     if(EEPROM.put(AD_PIN,PINcode)){
       successMessage(122);
     }
@@ -474,7 +475,7 @@ void actionObj(int Matrix[MTR]){
               van[sector[Matrix[4]-1][i]-1].runObj(Matrix[5]);
               delay(500);
            }
-        }
+        }  
     break;
     default:
       Error();
@@ -502,18 +503,18 @@ void progObj(int Matrix[MTR]){
     break;
     case 6:
         for(int i=0;i<6;i++){
-         if(sector[Matrix[4]-1][i]>0){
+         if(sector[Matrix[4]-1][i]>0){  
           int N= sector[Matrix[4]-1][i];
            van[N-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
          }
          }
-
+         
     break;
     default:
       Error();
             break;
   }
-
+  
   }
 void setTime(int Matrix[MTR]){
     Clock.setDate(toDec(Matrix[2],Matrix[3]));
@@ -529,13 +530,13 @@ void showTime(){}
 
 void showHist(int Matrix[MTR]){
   String HistFile;
-  Matrix[3]==9? HistFile = "Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv"
+  Matrix[3]==9? HistFile = "Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv"         
   :   HistFile = "Hist_"+String(toDec(Matrix[3],Matrix[4]))+"_"+String(toDec(Matrix[5],Matrix[6]))+"_"+String(toDec(Matrix[7],Matrix[8]))+".csv";
   if(sd.exists(HistFile.c_str())){
-      csv.open(HistFile.c_str(), O_RDWR);
+      csv.open(HistFile.c_str(), O_RDWR); 
     } else {
-      popupMessage("Aucun historique trouvé",72);
-      return 0;
+      popupMessage("Aucun historique trouvé",72);  
+      return 0; 
       }
   csv.gotoBeginOfFile();
   while(!csv.isEndOfLine()) csv.nextLine();
@@ -549,7 +550,7 @@ void showHist(int Matrix[MTR]){
     char buffer[30];
     csv.readField(buffer,30);
     setDataNextion("O"+String(j)+".txt=\""+String(buffer)+"\"");
-    csv.nextField();
+    csv.nextField(); 
     memset(buffer,0,30);
     csv.readField(buffer,7);
     setDataNextion("M"+String(j)+".txt=\""+String(buffer)+"\"");
@@ -564,7 +565,7 @@ void showHist(int Matrix[MTR]){
 //// Etats des objets
 void showState(){
     ckeckWirless();
-    getStateWc();
+    getStateWc(); 
      int S;
   for(int i=0;i<numberObj[0];i++){
      int k=i+0;
@@ -641,7 +642,7 @@ void showProg(int type,int Page){
                }
                id++;  }
                cont++;
-          }
+          } 
           }
       break;
       case 2:
@@ -674,7 +675,7 @@ void showProg(int type,int Page){
                }
                id++;  }
                cont++;
-          }
+          } 
           }
       break;
       case 4:
@@ -690,7 +691,7 @@ void showProg(int type,int Page){
                      setDataNextion("E"+String(id)+".txt=\"Inactif\"");
                }
                id++;
-
+               
           } }
           }
       break;
@@ -711,7 +712,7 @@ void showProg(int type,int Page){
           }
       break;
     }
-
+  
   }
 
 
@@ -736,13 +737,15 @@ void showProg(int type,int Page){
   }
 //// Obtenir l'Etat d'un objet
 void getState(int Matrix[MTR]){
-   int St =objState[Matrix[3]-1][toDec(Matrix[4],Matrix[5])-1];
+   int St =objState[Matrix[3]-1][toDec(Matrix[4],Matrix[5])-1];  
    switch(Matrix[3]){
       case 1:
           if(St==1){
           setDataNextion("p0.pic=57");
           }else if (St==2 || St==0){
           setDataNextion("p0.pic=52");
+          }else if(St==7){
+          setDataNextion("p0.pic=77");
           }else {
           setDataNextion("p0.pic=49");
           }
@@ -752,6 +755,8 @@ void getState(int Matrix[MTR]){
           setDataNextion("p0.pic=54");
           }else if (St==2 || St==0){
           setDataNextion("p0.pic=50");
+          }else if(St==7){
+          setDataNextion("p0.pic=78");
           }else {
           setDataNextion("p0.pic=51");
           }
@@ -761,7 +766,9 @@ void getState(int Matrix[MTR]){
           setDataNextion("p0.pic=43");
           }else if (St==2 || St==0){
           setDataNextion("p0.pic=56");
-          }else {
+          }else if(St==7){
+          setDataNextion("p0.pic=79");
+          }else{
           setDataNextion("p0.pic=53");
           }
       break;
@@ -770,7 +777,9 @@ void getState(int Matrix[MTR]){
           setDataNextion("p0.pic=55");
           }else if (St==2 || St==0){
           setDataNextion("p0.pic=47");
-          }else {
+          }else if(St==7){
+          setDataNextion("p0.pic=76");
+          }else{
           setDataNextion("p0.pic=48");
           }
       break;
@@ -779,7 +788,9 @@ void getState(int Matrix[MTR]){
           setDataNextion("p0.pic=44");
           }else if (St==2 || St==0){
           setDataNextion("p0.pic=46");
-          }else {
+          }else if(St==7){
+          setDataNextion("p0.pic=75");
+          }else{
           setDataNextion("p0.pic=45");
           }
       break;
@@ -795,7 +806,7 @@ void getAccess(){
 
 void getProg(int Matrix[MTR]){
    switch(Matrix[3]){
-      case 1:
+      case 1: 
             setDataNextion("va0.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
             setDataNextion("va1.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
             setDataNextion("va2.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
@@ -850,7 +861,7 @@ void sendPinSMS(){
   }else {
     Serial3.println("P1234");
   }
-
+  
 }
 void smsSetting(int Matrix[MTR]){
     String str="";
@@ -883,7 +894,7 @@ void getPae(int pr){
     for(int i=0;i<2;i++){
       setDataNextion("va"+String(i+1)+".val="+String(relationPae[pr-1][i]));
     }
-  }
+  } 
 void getNumSector(){
   int count=0;
   for(int i=0;i<6;i++){
@@ -918,7 +929,7 @@ void getRelation(int pr){
     for(int i=0;i<6;i++){
       setDataNextion("n"+String(i+1)+".val="+String(relationObj[pr-1][i]));
     }
-
+    
   }
 
 void getModeSys(){
@@ -948,9 +959,9 @@ void getStateWc(){
     }else {
       setDataNextion("t5_6.txt=\""+String(PerLev*100)+"\"");
     }
-
-
-
+    
+    
+     
 }
 void getNumClient(){
    setDataNextion("t27_0.txt=\""+Phone+"\"");
@@ -967,7 +978,7 @@ void setState(int Matrix[MTR]){
       addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"DEF");
     }else {
       addHist(getName(Matrix[3],toDec(Matrix[4],Matrix[5]))+"ERR");
-    }
+    } 
     getState(Matrix);  //4  1 4 101 < 8 1 0 102 2
   }
 }
@@ -1013,8 +1024,9 @@ void sysLock(int Matrix[MTR]){
     setDataNextion("page Info"); //t0.txt=\"Certificat de securite non valide.\"
     setDataNextion("t13_0.txt=\"The system has been blocked, contact your supplier !\"");
     Serial2.end();
+    setup();// tm 
   }
-
+  
 ///////////////////////////////
 void checkState(int Matrix[]){
     if(Matrix[2]<=5 && toDec(Matrix[3],Matrix[4])<=numberObj[2] &&  toDec(Matrix[3],Matrix[4])>0 && (Matrix[5]==3 || Matrix[5]==4 || Matrix[5]==5 || Matrix[5]==6)){
@@ -1022,7 +1034,7 @@ void checkState(int Matrix[]){
     }
 }
 ////////////////// les fonctions EEPROM
-////// Mettre des valeurs
+////// Mettre des valeurs 
 void Virginity(int value ){
   EEPROM[AD_VIRGINITY]=value;
   defaultPar();
@@ -1063,18 +1075,18 @@ bool loadingData(){
   delay(100);setDataNextion("j0.val=80");
   for(int i=0;i<15;i++)
       van[i].getProg();
-
+  
   delay(100); setDataNextion("j0.val=85");
   for(int i=0;i<5;i++)
       mlg[i].getProg();
   delay(100);
   setDataNextion("j0.val=90");
   for(int i=0;i<5;i++)
-      eng[i].getProg();
+      eng[i].getProg();    
   putDataNextion();
   delay(100);
   setDataNextion("j0.val=95");
-
+  
   intState();
   return true;
 }
@@ -1089,7 +1101,7 @@ void putDataNextion(){
 
 
 ////////////////// les fonctions du vérification
-///// fonction pour vérifier
+///// fonction pour vérifier 
   //  Vérification la virginité.
 bool checkVirginity(){
   int value=EEPROM[AD_VIRGINITY];
@@ -1106,14 +1118,14 @@ bool checkValidity(){
   return k;
 }
 /////////////// NEXTION
-// Mettre les données à Nextion
+// Mettre les données à Nextion 
 void setDataNextion(String data) {
   Serial2.print(data);
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.write(0xff);
-  Serial2.write(0xff);
-  Serial2.write(0xff);
+  Serial2.write(0xff); 
+  Serial2.write(0xff); 
   Serial2.write(0xff);
 
 }
@@ -1123,7 +1135,7 @@ void popupMessage(String msg,int Id){
    setDataNextion("p14_0.pic="+String(Id));
    addHist(msg);
 }
-// Affiche les informations
+// Affiche les informations 
 void successMessage(){
    if(dataFromNex){
       setDataNextion("page succes");
@@ -1165,9 +1177,9 @@ String toString(int Matrix[9]){
   String str="";
   for(int i=0;i<9;i++)
     str+=Matrix[i];
-  return str;
+  return str; 
 }
-//  Obtenir l'heure d'horloge
+//  Obtenir l'heure d'horloge 
 void getTimeNextion(){
   setDataNextion("t28_3.txt=\""+toString(Hour)+"\"");
   setDataNextion("t28_4.txt=\""+toString(Minute)+"\"");
@@ -1221,7 +1233,7 @@ void autoRunObj(){
   for(int i=0;i<5;i++)
       mlg[i].autoRun();
   for(int i=0;i<5;i++)
-      eng[i].autoRun();
+      eng[i].autoRun();  
 }
 
 
@@ -1231,7 +1243,7 @@ void sendCmd(int cmd){
   }else {
     popupMessage("Err! La boite de contact est éteint.",74);
   }
-
+      
 }
 // fonction pour ajouter l'historique.
 void addHist(String hist)
@@ -1251,7 +1263,7 @@ void addHist(String hist)
   csv.addLine();
   csv.close();
 }
-////// Initialization de la module carte SD !!
+////// Initialization de la module carte SD !! 
 bool sdInit(){
   String HistFile="Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv";
   if(!sd.exists(HistFile.c_str())){
@@ -1270,7 +1282,7 @@ bool sdInit(){
 }
 
 void Error(){
-
+  
 }
 
 
@@ -1292,14 +1304,14 @@ if((Mpin[1]+(Mpin[2]*10))<=15 && (Mpin[1]+(Mpin[2]*10))>0 && Mpin[3]<=5){
  else
     addHist(getName(Mpin[3],Mpin[1]+(Mpin[2]*10))+"OFF");
 }
-// Initialisation  les pins des vannes
+// Initialisation  les pins des vannes 
 void intValve(){
   for(int i=0;i<=numberObj[2];i++){
     pinMode(i+5,OUTPUT);
     digitalWrite(i+5,HIGH);
   }
 }
-//
+// 
 void funValve(int van,int action){
     if(action==1){
       digitalWrite(van+4,LOW);

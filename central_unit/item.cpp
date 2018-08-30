@@ -19,35 +19,35 @@ void Item::updateProg(){
               //pompe immerger
               if(EEPROM.put(AD_PROG_PIM+k,this->MatrixTime)){
                 successMessage();
-                sendStateApp(22,100+k);
+                sendStateApp(22,100+this->NumberObj);
               }
               break;
        case 2:
               //pompe refolemnt
               if(EEPROM.put(AD_PROG_PR+k,this->MatrixTime)){
                 successMessage();
-                sendStateApp(22,200+k);
+                sendStateApp(22,200+this->NumberObj);
               }
               break;
        case 3:
               //les vannes 
               if(EEPROM.put(AD_PROG_VAN+k,this->MatrixTime)){
                 successMessage();
-                sendStateApp(22,300+k);
+                sendStateApp(22,300+this->NumberObj);
               }
               break;
        case 4:
               //les pompes angre
               if(EEPROM.put(AD_PROG_MLG+k,this->MatrixTime)){
                 successMessage();
-                sendStateApp(22,400+k);
+                sendStateApp(22,400+this->NumberObj);
               }
               break;
        case 5:
               //Melengeur Angre
               if(EEPROM.put(AD_PROG_PIM+k,this->MatrixTime)){
                 successMessage();
-                sendStateApp(22,500+k);
+                sendStateApp(22,500+this->NumberObj);
               }
               break;
        default:
