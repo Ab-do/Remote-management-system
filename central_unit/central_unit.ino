@@ -1,5 +1,5 @@
-// le 04/03/2019 Agadir
-// Etape 40  :  change la vitesse serial
+// le 09/09/2019 Agadir
+// Etape 69  :  Multi-programme 
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
