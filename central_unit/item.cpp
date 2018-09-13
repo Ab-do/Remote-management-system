@@ -13,6 +13,8 @@ Item::Item(int id,int number)
 
 void Item::updateProg(){
   int k = this->NumberObj * sizeof(this->MatrixTime);
+  Serial.print("size K=");
+  Serial.println(k);
   switch((this->IdObj))
   {
        case 1:
@@ -55,14 +57,15 @@ void Item::updateProg(){
   }
 }
 
-void Item::setProg(int sHr,int sMin,int eHr,int eMin,int Type)
+void Item::setProg(int sHr,int sMin,int eHr,int eMin,int Type,int Id)
 {
   //int Matrix[5]= {sHr,sMin,eHr,eMin,Type};
- this->MatrixTime[0] =sHr+1;
- this->MatrixTime[1] =sMin+1;
- this->MatrixTime[2] =eHr+1;
- this->MatrixTime[3] =eMin+1;
- this->MatrixTime[4] =Type;
+ Serial.println("...OK");
+ this->MatrixTime[0][Id] =sHr+1;
+ this->MatrixTime[1][Id] =sMin+1;
+ this->MatrixTime[2][Id] =eHr+1;
+ this->MatrixTime[3][Id] =eMin+1;
+ this->MatrixTime[4][Id] =Type;
  this->updateProg();  
 }
 
@@ -105,20 +108,21 @@ void Item::getProg(){
 
 void Item::autoRun()
 {
-  if(this->MatrixTime[4]==3 || this->MatrixTime[4]==4){
-   if(Hour==this->MatrixTime[0]-1 && Minute==this->MatrixTime[1]-1 && Second==0) {
+  for(int ID=0;ID<5;ID++){
+  if(this->MatrixTime[4][ID]==3 || this->MatrixTime[4][ID]==4){
+   if(Hour==this->MatrixTime[0][ID]-1 && Minute==this->MatrixTime[1][ID]-1 && Second==0) {
         this->runObj(1);
         delay(800);
-      }  else if(Hour==this->MatrixTime[2]-1 && Minute==this->MatrixTime[3]-1 && Second==0)
+      }  else if(Hour==this->MatrixTime[2][ID]-1 && Minute==this->MatrixTime[3][ID]-1 && Second==0)
       {
          this->runObj(2);
          delay(800);
-         if(this->MatrixTime[4]==3){
-          this->MatrixTime[4]=5;
+         if(this->MatrixTime[4][ID]==3){
+          this->MatrixTime[4][ID]=5;
           this->updateProg();
         }
       }
-     
+    }
   }
 }
 

@@ -14,10 +14,10 @@ extern void successMessage();
 extern void funValve(int van,int action);
 extern void sendStateApp(int key,int value);
 int const AD_PROG_PIM=500;
-int const AD_PROG_PR=610;
-int const AD_PROG_VAN=790;
-int const AD_PROG_MLG=670;
-int const AD_PROG_ENG=730;
+int const AD_PROG_PR=1100;
+int const AD_PROG_VAN=1450;
+int const AD_PROG_MLG=2300;
+int const AD_PROG_ENG=2650; // to 3000
 #ifndef Item_h
 #define Item_h
 #include "Arduino.h"
@@ -28,10 +28,10 @@ class Item{
       static int  Hour,Minute,Second;
       void autoRun();
       bool runObj(int Actin);
-      void setProg(int sHr,int sMin,int eHr,int eMin,int Type);
+      void setProg(int sHr,int sMin,int eHr,int eMin,int Type,int Id);
       void getProg();
       void updateProg();
-      int MatrixTime[5]={99};
+      int MatrixTime[5][5];
       //void static setTime(int Hr,int Min,int Sec);
     private :
       int IdObj,NumberObj,Cmd;

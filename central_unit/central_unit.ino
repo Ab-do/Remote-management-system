@@ -128,12 +128,11 @@ void loop() {
   ckeckHCState();
 }
 //********* OBTEBNIR LES DONNEES
-
-
 // Obtenir des données de Nextion
 void getDataNextion(){
   if(Serial2.available()>0){
     String str=Serial2.readString();
+    Serial.println(str);
     strToMatrix(str);
     dataFromNex=true;
   }
@@ -275,6 +274,9 @@ void switchData(int Matrix[MTR]){
                   break;
                   case 3:
                       getNumClient();
+                  break;
+                  case 4:
+                     getNumProg(Matrix[3],toDec(Matrix[4],Matrix[5]));
                   break;
                   default:
                       Error();
@@ -487,25 +489,25 @@ void progObj(int Matrix[MTR]){
 
   switch(Matrix[2]){
     case 1:
-        pim[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+        pim[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5],Matrix[14]);
     break;
     case 2:
-        pr[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+        pr[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5],Matrix[14]);
     break;
     case 3:
-        van[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+        van[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5],Matrix[14]);
     break;
     case 4:
-        mlg[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+        mlg[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5],Matrix[14]);
     break;
     case 5:
-        eng[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+        eng[toDec(Matrix[3],Matrix[4])-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5],Matrix[14]);
     break;
     case 6:
         for(int i=0;i<6;i++){
          if(sector[Matrix[4]-1][i]>0){  
           int N= sector[Matrix[4]-1][i];
-           van[N-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5]);
+           van[N-1].setProg(toDec(Matrix[6],Matrix[7]),toDec(Matrix[8],Matrix[9]),toDec(Matrix[10],Matrix[11]),toDec(Matrix[12],Matrix[13]),Matrix[5],0); // 0 ID
          }
          }
          
@@ -630,86 +632,73 @@ void showProg(int type,int Page){
     switch(type){
       case 1:
           for(int j=0;j<numberObj[0];j++){
-              if(pim[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
+            for(int k=0;k<5;k++){
+              if(pim[j].MatrixTime[4][k]==3 || pim[j].MatrixTime[4][k]==4){  // P1 , T1 , A1 , E1
                 if((Page-1)*5<cont && Page*5>=cont){
-                setDataNextion("P"+String(id)+".txt=\"PIM "+String(j+1)+"\"");
-                setDataNextion("T"+String(id)+".txt=\""+toString(pim[j].MatrixTime[0]-1)+":"+toString(pim[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(id)+".txt=\""+toString(pim[j].MatrixTime[2]-1)+":"+toString(pim[j].MatrixTime[3]-1)+"\"");
-                if(pim[j].MatrixTime[4]==3 || pim[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
-               }else if(pim[j].MatrixTime[4]==5 || pim[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
+                setDataNextion("P"+String(id)+".txt=\"P Immerg. "+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(pim[j].MatrixTime[0][k]-1)+":"+toString(pim[j].MatrixTime[1][k]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(pim[j].MatrixTime[2][k]-1)+":"+toString(pim[j].MatrixTime[3][k]-1)+"\"");
+                id++;  
                }
-               id++;  }
                cont++;
-          } 
-          }
+             } 
+          }}
       break;
       case 2:
-         for(int j=0;j<numberObj[1];j++){
-           if(id<=Page*5){
-              if(pr[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
-                setDataNextion("P"+String(id)+".txt=\"PMP REF "+String(j+1)+"\"");
-                setDataNextion("T"+String(id)+".txt=\""+toString(pr[j].MatrixTime[0]-1)+":"+toString(pr[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(id)+".txt=\""+toString(pr[j].MatrixTime[2]-1)+":"+toString(pr[j].MatrixTime[3]-1)+"\"");
-                if(pr[j].MatrixTime[4]==3 || pr[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
-               }else if(pr[j].MatrixTime[4]==5 || pr[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
+         for(int j=0;j<numberObj[0];j++){
+            for(int k=0;k<5;k++){
+              if(pr[j].MatrixTime[4][k]==3 || pr[j].MatrixTime[4][k]==4){  // P1 , T1 , A1 , E1
+                if((Page-1)*5<cont && Page*5>=cont){
+                setDataNextion("P"+String(id)+".txt=\"P Roufel. "+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(pr[j].MatrixTime[0][k]-1)+":"+toString(pr[j].MatrixTime[1][k]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(pr[j].MatrixTime[2][k]-1)+":"+toString(pr[j].MatrixTime[3][k]-1)+"\"");
+                id++;  
                }
-               id++;
-          } }
-          }
+               cont++;
+             } 
+          }}
       break;
       case 3:
-         for(int j=0;j<numberObj[2];j++){
-              if(van[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
+         for(int j=0;j<numberObj[0];j++){
+            for(int k=0;k<5;k++){
+              if(van[j].MatrixTime[4][k]==3 || van[j].MatrixTime[4][k]==4){  // P1 , T1 , A1 , E1
                 if((Page-1)*5<cont && Page*5>=cont){
-                setDataNextion("P"+String(id)+".txt=\"VAN "+String(j+1)+"\"");
-                setDataNextion("T"+String(id)+".txt=\""+toString(van[j].MatrixTime[0]-1)+":"+toString(van[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(id)+".txt=\""+toString(van[j].MatrixTime[2]-1)+":"+toString(van[j].MatrixTime[3]-1)+"\"");
-                if(van[j].MatrixTime[4]==3 || van[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
-               }else if(van[j].MatrixTime[4]==5 || van[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
+                setDataNextion("P"+String(id)+".txt=\"Vanne "+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(van[j].MatrixTime[0][k]-1)+":"+toString(van[j].MatrixTime[1][k]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(van[j].MatrixTime[2][k]-1)+":"+toString(van[j].MatrixTime[3][k]-1)+"\"");
+                id++;  
                }
-               id++;  }
                cont++;
-          } 
-          }
+             } 
+          }}
       break;
       case 4:
-          for(int j=0;j<numberObj[3];j++){
-            if(id<=Page*5){
-              if(pr[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
-                setDataNextion("P"+String(id)+".txt=\"MLG "+String(j+1)+"\"");
-                setDataNextion("T"+String(id)+".txt=\""+toString(pr[j].MatrixTime[0]-1)+":"+toString(pr[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(id)+".txt=\""+toString(pr[j].MatrixTime[2]-1)+":"+toString(pr[j].MatrixTime[3]-1)+"\"");
-                if(pr[j].MatrixTime[4]==3 || pr[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
-               }else if(pr[j].MatrixTime[4]==5 || pr[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
+          for(int j=0;j<numberObj[0];j++){
+            for(int k=0;k<5;k++){
+              if(mlg[j].MatrixTime[4][k]==3 || mlg[j].MatrixTime[4][k]==4){  // P1 , T1 , A1 , E1
+                if((Page-1)*5<cont && Page*5>=cont){
+                setDataNextion("P"+String(id)+".txt=\"Melangeur "+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(mlg[j].MatrixTime[0][k]-1)+":"+toString(mlg[j].MatrixTime[1][k]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(mlg[j].MatrixTime[2][k]-1)+":"+toString(mlg[j].MatrixTime[3][k]-1)+"\"");
+                id++;  
                }
-               id++;
-               
-          } }
-          }
+               cont++;
+             } 
+          }}
       break;
       case 5:
-          for(int j=0;j<numberObj[4];j++){
-           if(id<=Page*5){
-              if(eng[j].MatrixTime[4]>1){  // P1 , T1 , A1 , E1
-                setDataNextion("P"+String(id)+".txt=\"PMP ANG "+String(j+1)+"\"");
-                setDataNextion("T"+String(id)+".txt=\""+toString(eng[j].MatrixTime[0]-1)+":"+toString(eng[j].MatrixTime[1]-1)+"\"");
-                setDataNextion("A"+String(id)+".txt=\""+toString(eng[j].MatrixTime[2]-1)+":"+toString(eng[j].MatrixTime[3]-1)+"\"");
-                if(eng[j].MatrixTime[4]==3 || eng[j].MatrixTime[4]==4 ){
-                     setDataNextion("E"+String(id)+".txt=\"Actif\"");
-               }else if(eng[j].MatrixTime[4]==5 || eng[j].MatrixTime[4]==6){
-                     setDataNextion("E"+String(id)+".txt=\"Inactif\"");
+          for(int j=0;j<numberObj[0];j++){
+            for(int k=0;k<5;k++){
+              if(eng[j].MatrixTime[4][k]==3 || eng[j].MatrixTime[4][k]==4){  // P1 , T1 , A1 , E1
+                if((Page-1)*5<cont && Page*5>=cont){
+                setDataNextion("P"+String(id)+".txt=\"P. Engrais"+String(j+1)+"\"");
+                setDataNextion("T"+String(id)+".txt=\""+toString(eng[j].MatrixTime[0][k]-1)+":"+toString(eng[j].MatrixTime[1][k]-1)+"\"");
+                setDataNextion("A"+String(id)+".txt=\""+toString(eng[j].MatrixTime[2][k]-1)+":"+toString(eng[j].MatrixTime[3][k]-1)+"\"");
+                id++;  
                }
-               id++;
-          } }
-          }
+               cont++;
+             } 
+          }}
       break;
     }
   
@@ -807,39 +796,39 @@ void getAccess(){
 void getProg(int Matrix[MTR]){
    switch(Matrix[3]){
       case 1: 
-            setDataNextion("va0.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
-            setDataNextion("St.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
+            setDataNextion("va0.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0][Matrix[6]]-1));
+            setDataNextion("va1.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1][Matrix[6]]-1));
+            setDataNextion("va2.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2][Matrix[6]]-1));
+            setDataNextion("va3.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3][Matrix[6]]-1));
+            setDataNextion("St.val="+String(pim[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4][Matrix[6]]));
       break;
       case 2:
-            setDataNextion("va0.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
-            setDataNextion("St.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
+            setDataNextion("va0.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0][Matrix[6]]-1));
+            setDataNextion("va1.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1][Matrix[6]]-1));
+            setDataNextion("va2.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2][Matrix[6]]-1));
+            setDataNextion("va3.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3][Matrix[6]]-1));
+            setDataNextion("St.val="+String(pr[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4][Matrix[6]]));
       break;
       case 3:
-            setDataNextion("va0.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
-            setDataNextion("St.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
+            setDataNextion("va0.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0][Matrix[6]]-1));
+            setDataNextion("va1.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1][Matrix[6]]-1));
+            setDataNextion("va2.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2][Matrix[6]]-1));
+            setDataNextion("va3.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3][Matrix[6]]-1));
+            setDataNextion("St.val="+String(van[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4][Matrix[6]]));
       break;
       case 4:
-            setDataNextion("va0.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
-            setDataNextion("St.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
+            setDataNextion("va0.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0][Matrix[6]]-1));
+            setDataNextion("va1.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1][Matrix[6]]-1));
+            setDataNextion("va2.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2][Matrix[6]]-1));
+            setDataNextion("va3.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3][Matrix[6]]-1));
+            setDataNextion("St.val="+String(mlg[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4][Matrix[6]]));
       break;
       case 5:
-            setDataNextion("va0.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0]-1));
-            setDataNextion("va1.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1]-1));
-            setDataNextion("va2.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2]-1));
-            setDataNextion("va3.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3]-1));
-            setDataNextion("St.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4]));
+            setDataNextion("va0.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[0][Matrix[6]]-1));
+            setDataNextion("va1.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[1][Matrix[6]]-1));
+            setDataNextion("va2.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[2][Matrix[6]]-1));
+            setDataNextion("va3.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[3][Matrix[6]]-1));
+            setDataNextion("St.val="+String(eng[toDec(Matrix[4],Matrix[5])-1].MatrixTime[4][Matrix[6]]));
       break;
       default:
            Error();
@@ -966,6 +955,66 @@ void getStateWc(){
 void getNumClient(){
    setDataNextion("t27_0.txt=\""+Phone+"\"");
 }
+void getNumProg(int OBJ,int NUM){
+  int count=0;
+  Serial.println(OBJ);
+  Serial.println(NUM);
+  
+  Serial.println(pim[NUM-1].MatrixTime[0][0]);
+  Serial.println(pim[NUM-1].MatrixTime[1][0]);
+  Serial.println(pim[NUM-1].MatrixTime[2][0]);
+  Serial.println(pim[NUM-1].MatrixTime[3][0]);
+  Serial.println(pim[NUM-1].MatrixTime[4][0]);
+  switch(OBJ){
+    case 1:
+       for(int i=0;i<5;i++){
+         if(pim[NUM-1].MatrixTime[4][i]==4 || pim[NUM-1].MatrixTime[4][i]==3){
+           setDataNextion("b31_"+String(i+2)+".picc=81");
+           count++;
+         }
+       }
+       setDataNextion("id_6.val="+String(count));
+    break;
+    case 2:
+     for(int i=0;i<5;i++){
+         if(pr[NUM-1].MatrixTime[4][i]==4 || pr[NUM-1].MatrixTime[4][i]==3){
+           setDataNextion("b31_"+String(i+2)+".picc=81");
+           count++;
+         }
+       }
+       setDataNextion("id_6.val="+String(count));
+    break;
+    case 3:
+    for(int i=0;i<5;i++){
+         if(van[NUM-1].MatrixTime[4][i]==4 || van[NUM-1].MatrixTime[4][i]==3){
+           setDataNextion("b31_"+String(i+2)+".picc=81");
+           count++;
+         }
+       }
+      setDataNextion("id_6.val="+String(count));
+    break;
+    case 4:
+    for(int i=0;i<5;i++){
+         if(mlg[NUM-1].MatrixTime[4][i]==4 || mlg[NUM-1].MatrixTime[4][i]==3){
+           setDataNextion("b31_"+String(i+2)+".picc=81");
+           count++;
+         }
+       }
+       setDataNextion("id_6.val="+String(count));
+    break;
+    case 5:
+    for(int i=0;i<5;i++){
+         if(eng[NUM-1].MatrixTime[4][i]==4 || eng[NUM-1].MatrixTime[4][i]==3){
+           setDataNextion("b31_"+String(i+2)+".picc=81");
+           count++;
+         }
+       }
+       setDataNextion("id_6.val="+String(count));
+    break;
+    default:
+    break;
+  }
+  }
 /////////// PARTIE 6 les etats
 void setState(int Matrix[MTR]){
   if(Matrix[3]<=NUMBER_OBJ && toDec(Matrix[4],Matrix[5])<=NUMBER_MAX){
@@ -1121,6 +1170,7 @@ bool checkValidity(){
 // Mettre les données à Nextion 
 void setDataNextion(String data) {
   Serial2.print(data);
+  Serial.println(data); //tmp
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.write(0xff);
@@ -1224,15 +1274,15 @@ String getName(int Obj,int Number){
 }
 // fonction class
 void autoRunObj(){
-  for(int i=0;i<10;i++)
+  for(int i=0;i<=numberObj[0];i++)
       pim[i].autoRun();
-  for(int i=0;i<5;i++)
+  for(int i=0;i<=numberObj[1];i++)
       pr[i].autoRun();
-  for(int i=0;i<15;i++)
+  for(int i=0;i<=numberObj[2];i++)
       van[i].autoRun();
-  for(int i=0;i<5;i++)
+  for(int i=0;i<=numberObj[3];i++)
       mlg[i].autoRun();
-  for(int i=0;i<5;i++)
+  for(int i=0;i<=numberObj[4];i++)
       eng[i].autoRun();  
 }
 
