@@ -48,7 +48,7 @@ void setup() {
   Serial3.begin(9600); // Module GSM  SIM800L
   GSMmodule.begin();
   Serial2.begin(9600); // Module radio HC12
-  Serial2.setTimeout(70);
+  //Serial2.setTimeout(70);
   //Serial.println("Start-up");
   pinMode(LED_START,OUTPUT);
   pinMode(LED_WIRLESS_COM,OUTPUT);
