@@ -154,7 +154,6 @@ void motorFun(int cmd)
           }else {
           delay(5000);
           digitalWrite(RELAY1, LOW);
-          HC12.println("J" + String(PINCODE + 3));
           }
      }else {
       digitalWrite(RELAY1, LOW);
@@ -177,7 +176,6 @@ void motorFun(int cmd)
           }else {
           delay(5000);
           digitalWrite(RELAY2, LOW);
-          HC12.println("J" + String(PINCODE + 1003));
           }
     }else {
       digitalWrite(RELAY2, LOW);
@@ -209,7 +207,6 @@ void pmpFun(int cmd)
         digitalWrite(RELAY1, LOW);
         delay(500);
         digitalWrite(RELAY1, HIGH);
-        HC12.println("J" + String(PINCODE + 3));
       }
     }else {
       digitalWrite(RELAY1, LOW);
