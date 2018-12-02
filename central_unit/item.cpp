@@ -13,8 +13,6 @@ Item::Item(int id,int number)
 
 void Item::updateProg(){
   int k = this->NumberObj * sizeof(this->MatrixTime);
-  Serial.print("size K=");
-  Serial.println(k);
   switch((this->IdObj))
   {
        case 1:
@@ -39,15 +37,13 @@ void Item::updateProg(){
               }
               break;
        case 4:
-              //les pompes angre
               if(EEPROM.put(AD_PROG_MLG+k,this->MatrixTime)){
                 successMessage();
                 sendStateApp(22,400+this->NumberObj);
               }
               break;
        case 5:
-              //Melengeur Angre
-              if(EEPROM.put(AD_PROG_PIM+k,this->MatrixTime)){
+              if(EEPROM.put(AD_PROG_ENG+k,this->MatrixTime)){
                 successMessage();
                 sendStateApp(22,500+this->NumberObj);
               }
@@ -60,7 +56,6 @@ void Item::updateProg(){
 void Item::setProg(int sHr,int sMin,int eHr,int eMin,int Type,int Id)
 {
   //int Matrix[5]= {sHr,sMin,eHr,eMin,Type};
- Serial.println("...OK");
  this->MatrixTime[0][Id] =sHr+1;
  this->MatrixTime[1][Id] =sMin+1;
  this->MatrixTime[2][Id] =eHr+1;
@@ -91,12 +86,12 @@ void Item::getProg(){
               AD=AD_PROG_VAN+k;
               break;
        case 4:
-              //les pompes angre
+              //Melengeur 
               EEPROM.get(AD_PROG_MLG+k,this->MatrixTime);
               AD=AD_PROG_MLG+k;
               break;
        case 5:
-              //Melengeur Angre
+              //les pompes à engrais
               EEPROM.get(AD_PROG_ENG+k,this->MatrixTime);
               AD=AD_PROG_ENG+k;
               break;
@@ -200,6 +195,14 @@ bool Item::runObj(int Action)
             }
            break;
     case 4://****************************************************
+          if(Action==1 || Action==2){
+            sendCmd(this->Cmd+Action);
+            //sendStateApp(,this->Cmd+Action);
+          } else if(Action==8){
+              sendCmd(this->Cmd);
+          }
+          break;
+     case 5:
           //pompe a angre 
           if(Action==1 && checkPrPae()) {
              sendCmd(this->Cmd+Action);
@@ -219,14 +222,6 @@ bool Item::runObj(int Action)
           }else if(Action==8){
               sendCmd(this->Cmd);
             }
-          break;
-     case 5:
-          if(Action==1 || Action==2){
-            sendCmd(this->Cmd+Action);
-            //sendStateApp(,this->Cmd+Action);
-          } else if(Action==8){
-              sendCmd(this->Cmd);
-          }
           break;
     default:
            break;
@@ -291,7 +286,7 @@ bool Item::checkPrPae()
 //**************************condition 5***************************
 bool Item::checkPae()
 { 
-  if(objState[3][relationPae[(this->NumberObj)-1][0]-1]==1){ return false; }
+  if(objState[4][relationPae[(this->NumberObj)-1][0]-1]==1){ return false; }
   return true;
 }
 

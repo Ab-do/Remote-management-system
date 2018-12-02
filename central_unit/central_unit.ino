@@ -45,6 +45,7 @@ unsigned long Time = millis();
 unsigned long Last = millis();
 String Phone="669600729"; // numéro de Tel.
 String StePhone="669600729";
+String StrLm="";
 int sysTime=9999;
 int PINcode=11234;
 int Hour,Minute,Second,Date,Month,Year;
@@ -132,7 +133,6 @@ void loop() {
 void getDataNextion(){
   if(Serial2.available()>0){
     String str=Serial2.readString();
-    Serial.println(str);
     strToMatrix(str);
     dataFromNex=true;
   }
@@ -638,6 +638,11 @@ void showProg(int type,int Page){
                 setDataNextion("P"+String(id)+".txt=\"P Immerg. "+String(j+1)+"\"");
                 setDataNextion("T"+String(id)+".txt=\""+toString(pim[j].MatrixTime[0][k]-1)+":"+toString(pim[j].MatrixTime[1][k]-1)+"\"");
                 setDataNextion("A"+String(id)+".txt=\""+toString(pim[j].MatrixTime[2][k]-1)+":"+toString(pim[j].MatrixTime[3][k]-1)+"\"");
+                if(pim[j].MatrixTime[4][k]==4){
+                  setDataNextion("E"+String(id)+".txt=\"Quotidien\"");
+                }else {
+                  setDataNextion("E"+String(id)+".txt=\"1 fois\"");
+                }
                 id++;  
                }
                cont++;
@@ -652,6 +657,11 @@ void showProg(int type,int Page){
                 setDataNextion("P"+String(id)+".txt=\"P Roufel. "+String(j+1)+"\"");
                 setDataNextion("T"+String(id)+".txt=\""+toString(pr[j].MatrixTime[0][k]-1)+":"+toString(pr[j].MatrixTime[1][k]-1)+"\"");
                 setDataNextion("A"+String(id)+".txt=\""+toString(pr[j].MatrixTime[2][k]-1)+":"+toString(pr[j].MatrixTime[3][k]-1)+"\"");
+                if(pr[j].MatrixTime[4][k]==4){
+                  setDataNextion("E"+String(id)+".txt=\"Quotidien\"");
+                }else {
+                  setDataNextion("E"+String(id)+".txt=\"1 fois\"");
+                }
                 id++;  
                }
                cont++;
@@ -666,6 +676,11 @@ void showProg(int type,int Page){
                 setDataNextion("P"+String(id)+".txt=\"Vanne "+String(j+1)+"\"");
                 setDataNextion("T"+String(id)+".txt=\""+toString(van[j].MatrixTime[0][k]-1)+":"+toString(van[j].MatrixTime[1][k]-1)+"\"");
                 setDataNextion("A"+String(id)+".txt=\""+toString(van[j].MatrixTime[2][k]-1)+":"+toString(van[j].MatrixTime[3][k]-1)+"\"");
+                if(van[j].MatrixTime[4][k]==4){
+                  setDataNextion("E"+String(id)+".txt=\"Quotidien\"");
+                }else {
+                  setDataNextion("E"+String(id)+".txt=\"1 fois\"");
+                }
                 id++;  
                }
                cont++;
@@ -680,6 +695,11 @@ void showProg(int type,int Page){
                 setDataNextion("P"+String(id)+".txt=\"Melangeur "+String(j+1)+"\"");
                 setDataNextion("T"+String(id)+".txt=\""+toString(mlg[j].MatrixTime[0][k]-1)+":"+toString(mlg[j].MatrixTime[1][k]-1)+"\"");
                 setDataNextion("A"+String(id)+".txt=\""+toString(mlg[j].MatrixTime[2][k]-1)+":"+toString(mlg[j].MatrixTime[3][k]-1)+"\"");
+                if(mlg[j].MatrixTime[4][k]==4){
+                  setDataNextion("E"+String(id)+".txt=\"Quotidien\"");
+                }else {
+                  setDataNextion("E"+String(id)+".txt=\"1 fois\"");
+                }
                 id++;  
                }
                cont++;
@@ -691,9 +711,14 @@ void showProg(int type,int Page){
             for(int k=0;k<5;k++){
               if(eng[j].MatrixTime[4][k]==3 || eng[j].MatrixTime[4][k]==4){  // P1 , T1 , A1 , E1
                 if((Page-1)*5<cont && Page*5>=cont){
-                setDataNextion("P"+String(id)+".txt=\"P. Engrais"+String(j+1)+"\"");
+                setDataNextion("P"+String(id)+".txt=\"P. Engrais "+String(j+1)+"\"");
                 setDataNextion("T"+String(id)+".txt=\""+toString(eng[j].MatrixTime[0][k]-1)+":"+toString(eng[j].MatrixTime[1][k]-1)+"\"");
                 setDataNextion("A"+String(id)+".txt=\""+toString(eng[j].MatrixTime[2][k]-1)+":"+toString(eng[j].MatrixTime[3][k]-1)+"\"");
+                if(eng[j].MatrixTime[4][k]==4){
+                  setDataNextion("E"+String(id)+".txt=\"Quotidien\"");
+                }else {
+                  setDataNextion("E"+String(id)+".txt=\"1 fois\"");
+                }
                 id++;  
                }
                cont++;
@@ -762,6 +787,17 @@ void getState(int Matrix[MTR]){
           }
       break;
       case 4:
+        if(St==1){
+          setDataNextion("p0.pic=44");
+          }else if (St==2 || St==0){
+          setDataNextion("p0.pic=46");
+          }else if(St==7){
+          setDataNextion("p0.pic=75");
+          }else{
+          setDataNextion("p0.pic=45");
+          }
+      break;
+      case 5:
           if(St==1){
           setDataNextion("p0.pic=55");
           }else if (St==2 || St==0){
@@ -770,17 +806,6 @@ void getState(int Matrix[MTR]){
           setDataNextion("p0.pic=76");
           }else{
           setDataNextion("p0.pic=48");
-          }
-      break;
-      case 5:
-          if(St==1){
-          setDataNextion("p0.pic=44");
-          }else if (St==2 || St==0){
-          setDataNextion("p0.pic=46");
-          }else if(St==7){
-          setDataNextion("p0.pic=75");
-          }else{
-          setDataNextion("p0.pic=45");
           }
       break;
       default:
@@ -957,14 +982,6 @@ void getNumClient(){
 }
 void getNumProg(int OBJ,int NUM){
   int count=0;
-  Serial.println(OBJ);
-  Serial.println(NUM);
-  
-  Serial.println(pim[NUM-1].MatrixTime[0][0]);
-  Serial.println(pim[NUM-1].MatrixTime[1][0]);
-  Serial.println(pim[NUM-1].MatrixTime[2][0]);
-  Serial.println(pim[NUM-1].MatrixTime[3][0]);
-  Serial.println(pim[NUM-1].MatrixTime[4][0]);
   switch(OBJ){
     case 1:
        for(int i=0;i<5;i++){
@@ -1050,10 +1067,19 @@ void restSys(){
     for (int i = 1 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
     if(i%400==0){
-      setDataNextion("j30_0.val="+String(j+10));
+      j=j+10;
+      setDataNextion("j30_0.val="+String(j));
     }
   }
-  setup();
+   memset(numberObj, 0, sizeof(numberObj));
+   memset(settingSMS, 0, sizeof(settingSMS));
+   memset(objState, 0, sizeof(objState));
+   memset(sector, 0, sizeof(sector));
+   memset(relationObj, 0, sizeof(relationObj));
+   memset(relationPae, 0, sizeof(relationPae));
+   memset(ModeSys, 0, sizeof(ModeSys));
+   delay(700);
+   setup();
   }
 
 void getValueRelation(){
@@ -1116,22 +1142,22 @@ bool loadingData(){
   EEPROM.get(AD_RELATION_OBJ,relationObj);
   delay(100);setDataNextion("j0.val=70");
   EEPROM.get(AD_RELATION_PAE,relationPae);
-  for(int i=0;i<10;i++)
+  for(int i=0;i<numberObj[0];i++)
       pim[i].getProg();
   delay(100);setDataNextion("j0.val=75");
-  for(int i=0;i<5;i++)
+  for(int i=0;i<numberObj[1];i++)
       pr[i].getProg();
   delay(100);setDataNextion("j0.val=80");
-  for(int i=0;i<15;i++)
+  for(int i=0;i<numberObj[2];i++)
       van[i].getProg();
-  
   delay(100); setDataNextion("j0.val=85");
-  for(int i=0;i<5;i++)
+  for(int i=0;i<numberObj[3];i++)
       mlg[i].getProg();
   delay(100);
   setDataNextion("j0.val=90");
-  for(int i=0;i<5;i++)
+  for(int i=0;i<numberObj[4];i++)
       eng[i].getProg();    
+  delay(100);
   putDataNextion();
   delay(100);
   setDataNextion("j0.val=95");
@@ -1170,7 +1196,6 @@ bool checkValidity(){
 // Mettre les données à Nextion 
 void setDataNextion(String data) {
   Serial2.print(data);
-  Serial.println(data); //tmp
   Serial2.write(0xff);
   Serial2.write(0xff);
   Serial2.write(0xff);
@@ -1298,6 +1323,9 @@ void sendCmd(int cmd){
 // fonction pour ajouter l'historique.
 void addHist(String hist)
 {
+  if(hist!=StrLm || hist=="start-up"){
+  StrLm=hist;
+  delay(10);
   String Time,Day;
   if(Hour<10)   { Time  ="0"+String(Hour); }     else { Time=String(Hour); }
   if(Minute<10) { Time+=" : 0"+String(Minute); }  else { Time+=" : "+String(Minute); }
@@ -1312,6 +1340,7 @@ void addHist(String hist)
   csv.addField(Day.c_str());
   csv.addLine();
   csv.close();
+  }
 }
 ////// Initialization de la module carte SD !! 
 bool sdInit(){
