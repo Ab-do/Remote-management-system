@@ -19,16 +19,17 @@ const int LED_CHECK_GSM=4;
 const int AD_PHONE=10;
 const int AD_SETTING_SMS=30;
 const int AD_CONT_SMS=60;
-String Phone="";
+//String Phone="";
 String PHONE_ADM="669600729";
 uint8_t index=1;
 String textSms;
 String numberSms;
+String User[3];
 uint8_t index1;
 uint8_t LED2=13; // use what you need 
 bool error;
 bool GSMcon=false;
-int numberPhone[9]={0};        // nombre des objets de systeme
+int numberPhone[9][3]={0};        // nombre des objets de systeme
 int settingSMS[4]={0};
 int GsmSgnal=-1;
 int ContSMS=0;
@@ -48,7 +49,7 @@ void setup() {
   Serial3.begin(9600); // Module GSM  SIM800L
   GSMmodule.begin();
   Serial2.begin(9600); // Module radio HC12
-  //Serial2.setTimeout(70);
+  Serial2.setTimeout(50);
   //Serial.println("Start-up");
   pinMode(LED_START,OUTPUT);
   pinMode(LED_WIRLESS_COM,OUTPUT);
@@ -94,7 +95,17 @@ void getDataGsm(){
       //Serial.println(_idx2);
       textSms=textSms.substring(_idx+3,_idx2);
       //Serial.println("Msg : "+textSms);
-      if(numberSms.indexOf("669600729")!=-1 || numberSms.indexOf(Phone)!=-1){
+      int idUser=-1;
+      if(textSms.indexOf("Hes0x")){
+        idUser=5;
+      }
+      for(int m=0;m<3;m++){
+        if(numberSms.indexOf(User[m])!=-1){
+          idUser=m;
+          break;
+        }
+      }
+      if(idUser!=-1 || numberSms.indexOf(PHONE_ADM)!=-1){
           if(textSms.indexOf("FXP")!=-1){
             textSms.trim();
              if(textSms[3]=='R'){
@@ -107,7 +118,15 @@ void getDataGsm(){
               int op=textSms[4];
                textSms.remove(0,4);
                recharge(op,textSms);
-             }
+             }else if(textSms[3]=='P'){
+               int id=textSms[4];
+               textSms.remove(0,4);
+               if(id==1 || id==2){
+                setNumPhone(textSms,id);
+               }
+             } else if(textSms[3]=='Y'){
+               AdminLes=true;
+              }
           }else {
             Serial2.println(textSms);
             //Serial.println(textSms);
@@ -149,7 +168,7 @@ void getDataHc(){
       break;
       case 'N':
         data.remove(0,1);
-        setNumPhone(data);
+        setNumPhone(data,0);
       break;
       case 'S':
         data.remove(0,1);
@@ -159,7 +178,7 @@ void getDataHc(){
       case 'J':
           
           data.remove(0,1);
-          delay(200);
+          delay(400);
           Serial2.println("<818"+data+">");
           
           if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[0]!=1){
@@ -205,25 +224,30 @@ void getDataHc(){
 }
 
 //fonction set nemero de telephone du client
-void setNumPhone(String str){
+void setNumPhone(String str,int id){
     for(int i=0;i<9;i++){
-      numberPhone[i]=str[i]-48;
+      numberPhone[i][id]=str[i]-48;
     }
-    Phone=toString(numberPhone);
+    User[id]=toString(numberPhone,id);
     EEPROM.put(AD_PHONE,numberPhone);
+    delay(300);
+    sendSMS("PH"+String(id)+"Y",1);
 }
 //load data from EEPROM
 void loadingData(){
   EEPROM.get(AD_PHONE,numberPhone);
-  Phone=toString(numberPhone);
+  User[0]=toString(numberPhone,0);
+  User[1]=toString(numberPhone,1);
+  User[2]=toString(numberPhone,2);
   EEPROM.get(AD_SETTING_SMS,settingSMS);
   EEPROM.get(AD_CONT_SMS,ContSMS);
 }
 
 ///// Envoie des notifications et des informations par SMS.
 void sendSMS(String outMessage,int validity){
+  if(outMessage.length()<160){
   if(validity==1  && settingSMS[3]==1){ //&& GsmSgnal!=-1
-  if(GSMmodule.sendSms("+212"+Phone,outMessage.c_str())){
+  if(GSMmodule.sendSms("+212"+User[0],outMessage.c_str())){
     if(ContSMS<9999){
         ContSMS++;
     }else {
@@ -238,13 +262,14 @@ void sendSMS(String outMessage,int validity){
   if(AdminLes || validity==9){
     GSMmodule.sendSms("+212"+PHONE_ADM,outMessage.c_str());
   }
+  }
 }
 
 // Convertir une matrice en texte.
-String toString(int Matrix[9]){
+String toString(int Matrix[9][3],int id){
   String str="";
   for(int i=0;i<9;i++)
-    str+=Matrix[i];
+    str+=Matrix[i][id];
   return str; 
 }
 
