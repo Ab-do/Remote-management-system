@@ -17,8 +17,8 @@ const int LED_START=3;
 const int LED_WIRLESS_COM=2;
 const int LED_CHECK_GSM=4;
 const int AD_PHONE=10;
-const int AD_SETTING_SMS=30;
-const int AD_CONT_SMS=60;
+const int AD_SETTING_SMS=70;
+const int AD_CONT_SMS=100;
 //String Phone="";
 String PHONE_ADM="669600729";
 uint8_t index=1;
@@ -140,6 +140,9 @@ void getDataGsm(){
       Serial3.println(F("AT+CMGDA=\"DEL ALL\""));
       delay(100);
       Serial3.print("AT+CMGD=1,4\n\r");
+      if(GSMmodule.delAllSms()){
+        Serial2.println("delAllSms");
+      }
    }
    Last=millis();
    textSms="";
@@ -166,7 +169,7 @@ void getDataHc(){
           checkNet(true);
           }
       break;
-      case 'N':
+      case 'M':
         data.remove(0,1);
         setNumPhone(data,0);
       break;
@@ -225,6 +228,10 @@ void getDataHc(){
 
 //fonction set nemero de telephone du client
 void setNumPhone(String str,int id){
+  str.trim();
+  Serial2.println(str);
+  Serial2.println(str.length());
+  if(str.length()==9){
     for(int i=0;i<9;i++){
       numberPhone[i][id]=str[i]-48;
     }
@@ -232,6 +239,10 @@ void setNumPhone(String str,int id){
     EEPROM.put(AD_PHONE,numberPhone);
     delay(300);
     sendSMS("PH"+String(id)+"Y",1);
+       
+  }else {
+    Serial2.println("Num Err: "+str);
+  }
 }
 //load data from EEPROM
 void loadingData(){
@@ -247,6 +258,8 @@ void loadingData(){
 void sendSMS(String outMessage,int validity){
   if(outMessage.length()<160){
   if(validity==1  && settingSMS[3]==1){ //&& GsmSgnal!=-1
+    Serial2.println("+212"+User[0]);
+    Serial2.println(outMessage.c_str());
   if(GSMmodule.sendSms("+212"+User[0],outMessage.c_str())){
     if(ContSMS<9999){
         ContSMS++;
@@ -257,6 +270,10 @@ void sendSMS(String outMessage,int validity){
     Last=millis();
     }else {
       Serial2.println("<86>");
+      delay(100);
+      if(GSMmodule.delAllSms()){
+        Serial2.println("delAllSms");
+      }
     }
   }
   if(AdminLes || validity==9){
