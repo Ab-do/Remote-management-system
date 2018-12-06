@@ -444,7 +444,7 @@ void setNumPhone(int Matrix[MTR]){
     if(EEPROM.put(AD_PHONE,numberPhone)){
       successMessage(121);
     }
-    Serial3.println("N"+Phone);
+    Serial3.println("M"+Phone);
   }
 void setPIN(int Matrix[MTR]){
     PINcode= 10000+Matrix[3]*1000+Matrix[4]*100+Matrix[5]*10+Matrix[6]; 
@@ -1468,8 +1468,6 @@ void getAppNumObj(){
     msg+=toString(numberObj[5]);
     delay(100);
     Serial3.println(msg);
-    delay(100);
-    getAppState();
 }
 
 void getAppState(){
