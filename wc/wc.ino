@@ -19,6 +19,7 @@ const int LED_CHECK_GSM=4;
 const int AD_PHONE=10;
 const int AD_SETTING_SMS=70;
 const int AD_CONT_SMS=100;
+const int NBR_CHAR_PHONE=10;
 //String Phone="";
 String PHONE_ADM="669600729";
 uint8_t index=1;
@@ -29,7 +30,7 @@ uint8_t index1;
 uint8_t LED2=13; // use what you need 
 bool error;
 bool GSMcon=false;
-int numberPhone[9][3]={0};        // nombre des objets de systeme
+int numberPhone[NBR_CHAR_PHONE][3]={0};        // nombre des objets de systeme
 int settingSMS[4]={0};
 int GsmSgnal=-1;
 int ContSMS=0;
@@ -42,7 +43,7 @@ unsigned long replayCmd=millis();
 bool SMS_Responce=false;
 bool waitingPIN=false;
 bool starRep=false;
-bool AdminLes=false;
+int AdminLes=0;
 SIM800L GSMmodule;
 void setup() {
   Serial.begin(9600);  // Moniteur série
@@ -67,7 +68,7 @@ void setup() {
   Serial3.println("AT+CMGF=1");
   Serial3.println("AT+CNMI=3,3,0,0,0");
   delay(300);
-  sendSMS("GB-9467",1);
+  sendSMS("GB-9467",1,3);
   Serial3.println(F("AT+CMGDA=\"DEL ALL\""));
   delay(300);
   Serial2.println("<83>");
@@ -96,7 +97,7 @@ void getDataGsm(){
       textSms=textSms.substring(_idx+3,_idx2);
       //Serial.println("Msg : "+textSms);
       int idUser=-1;
-      if(textSms.indexOf("Hes0x")){
+      if(textSms.indexOf("Hes0x")!=-1){
         idUser=5;
       }
       for(int m=0;m<3;m++){
@@ -105,6 +106,9 @@ void getDataGsm(){
           break;
         }
       }
+      
+      Serial2.println("IdUser : "+String(idUser));
+      
       if(idUser!=-1 || numberSms.indexOf(PHONE_ADM)!=-1){
           if(textSms.indexOf("FXP")!=-1){
             textSms.trim();
@@ -115,34 +119,30 @@ void getDataGsm(){
              }else if (textSms[3]=='E'){
                 checkConx();
              }else if(textSms[3]=='D'){
-              int op=textSms[4];
+              int op=textSms[4]-'0';
                textSms.remove(0,4);
                recharge(op,textSms);
              }else if(textSms[3]=='P'){
-               int id=textSms[4];
-               textSms.remove(0,4);
-               if(id==1 || id==2){
-                setNumPhone(textSms,id);
-               }
+               int id=textSms[4]-'0';
+               numberPhone[0][id]=textSms[5]-'0';
+               textSms.remove(0,6);
+                 if(id==0 || id==1 || id==2){
+                  Serial2.println(textSms);
+                  setNumPhone(textSms,id);
+                 }
              } else if(textSms[3]=='Y'){
-               AdminLes=true;
+              
+               AdminLes=textSms[4]-'0';
               }
           }else {
             Serial2.println(textSms);
-            //Serial.println(textSms);
           }
       }else {
-        sendSMS(numberSms+"\n"+textSms,1);
+        sendSMS(numberSms+"\n"+textSms,1,1);
       }
       delay(30);
       Serial3.println("AT+CMGD=1");  
-      delay(100);
-      Serial3.println(F("AT+CMGDA=\"DEL ALL\""));
-      delay(100);
-      Serial3.print("AT+CMGD=1,4\n\r");
-      if(GSMmodule.delAllSms()){
-        Serial2.println("delAllSms");
-      }
+      GSMmodule.delAllSms();
    }
    Last=millis();
    textSms="";
@@ -165,34 +165,32 @@ void getDataHc(){
           checkWirless();
           checkNet(true);
          }else if(data[1]=='d'){
-          sendSMS("GB-9478",1);
+          sendSMS("GB-9478",1,3);
           checkNet(true);
           }
       break;
       case 'M':
         data.remove(0,1);
+        numberPhone[0][0]=1;
         setNumPhone(data,0);
       break;
       case 'S':
         data.remove(0,1);
-        //Serial.println(data);
         setSettingSMS(data);
       break;
       case 'J':
-          
           data.remove(0,1);
           delay(400);
           Serial2.println("<818"+data+">");
-          
           if(SMS_Responce==true && millis()-CheckSMS<20000 && settingSMS[0]!=1){
                 //Serial.println("SMS send");
-                sendSMS("Gx21"+data,1);
+                sendSMS("Gx21"+data,1,3);
                 SMS_Responce==false;
            }else {
                 if(data[3]=='3' || data[3]=='4'){
-                  sendSMS("Gx21"+data,settingSMS[0]);
+                  sendSMS("Gx21"+data,settingSMS[0],3);
                 }else {
-                  sendSMS("Gx21"+data,settingSMS[2]);
+                  sendSMS("Gx21"+data,settingSMS[2],3);
                 }
                 SMS_Responce==false;
            }
@@ -200,7 +198,7 @@ void getDataHc(){
       break;
       case 'P':
         data.remove(0,1);
-        sendSMS("PIN-"+data,1);
+        sendSMS("PIN-"+data,1,1);
       break;
       case 'R':
         data=data.substring(1,5);
@@ -209,11 +207,11 @@ void getDataHc(){
         saveToWaiting(data);
       break;
       case 'G':
-        sendSMS(data,1);
+        sendSMS(data,1,3);
       break;
       case 'T':
         data.remove(0,1);
-        sendSMS("GC"+data,9);
+        sendSMS("GC"+data,9,1);
       break;
       default:
         if(data=="T475"){
@@ -231,61 +229,88 @@ void setNumPhone(String str,int id){
   str.trim();
   Serial2.println(str);
   Serial2.println(str.length());
-  if(str.length()==9){
-    for(int i=0;i<9;i++){
-      numberPhone[i][id]=str[i]-48;
+  if(str.length()==NBR_CHAR_PHONE-1){
+    for(int i=1;i<NBR_CHAR_PHONE;i++){
+      numberPhone[i][id]=str[i-1]-48;
     }
-    User[id]=toString(numberPhone,id);
-    EEPROM.put(AD_PHONE,numberPhone);
-    delay(300);
-    sendSMS("PH"+String(id)+"Y",1);
+    User[id]=getNumPhone(numberPhone,id);
+    Serial2.print("id : "+String(id)+" Phone:"+User[id]);
+    if(EEPROM.put(AD_PHONE,numberPhone)){
+      delay(300);
+      sendSMS("PH"+String(id)+"Y",1,1);
+    }
        
-  }else {
-    Serial2.println("Num Err: "+str);
+  }else if(str.length()==0) {
+    if(numberPhone[0][id]==3){
+         for(int i=1;i<NBR_CHAR_PHONE;i++){
+         numberPhone[i][id]=-48;
+         }
+        User[id]="";
+        Serial2.print("id : "+String(id)+" Phone: No");
+        if(EEPROM.put(AD_PHONE,numberPhone)){
+          delay(200);
+          sendSMS("PH"+String(id)+"D",1,1);
+        }
+    }else if(numberPhone[0][id]==2) {
+        if(EEPROM.put(AD_PHONE,numberPhone)){
+          delay(200);
+          sendSMS("PH"+String(id)+"N",1,1);
+        }
+    }else if(numberPhone[0][id]==1) {
+        if(EEPROM.put(AD_PHONE,numberPhone)){
+          delay(200);
+          sendSMS("PH"+String(id)+"A",1,1);
+        }
+    }
   }
 }
 //load data from EEPROM
 void loadingData(){
   EEPROM.get(AD_PHONE,numberPhone);
-  User[0]=toString(numberPhone,0);
-  User[1]=toString(numberPhone,1);
-  User[2]=toString(numberPhone,2);
+  User[0]=getNumPhone(numberPhone,0);
+  User[1]=getNumPhone(numberPhone,1);
+  User[2]=getNumPhone(numberPhone,2);
   EEPROM.get(AD_SETTING_SMS,settingSMS);
   EEPROM.get(AD_CONT_SMS,ContSMS);
 }
 
 ///// Envoie des notifications et des informations par SMS.
-void sendSMS(String outMessage,int validity){
-  if(outMessage.length()<160){
+void sendSMS(String outMessage,int validity ,int Priority){
+  if(outMessage.length()<160 && AdminLes==0 && AdminLes==1 ){
   if(validity==1  && settingSMS[3]==1){ //&& GsmSgnal!=-1
-    Serial2.println("+212"+User[0]);
+    Serial2.println(">+212"+User[0]);
     Serial2.println(outMessage.c_str());
-  if(GSMmodule.sendSms("+212"+User[0],outMessage.c_str())){
-    if(ContSMS<9999){
-        ContSMS++;
-    }else {
-        ContSMS=1;
+    bool num[3]={false,false,false};
+    for(int g=0;g<Priority;g++){
+      if(numberPhone[0][g]==1){
+         num[g]=GSMmodule.sendSms("+212"+User[g],outMessage.c_str());
+        if(ContSMS<9999){
+         ContSMS++;
+        }else {
+         ContSMS=1;
+        }
+    }
     }
     EEPROM.put(AD_CONT_SMS,ContSMS);
     Last=millis();
-    }else {
+    if(!num[0] && !num[1] && !num[2]){
       Serial2.println("<86>");
-      delay(100);
-      if(GSMmodule.delAllSms()){
-        Serial2.println("delAllSms");
-      }
     }
+    delay(100);
+    GSMmodule.delAllSms();
+   
   }
-  if(AdminLes || validity==9){
+  if(AdminLes==1 || AdminLes==2 || validity==9){
+    delay(400);
     GSMmodule.sendSms("+212"+PHONE_ADM,outMessage.c_str());
   }
   }
 }
 
 // Convertir une matrice en texte.
-String toString(int Matrix[9][3],int id){
+String getNumPhone(int Matrix[NBR_CHAR_PHONE][3],int id){
   String str="";
-  for(int i=0;i<9;i++)
+  for(int i=1;i<NBR_CHAR_PHONE;i++)
     str+=Matrix[i][id];
   return str; 
 }
@@ -318,7 +343,6 @@ void checkNet(bool mode){
    if(millis()-Last>60000 || mode==true){
       GsmSgnal=GSMmodule.signalQuality();
       if(GsmSgnal==-1){
-        //Serial.println("module GSM : Erreur");
         digitalWrite(LED_CHECK_GSM,LOW);
         GSMcon=true;
       }else if(GsmSgnal>20){
@@ -330,7 +354,6 @@ void checkNet(bool mode){
         GSMcon=false;
         digitalWrite(LED_CHECK_GSM,LOW);
       }
-     //Serial.println("Niveau signal : "+toString(GsmSgnal));
      Last=millis();
   }
 }
@@ -339,13 +362,12 @@ void checkConx(){
   String msg="GB-91";
   msg+=toString(GsmSgnal); //
   msg+=toStringPin(ContSMS);
-  sendSMS(msg,1);
-  //Serial.println(msg);
+  sendSMS(msg,1,3);
 }
 void restSys(){
     for (int i = 1 ; i < EEPROM.length() ; i++) {
     EEPROM.write(i, 0);
-  }
+    }
   setup();
   }
 
@@ -384,10 +406,9 @@ void waitReplay(){
         if(val[i].waiting==true){
           if(millis()-val[i]._time>TIME_WAIT && val[i].Rep==false){
             msg+=val[i].PIN+"9>";
-            //Serial.println("ERR ID= "+String(i)+" "+val[i].PIN);
             delay(80);
             Serial2.println(msg);
-            sendSMS("Gx21"+val[i].PIN+"9",settingSMS[3]);
+            sendSMS("Gx21"+val[i].PIN+"9",settingSMS[3],3);
             val[i].waiting=false;
             val[i].Rep=false;
             val[i].PIN="";
