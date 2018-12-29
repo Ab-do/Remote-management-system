@@ -1,5 +1,4 @@
-// le 09/09/2019 Agadir
-// Etape 69  :  Multi-programme 
+// Etape 72Dev  :  Melangeur -> Pompe de traitement
 #include <SoftwareSerial.h>
 #include <EEPROM.h>
 #include <DS3231.h>
@@ -532,8 +531,8 @@ void showTime(){}
 
 void showHist(int Matrix[MTR]){
   String HistFile;
-  Matrix[3]==9? HistFile = "Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv"         
-  :   HistFile = "Hist_"+String(toDec(Matrix[3],Matrix[4]))+"_"+String(toDec(Matrix[5],Matrix[6]))+"_"+String(toDec(Matrix[7],Matrix[8]))+".csv";
+  Matrix[3]==9? HistFile = "Hist_"+toString(Date)+"_"+toString(Month)+"_"+String(Year)+".csv"         
+  :   HistFile = "Hist_"+toString(toDec(Matrix[3],Matrix[4]))+"_"+toString(toDec(Matrix[5],Matrix[6]))+"_"+String(toDec(Matrix[7],Matrix[8]))+".csv";
   if(sd.exists(HistFile.c_str())){
       csv.open(HistFile.c_str(), O_RDWR); 
     } else {
@@ -1287,7 +1286,7 @@ String getName(int Obj,int Number){
     return "VANNE "+String(Number)+" ";
     break;
     case 4 : //Vn
-    return "MELANGEUR "+String(Number)+" ";
+    return "Melangeur "+String(Number)+" ";
     break;
     case 5 : //Vn
     return "PMP ENGRIS "+String(Number)+" ";
@@ -1344,7 +1343,7 @@ void addHist(String hist)
 }
 ////// Initialization de la module carte SD !! 
 bool sdInit(){
-  String HistFile="Hist_"+String(Date)+"_"+String(Month)+"_"+String(Year)+".csv";
+  String HistFile="Hist_"+toString(Date)+"_"+toString(Month)+"_"+String(Year)+".csv";
   if(!sd.exists(HistFile.c_str())){
       csv.open(HistFile.c_str(), O_RDWR | O_CREAT);
       csv.gotoBeginOfFile();
